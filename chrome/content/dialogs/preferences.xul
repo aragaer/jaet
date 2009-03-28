@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://jaet/locale/jaet.dtd">
+
+
+<prefwindow id="preferences" title="Preferences"
+            windowtype="jaet-preferences"
+            type="prefwindow"
+            flex="1" width="400" height="300"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <prefpane label="Proxy" id="proxy">
+        <preferences>
+            <preference id="proxy-type" type="int" name="network.proxy.type"/>
+            <preference id="proxy-auto-url" type="unichar" name="network.proxy.autoconfig_url"/>
+            <preference id="proxy-manual-url" type="unichar" name="network.proxy.http"/>
+            <preference id="proxy-manual-port" type="int" name="network.proxy.http_port"/>
+        </preferences>
+        <radiogroup id="net-select" preference="proxy-type">
+            <radio value="0" label="&net.proxy.direct;"/>
+            <vbox>
+                <radio value="1" label="&net.proxy.manual;"/>
+                <textbox preference="proxy-manual-url" />
+                <textbox preference="proxy-manual-port" />
+            </vbox>
+            <vbox>
+                <radio value="2" label="&net.proxy.auto;"/>
+                <textbox preference="proxy-auto-url" />
+            </vbox>
+        </radiogroup>
+    </prefpane>
+    <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+</prefwindow>

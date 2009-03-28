@@ -1,0 +1,22 @@
+<!ENTITY title "Just Another Eve Tool">
+
+<!ENTITY net.proxy.direct "No proxy">
+<!ENTITY net.proxy.manual "Manual proxy configuration">
+<!ENTITY net.proxy.auto "Automatic proxy configuration via script">
+
+<!ENTITY menu.file.label "File">
+<!ENTITY menu.file.accesskey "F">
+<!ENTITY menu_file.exit.label "Exit">
+<!ENTITY menu_file.exit.accesskey "x">
+
+<!ENTITY menu.settings.label "Settings">
+<!ENTITY menu.settings.accesskey "S">
+<!ENTITY menu_settings.network.label "Network settings">
+<!ENTITY menu_settings.network.accesskey "N">
+<!ENTITY menu_settings.extensions.label "Extension manager">
+<!ENTITY menu_settings.extensions.accesskey "E">
+
+<!ENTITY menu_settings.preferences.label "Preferences">
+<!ENTITY menu_settings.preferences.accesskey "P">
+
+<!ENTITY exit_confirm "Really quit JAET?">
