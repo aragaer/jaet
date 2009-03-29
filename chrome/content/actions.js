@@ -2,9 +2,30 @@ function onLoad() {
     println("Application initialized.");
 }
 
-function setupNetwork() {
-    println("Network settings activated.");
-    openPreferences('proxy');
+function quit() {
+    if (confirm(document.getElementById('quit-label').value))
+        doQuit(false);
+}
+
+function doQuit (aForceQuit) {
+    var appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
+            getService(Ci.nsIAppStartup);
+
+    appStartup.quit(aForceQuit
+            ? Ci.nsIAppStartup.eForceQuit
+            : Ci.nsIAppStartup.eAttemptQuit);
+}
+
+
+function setupPreferences() {
+    println("Preferences activated.");
+    openPreferences();
+}
+
+function setupApiKeys() {
+    println("API keys activated.");
+    openDialog("dialogs/api.xul", "",
+            "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
 }
 
 function openExtManager() {

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://jaet/locale/jaet.dtd">
+
+
+<window id="preferences" title="&menu_settings.api.label;"
+            flex="1"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+    <script type="application/x-javascript" src="api.js"/>
+
+    <command id="API:Close" oncommand="apiClose()"/>
+    <command id="API:Check" oncommand="apiCheck()"/>
+
+    <label id="wrong-creds" value="&api.incorrect;" hidden="true" />
+
+    <vbox flex="1">
+        <hbox flex="2">
+            <vbox flex="1">
+                <caption label="&api.acct.list.title;" />
+                <listbox id="acct-list" />
+            </vbox>
+            <splitter collapse="none" />
+            <vbox flex="1">
+                <caption label="&api.char.list.title;" />
+                <listbox id="char-list" />
+            </vbox>
+        </hbox>
+        <grid>
+            <columns>
+                <column flex="1"/>
+                <column flex="5" />
+            </columns>
+            <rows>
+                <row>
+                    <label style="width:10em" value="&api.id.title;:"/>
+                    <textbox id="api-id" onkeyup="activate_check()"/>
+                </row>
+                <row>
+                    <label style="width:10em" value="&api.limited.title;:"/>
+                    <textbox id="api-limited" onkeyup="activate_check()"/>
+                </row>
+                <row>
+                    <label style="width:10em" value="&api.full.title;:"/>
+                    <textbox id="api-full" onkeyup="activate_check()"/>
+                </row>
+            </rows>
+        </grid>
+        <spacer flex="1" />
+        <hbox>
+            <button flex="1" label="&api.check;" disabled="true" id="btn-check"
+                    command="API:Check"/>
+            <spacer flex="2" />
+            <button flex="1" label="&api.remove;" disabled="true" id="btn-remove" />
+            <spacer flex="2" />
+            <button flex="1" label="&api.close;" command="API:Close" />
+        </hbox>
+    </vbox>
+</window>
