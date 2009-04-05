@@ -4,13 +4,17 @@
 
 
 <window id="preferences" title="&menu_settings.api.label;"
-            flex="1"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
-    <script type="application/x-javascript" src="api.js"/>
+        flex="1"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/tools/sqlite.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/tools/api.js"/>
+<script type="application/x-javascript" src="api.js"/>
 
     <command id="API:Close" oncommand="apiClose()"/>
     <command id="API:Check" oncommand="apiCheck()"/>
+    <command id="API:Add" oncommand="apiAdd()"/>
+    <command id="API:Remove" oncommand="apiRm()"/>
 
     <label id="wrong-creds" value="&api.incorrect;" hidden="true" />
 
@@ -28,30 +32,39 @@
         </hbox>
         <grid>
             <columns>
-                <column flex="1"/>
-                <column flex="5" />
+                <column flex="3"/>
+                <column flex="1" />
+                <column flex="10" />
             </columns>
             <rows>
                 <row>
                     <label style="width:10em" value="&api.id.title;:"/>
-                    <textbox id="api-id" onkeyup="activate_check()"/>
+                    <button label="&api.check;" command="API:Check" 
+                            id="btn-check" disabled="true" width="10px"/>
+                    <textbox id="api-id" onkeyup="activate_check()"
+                             disabled="true"/>
                 </row>
                 <row>
                     <label style="width:10em" value="&api.limited.title;:"/>
-                    <textbox id="api-limited" onkeyup="activate_check()"/>
+                    <img />
+                    <textbox id="api-limited" onkeyup="activate_check()"
+                             disabled="true"/>
                 </row>
                 <row>
                     <label style="width:10em" value="&api.full.title;:"/>
-                    <textbox id="api-full" onkeyup="activate_check()"/>
+                    <img />
+                    <textbox id="api-full" onkeyup="activate_check()"
+                             disabled="true"/>
                 </row>
             </rows>
         </grid>
         <spacer flex="1" />
         <hbox>
-            <button flex="1" label="&api.check;" disabled="true" id="btn-check"
-                    command="API:Check"/>
+            <button flex="1" label="&api.add;" id="btn-add"
+                    command="API:Add" />
             <spacer flex="2" />
-            <button flex="1" label="&api.remove;" disabled="true" id="btn-remove" />
+            <button flex="1" label="&api.remove;" disabled="true"
+                    id="btn-remove" command="API:Remove" />
             <spacer flex="2" />
             <button flex="1" label="&api.close;" command="API:Close" />
         </hbox>

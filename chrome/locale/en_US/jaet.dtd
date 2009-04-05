@@ -29,6 +29,7 @@
 <!ENTITY api.full.title "Full key">
 
 <!ENTITY api.check "Check">
+<!ENTITY api.add "Add">
 <!ENTITY api.remove "Remove">
 <!ENTITY api.close "Close">
 
