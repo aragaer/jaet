@@ -16,6 +16,11 @@ function doQuit (aForceQuit) {
             : Ci.nsIAppStartup.eAttemptQuit);
 }
 
+function pricing() {
+    println("Preferences activated.");
+    openDialog("pricing.xul", "",
+            "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
+}
 
 function setupPreferences() {
     println("Preferences activated.");

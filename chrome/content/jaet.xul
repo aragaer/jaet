@@ -19,6 +19,7 @@
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
 
     <command id="File:Exit" oncommand="quit()"/>
+    <command id="Tools:Pricing" oncommand="pricing()"/>
     <command id="Settings:Preferences" oncommand="setupPreferences()"/>
     <command id="Settings:Extensions" oncommand="openExtManager()"/>
     <command id="Settings:ApiKeys" oncommand="setupApiKeys()"/>
@@ -34,6 +35,13 @@
                         <menuitem label="&menu_file.exit.label;"
                                   accesskey="&menu_file.exit.accesskey;"
                                   command="File:Exit"/>
+                    </menupopup>
+                </menu>
+                <menu label="Tools" accesskey="T">
+                    <menupopup id="menu_ToolsPopup">
+                        <menuitem label="Pricing"
+                                  accesskey="r"
+                                  command="Tools:Pricing"/>
                     </menupopup>
                 </menu>
                 <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">

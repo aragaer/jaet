@@ -4,17 +4,21 @@ const StorageService = Cc["@mozilla.org/storage/service;1"].
         getService(Ci.mozIStorageService);
 
 
-function init_db(db_file) {
-    var conn = StorageService.openDatabase(db_file);
-    conn.executeSimpleSQL("PRAGMA synchronous = OFF");
-    conn.executeSimpleSQL("PRAGMA temp_store = MEMORY");
-    return conn;
+function DBH(db_file) {
+    this.conn = StorageService.openDatabase(db_file);
+    this.conn.executeSimpleSQL("PRAGMA synchronous = OFF");
+    this.conn.executeSimpleSQL("PRAGMA temp_store = MEMORY");
 }
 
-function doSelectQuery(conn, query, recHandler) {
+DBH.prototype.executeSimpleSQL = function (query) {
+    println("Executing "+query);
+    this.conn.executeSimpleSQL(query);
+}
+
+DBH.prototype.doSelectQuery = function (query, recHandler) {
     var rv = new Array;
     println("Executing "+query);
-    var statement = conn.createStatement(query);
+    var statement = this.conn.createStatement(query);
     while (statement.executeStep()) {
         var c;
         var thisArray = new Array;

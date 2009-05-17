@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-include $(BASE_DIR)/ENVIRONMENT
+#include $(BASE_DIR)/ENVIRONMENT
 
 BUILDID = $(shell date +%Y%m%d)
 

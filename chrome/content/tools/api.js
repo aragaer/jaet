@@ -13,7 +13,7 @@ function init_api_db() {
     if (!file.exists())
         file.create(file.NORMAL_FILE_TYPE, 0700);
 
-    var conn = init_db(file);
+    var conn = new DBH(file);
 
     do_check_and_create_tables(conn);
     return conn;
@@ -21,4 +21,18 @@ function init_api_db() {
 
 function do_check_and_create_tables(conn) {
     
+}
+
+function get_all_accounts() {
+    return ApiDB.doSelectQuery("select * from accounts;");
+}
+
+function store_characters(acct, chars) {
+    for (i in chars) {
+        ApiDB.executeSimpleSQL("replace into characters values ('"+chars[i][0]+"',"+chars[i][1]+","+acct+");");
+    }
+}
+
+function load_characters(acct) {
+    return ApiDB.doSelectQuery("select name, id from characters where account="+acct+";");
 }
