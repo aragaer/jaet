@@ -28,6 +28,7 @@
                 <treecol id="mat"  label="Material" flex="10" primary="true" />
                 <splitter class="tree-splitter"/>
                 <treecol id="cnt"  label="Count" flex="2"/>
+                <treecol id="total"  label="Total" flex="3"/>
                 <treecol id="isk"  label="Price" flex="2"/>
                 <treecol id="date" label="Last Updated" flex="3"/>
             </treecols>

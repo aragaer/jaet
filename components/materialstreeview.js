@@ -4,7 +4,7 @@ const Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /*  Materials
- *  id, mat, cnt, isk, date
+ *  id, mat, cnt, total, isk, date
  *  children, open
  */
 
@@ -28,25 +28,44 @@ MaterialsTreeView.prototype = {
     priceDB: null,
 
     boxObject: null,
-    _getMaterials: function (aData, item, bpID) {
-        if (!bpID) {
-            var itemID = this.dataDB.doSelectQuery("select typeID from invTypes where typeName='"+item+"';");
-            if (itemID == 0) {
-                dump("No such item: ["+item+"]\n");
-                return;
-            }
-            bpID = this.dataDB.doSelectQuery("select blueprintTypeId from invBlueprintTypes where productTypeID="+itemID+";");
-            if (bpID == 0) {
-                dump("No blueprint for item ["+item+"]\n");
-                return;
-            }
-        }
+    _getManufacturingMaterials: function (aData, bpInfo) {
+        if (!bpInfo.bpID)
+            bpInfo.bpID = this.dataDB.doSelectQuery("select blueprintTypeId " +
+                "from invBlueprintTypes where productTypeID="+bpInfo.itemID+";");
 
+        if (!bpInfo.bpID) {
+            dump("No blueprint for item "+bpInfo.item+"\n");
+            return;
+        }
         this.dataDB.doSelectQuery("select quantity, requiredTypeID, typeName, blueprintTypeID " +
             " from typeActivityMaterials" +
             " left join invTypes on requiredTypeId=invTypes.typeId " +
             " left join invBlueprintTypes on productTypeID=invTypes.typeId " +
-            " where typeActivityMaterials.typeID="+bpID+" and activityID=1;", function (array) {
+            " where typeActivityMaterials.typeID=" + bpInfo.bpID +
+            " and activityID=1 " +
+            " and invTypes.groupID not in (select groupID from invGroups where categoryID=16);",
+            function (array) {
+                aData.push({
+                    id: array[1],
+                    mat: array[2],
+                    cnt: array[0]
+                });
+                if (array[3]) {
+                    aData[aData.length-1].bp = {
+                        bpID: array[3],
+                        itemID: array[1],
+                        item: array[2]
+                    };
+                    aData[aData.length-1].children = [];
+                }
+                array.splice(0);
+            });
+     },
+     _getReprocessingMaterials: function (aData, bpInfo) {
+         this.dataDB.doSelectQuery("select quantity, requiredTypeID, t3.typeName " +
+            " from typeActivityMaterials as t2" +
+            " left join invTypes as t3 on requiredTypeId=t3.typeId " +
+            " where t2.typeID="+bpInfo.itemID+" and activityID=6;", function (array) {
                 aData.push({
                     id: array[1],
                     mat: array[2],
@@ -58,6 +77,42 @@ MaterialsTreeView.prototype = {
                 }
                 array.splice(0);
             });
+      },
+    _getMaterials: function (aData, item, bpInfo) {
+        if (!bpInfo) {
+            var itemID = this.dataDB.doSelectQuery("select typeID, " +
+                    "invGroups.groupID, invCategories.categoryID " +
+                    "from invTypes " +
+                    "left join invGroups " +
+                        "on invTypes.groupID=invGroups.groupID " +
+                    "left join invCategories " +
+                        "on invGroups.categoryID = invCategories.categoryID " +
+                    "where typeName='"+item+"';")[0];
+            if (!itemID || !itemID[0]) {
+                dump("No such item: ["+item+"]\n");
+                return;
+            }
+            bpInfo = {
+                itemID: itemID[0],
+                grpID: itemID[1],
+                catID: itemID[2]
+            };
+        }
+	
+        switch (this.type) {
+        default:
+        case 'manufacture':
+            this._getManufacturingMaterials(aData, bpInfo);
+            break;
+        case 'reprocess':
+            switch (true) {
+            case bpInfo.grpID == 355:   /* Refinables */
+            case bpInfo.catID == 25:    /* Asteroid (ore, ice) */
+            default:
+                this._getReprocessingMaterials(aData, bpInfo);
+            }
+            break;
+        }
     },
 
     setTree: function (aBoxObject) {
@@ -65,6 +120,7 @@ MaterialsTreeView.prototype = {
             var el = aBoxObject.element;
             this.dataDB = el.dataDB;
             this.priceDB = el.priceDB;
+            this.type = el.type;
             if (el.item)
                 this._getMaterials(this.materials, el.item);
 
@@ -110,7 +166,13 @@ MaterialsTreeView.prototype = {
         var element = this._getRowElement(this.materials, aRow);
         if (typeof element == 'undefined')
             return null;
-        return element[aCol.id];
+        switch (aCol.id) {
+        case 'total':
+            var parent = this._getParent(this.materials, aRow);
+            return element.cnt * (parent ? parent.cnt : 1);
+        default:
+            return element[aCol.id];
+        }
     },
 
     getColumnProperties: function (aCol, aProperties) { },
@@ -158,7 +220,22 @@ MaterialsTreeView.prototype = {
     getLevel: function (aRow) {
         return this._getLevel(this.materials, aRow);
     },
-    _getParentIndex: function(aData, aRow) {
+    _getParent: function (aData, aRow) {
+        var currentIndex = 0;
+        for (var i = 0; i < aData.length && aRow > currentIndex; i++) {
+            currentIndex++;
+
+            if ('children' in aData[i] && aData[i].open) {
+                var count = this._getRowCount(aData[i].children);
+
+                if (aRow < currentIndex + count)
+                    return aData[i];
+                currentIndex += count;
+            }
+        }
+        return null;
+    },
+    _getParentIndex: function (aData, aRow) {
         var currentIndex = 0;
         for (var i = 0; i < aData.length && aRow > currentIndex; i++) {
             currentIndex++;

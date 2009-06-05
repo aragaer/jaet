@@ -8,10 +8,6 @@ const Materials = [];
 
 const MaterialTreeView = Cc['@aragaer.com/materials-tree-view;1'].
         getService(Ci.nsITreeView);
-const ReprocessTreeView = Cc['@aragaer.com/reprocess-tree-view;1'].
-        getService(Ci.nsITreeView);
-
-var MyTreeView;
 
 function init_market_dump() {
     var file = DirectoryService.get('CurProcD', Ci.nsIFile);
@@ -53,7 +49,7 @@ function get_base_market_groups() {
 
 function pricingCheck() {
     mat_tree.item = item.value;
-    mat_tree.view = MyTreeView;
+    mat_tree.view = MaterialTreeView;
 }
 
 function onMarketGroupSelect(aEvt) {
@@ -61,7 +57,8 @@ function onMarketGroupSelect(aEvt) {
 
 function switchView() {
     /* !type.checked since it will become checked now */
-    mat_tree.view = MyTreeView = !type.checked ? ReprocessTreeView : MaterialTreeView;
+    mat_tree.type = type.checked ? 'manufacture' : 'reprocess';
+    mat_tree.view = MaterialTreeView;
 }
 
 function pricingOnLoad() {
@@ -71,5 +68,6 @@ function pricingOnLoad() {
     item = document.getElementById("item");
     mat_tree.dataDB = marketDumpDB;
     mat_tree.priceDB = marketCacheDB;
+    mat_tree.type = 'manufacture';
     mat_tree.view = MyTreeView = MaterialTreeView;
 }
