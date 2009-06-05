@@ -2,3 +2,7 @@ tabpanel {
 	padding: 0px;
 }
 
+treechildren::-moz-tree-indentation {
+    width: 16px;
+}
+

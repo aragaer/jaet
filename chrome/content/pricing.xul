@@ -23,9 +23,10 @@
         <textbox id="item" onchange="pricingCheck()"/>
         <tree id="materials" hidecolumnpicker="true" flex="10" treelines="true">
             <treecols>
-<!--                <treecol id="id"   label="ID"/> -->
-                <treecol id="sp"   width="10px"/>
-                <treecol id="mat"  label="Material" flex="10"/>
+<!--                <treecol id="id"   label="ID"/>
+                <treecol id="sp"   width="10px"/> -->
+                <treecol id="mat"  label="Material" flex="10" primary="true" />
+                <splitter class="tree-splitter"/>
                 <treecol id="cnt"  label="Count" flex="2"/>
                 <treecol id="isk"  label="Price" flex="2"/>
                 <treecol id="date" label="Last Updated" flex="3"/>

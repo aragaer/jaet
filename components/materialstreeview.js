@@ -10,12 +10,9 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function MaterialsTreeView() {
     this.materials = []; /* 1st level materials */
-}
+    var atomService = Cc['@mozilla.org/atom-service;1'].
+        getService(Ci.nsIAtomService);
 
-function leftPad(n, len) {
-    if (!len)
-        return n;
-    return (new Array(len+1)).join("    ") + n;
 }
 
 MaterialsTreeView.prototype = {
@@ -113,9 +110,7 @@ MaterialsTreeView.prototype = {
         var element = this._getRowElement(this.materials, aRow);
         if (typeof element == 'undefined')
             return null;
-        return aCol.id == 'mat'
-            ? leftPad(element[aCol.id], this.getLevel(aRow))
-            : element[aCol.id];
+        return element[aCol.id];
     },
 
     getColumnProperties: function (aCol, aProperties) { },
@@ -123,7 +118,7 @@ MaterialsTreeView.prototype = {
         var element = this._getRowElement(this.materials, aRow);
         if (typeof element != 'undefined' && 'properties' in element) {
             for (var i = 0; i < element.properties.length; i++)
-                    aProperties.AppendElement(element.properties[i]);
+                aProperties.AppendElement(element.properties[i]);
         }
     },
     getCellProperties: function (aRow, aCol, aProperties) {
@@ -212,21 +207,11 @@ MaterialsTreeView.prototype = {
         var count = this._getRowCount(element.children);
         element.open = !element.open;
         this.boxObject.rowCountChanged(aRow + 1, element.open ? count : -count);
-        this.boxObject.invalidateRow(aRow);  
+        this.boxObject.invalidateRow(aRow);
     },
     isSorted: function () { return false; },
     isEditable: function(aRow, aCol) { return false; },
-    getImageSrc: function(aRow, aCol) {
-        if (aCol.id != 'sp')
-            return false;
-        var element = this._getRowElement(this.materials, aRow);
-        if (!('children' in element))
-            return false;
-
-        return element.open
-            ? "chrome://jaet/content/img/collapse.gif"
-            : "chrome://jaet/content/img/expand.gif";
-    },  
+    getImageSrc: function(aRow, aCol) {},
     getProgressMode : function(aRow, aCol) {},  
     selection: null,
     selectionChanged: function () {},
