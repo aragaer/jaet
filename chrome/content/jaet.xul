@@ -20,6 +20,7 @@
 
     <command id="File:Exit" oncommand="quit()"/>
     <command id="Tools:Pricing" oncommand="pricing()"/>
+    <command id="Tools:Market" oncommand="market()"/>
     <command id="Settings:Preferences" oncommand="setupPreferences()"/>
     <command id="Settings:Extensions" oncommand="openExtManager()"/>
     <command id="Settings:ApiKeys" oncommand="setupApiKeys()"/>
@@ -42,6 +43,9 @@
                         <menuitem label="Pricing"
                                   accesskey="r"
                                   command="Tools:Pricing"/>
+                        <menuitem label="Market Data"
+                                  accesskey="M"
+                                  command="Tools:Market"/>
                     </menupopup>
                 </menu>
                 <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">

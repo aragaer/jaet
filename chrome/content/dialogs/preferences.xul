@@ -6,7 +6,7 @@
 <prefwindow id="preferences" title="Preferences"
             windowtype="jaet-preferences"
             type="prefwindow"
-            flex="1" width="400" height="300"
+            flex="1" width="600" height="300"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <prefpane label="Proxy" id="proxy">
         <preferences>
@@ -27,6 +27,34 @@
                 <textbox preference="proxy-auto-url" />
             </vbox>
         </radiogroup>
+     </prefpane>
+     <prefpane label="Exports" id="exports">
+<script language="javascript">
+<![CDATA[
+function onPick() {
+    var fp = Cc["@mozilla.org/filepicker;1"].
+            createInstance(Ci.nsIFilePicker);
+    fp.init(window, "&exports.title;", fp.modeGetFolder);
+    fp.appendFilters(fp.filterAll);
+    fp.show();
+    if (fp.file) {
+        tx = document.getElementById("exports-path");
+        tx.value = fp.file.path;
+        document.getElementById('exports').userChangedValue(tx);        
+    }
+}
+]]>    
+</script>        
+        <preferences>
+            <preference id="exports-dir" type="unichar" name="jaet.exports.dir"/>
+        </preferences>
+        
+        <label value="&exports.title;" />
+        <hbox>
+            <textbox preference="exports-dir" id="exports-path" width="500"/>
+            <button onclick="onPick()" label="&exports.browse;"/>
+        </hbox>
+        
     </prefpane>
     <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 </prefwindow>
