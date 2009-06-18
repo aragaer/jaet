@@ -33,6 +33,10 @@
 <!ENTITY api.remove "Remove">
 <!ENTITY api.close "Close">
 
+
+<!ENTITY exports.title "Market Exports">
+<!ENTITY exports.browse "Browse">
+
 <!ENTITY api.incorrect "Incorrect credentials">
 
 <!ENTITY exit_confirm "Really quit JAET?">

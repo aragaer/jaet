@@ -1,0 +1,12 @@
+#include "nsISupports.idl"
+
+[scriptable, uuid(143c265f-0599-4f50-ac7c-6085c4741c91)]
+interface nsIEveMarketExport : nsISupports {
+};
+
+[scriptable, uuid(787242ef-1931-4c67-89c1-e3e534581153)]
+interface nsIEveMarketExportService : nsISupports {
+	void initWithPath(in string path);
+        void getExports(out unsigned long count, [array, size_is(count), retval] out nsIEveMarketExport retv);
+        void getExportsByRegion(in string region, out unsigned long count, [array, size_is(count), retval] out nsIEveMarketExport retv);
+};

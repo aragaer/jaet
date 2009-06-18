@@ -1,5 +1,5 @@
 SHELL = /bin/sh
-
+SDK_DIR=~/xulrunner-sdk
 #include $(BASE_DIR)/ENVIRONMENT
 
 BUILDID = $(shell date +%Y%m%d)

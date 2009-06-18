@@ -17,8 +17,14 @@ function doQuit (aForceQuit) {
 }
 
 function pricing() {
-    println("Preferences activated.");
+    println("Pricing activated.");
     openDialog("pricing.xul", "",
+            "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
+}
+
+function market() {
+    println("Market activated.");
+    openDialog("market.xul", "",
             "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
 }
 

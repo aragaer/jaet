@@ -2,7 +2,14 @@ tabpanel {
 	padding: 0px;
 }
 
-treechildren::-moz-tree-indentation {
-    width: 16px;
+treechildren:-moz-tree-line {
+  border: 1px dotted #9C9C9C;
 }
 
+treechildren:-moz-tree-line(selected, focus) {
+  border: 1px dotted #FFFFFF;
+}
+
+treechildren:-moz-tree-indentation() {
+    width: 16px;
+}
