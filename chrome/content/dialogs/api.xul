@@ -22,11 +22,11 @@
     <vbox flex="1">
         <hbox flex="2">
             <vbox flex="1">
-                <caption label="&api.acct.list.title;" />
-                <tree id="acct-list" flex="1">
-                    <cols>
-                        <col id="name" />
-                    </cols>
+                <caption label="&api.acct.list.title;" hidecolumnpicker="true"/>
+                <tree id="acct-list" flex="1" >
+                    <treecols>
+                        <treecol id="name" flex="10"/>
+                    </treecols>
                     <treechildren/>
                 </tree>
             </vbox>

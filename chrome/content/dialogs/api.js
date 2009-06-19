@@ -4,8 +4,27 @@
 
 const chars = [];
 var acct_list, api_id, api_ltd, api_full, char_list;
-const AcctTreeView = Cc['@aragaer.com/acct-tree-view;1'].
-        getService(Ci.nsITreeView);
+const accts = [];
+const AcctTreeView = {
+    get rowCount() { return accts.length; },
+    getCellText : function (row,col) {
+        return accts[row].name || 'Enter name..';
+    },
+    setCellText : function (row,col,value) {
+        accts[row].name = value;
+        update_acct_name(accts[row].id, accts[row].name);
+    },
+    setTree: function (treebox) { this.treebox = treebox; },
+    isContainer: function (row) { return false; },
+    isEditable: function (row,col) { return true; },
+    isSeparator: function (row) { return false; },
+    isSorted: function () { return false; },
+    getLevel: function (row) { return 0; },
+    getImageSrc: function (row,col) { return null; },
+    getRowProperties: function (row,props){},
+    getCellProperties: function (row,col,props){},
+    getColumnProperties: function (colid,col,props){}
+}; 
 
 function close_api() {
     window.close();
@@ -26,15 +45,28 @@ function on_api_load() {
     api_full = document.getElementById('api-full');
 
     acct_list.addEventListener('select', on_acct_select, true);
+    acct_list.addEventListener('dblclick', on_acct_dclick, true);
 
-    acct_list.apiDB = ApiDB;
-    acct_list.view = AcctTreeView; 
+    reload_accts();
 }
 
 function empty_char_list() {
     while (char_list.hasChildNodes()) {
         char_list.removeChild(char_list.firstChild);
     }
+}
+
+function on_acct_dclick(aEvt) {
+    var tbo = acct_list.treeBoxObject;
+    var row = { }, col = { }, child = { };
+
+    // get the row, col and child element at the point
+    tbo.getCellAt(aEvt.clientX, aEvt.clientY, row, col, child);
+
+    if (row.value == -1)
+        return;
+
+    acct_list.startEditing(row.value, col.value);
 }
 
 function on_acct_select(aEvt) {
@@ -54,6 +86,7 @@ function on_acct_select(aEvt) {
         char_list_empty();
         return;
     }
+
     api_id.value = accts[row].acct_id;
     api_ltd.value = accts[row].ltd;
     api_full.value = accts[row].full;
@@ -79,7 +112,7 @@ function check_data() {
     accts[row].full = document.getElementById('api-full').value;
 
     store_keys(accts[row]);
-    
+
     var ret = request_char_list(accts[row].id);
     if (!ret) {
         alert(document.getElementById('wrong-creds').value);
@@ -94,7 +127,7 @@ function check_data() {
 
 function add_data() {
     add_empty_account();
-    acct_list.view = AcctTreeView; 
+    reload_accts();
 }
 
 function reload_accts() {
