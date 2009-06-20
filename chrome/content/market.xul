@@ -14,14 +14,15 @@
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/sqlite.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/tools/materialstreeview.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/tools/market.js"/>
-	
+<script type="application/x-javascript" src="chrome://jaet/content/tools/market.js"/>	
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
     <vbox flex="1">
-        <textbox id="region" onchange="marketCheck()"/>
-        <tree id="materials" hidecolumnpicker="true" flex="10" treelines="true">
+        <textbox id="region-name" ontextentered="check_market()"
+                 forceComplete="true" type="autocomplete"
+                 autocompletesearch="region-autocomplete"
+                 completedefaultindex="true"/>
+       <tree id="materials" hidecolumnpicker="true" flex="10" treelines="true">
             <treecols>
                 <treecol id="mat"  label="item" flex="10" primary="true" />
                 <splitter class="tree-splitter"/>

@@ -9,7 +9,7 @@ function EveMarketExportService() { }
 EveMarketExportService.prototype = {
     classDescription: "EVE Market Exports Service",
     classID:          Components.ID("{787242ef-1931-4c67-89c1-e3e534581153}"),
-    contractID:       "@aragaer.com/eve-market-exports;1",
+    contractID:       "@aragaer.com/eve-market-export/service;1",
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIEveMarketExportService]),
     _xpcom_categories: [{
         category: "xpcom-startup",
@@ -60,7 +60,7 @@ function EveMarketExport(aFile) {
 EveMarketExport.prototype = {
     classDescription: "EVE Market Export",
     classID:          Components.ID("{143c265f-0599-4f50-ac7c-6085c4741c91}"),
-    contractID:       "@aragaer.com/eve-market-export;1",
+    contractID:       "@aragaer.com/eve-market-export/result;1",
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIEveMarketExport])
 };
 
