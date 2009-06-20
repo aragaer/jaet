@@ -18,13 +18,19 @@
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
     <vbox flex="1">
-        <textbox id="region-name" ontextentered="check_market()"
-                 forceComplete="true" type="autocomplete"
-                 autocompletesearch="region-autocomplete"
-                 completedefaultindex="true"/>
-       <tree id="materials" hidecolumnpicker="true" flex="10" treelines="true">
+        <hbox>
+            <textbox id="region-name" ontextentered="check_market()"
+                     forceComplete="true" type="autocomplete"
+                     autocompletesearch="region-autocomplete"
+                     completedefaultindex="true" width="200px"/>
+            <spacer flex="1"/>
+            <caption label="Price-forming algorithm:"/>
+            <spacer width="10px" />
+            <menulist id="price-alg"/>
+        </hbox>
+        <tree id="items" hidecolumnpicker="true" flex="10" treelines="true">
             <treecols>
-                <treecol id="mat"  label="item" flex="10" primary="true" />
+                <treecol id="itm"  label="item" flex="10" primary="true" />
                 <splitter class="tree-splitter"/>
                 <treecol id="isk"  label="Price" flex="2"/>
                 <treecol id="date" label="Last Updated" flex="3"/>

@@ -17,22 +17,28 @@ EveMarketExportService.prototype = {
     }],
 
     initWithPath:    function (path) {
+        dump("Initializing exports directory with path '"+path+"'\n");
         exportsDirectory = Cc["@mozilla.org/file/local;1"].
-            createInstance(Ci.nsILocalFile).
-            initWithPath(path);
+            createInstance(Ci.nsILocalFile);
+        exportsDirectory.initWithPath(path);
+        if (!exportsDirectory.exists())
+            dump("Exports directory '"+path+"' doesn't exist.\n");
     },
     
-    getExports: function () {
+    getExports: function (aCount) {
         var res = [];
         var entries = exportsDirectory.directoryEntries;
         while (entries.hasMoreElements())
-            res.push(EveMarketExport(entries.
+            res.push(new EveMarketExport(entries.
                     getNext().QueryInterface(Ci.nsIFile)));
+        aCount.value = res.length;
         return res;
     },
 
-    getExportsByRegion: function (regName) {
-        return this.getExports().filter(filterByReg(regName));
+    getExportsByRegion: function (regName, aCount) {
+        var res = this.getExports({}).filter(filterByReg(regName));
+        aCount.value = res.length;
+        return res;
     }
 };
 
@@ -54,14 +60,14 @@ function EveMarketExport(aFile) {
             +dateparts[3].substr(2,2),
             +dateparts[3].substr(4,2)];
     this.date = new Date(dateparts[0], dateparts[1], dateparts[2],
-            times[0], times[1], times[2]);
+            times[0], times[1], times[2]).toString();;
 }
 
 EveMarketExport.prototype = {
-    classDescription: "EVE Market Export",
-    classID:          Components.ID("{143c265f-0599-4f50-ac7c-6085c4741c91}"),
-    contractID:       "@aragaer.com/eve-market-export/result;1",
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIEveMarketExport])
+    classDescription:   "EVE Market Export",
+    classID:            Components.ID("{143c265f-0599-4f50-ac7c-6085c4741c91}"),
+    contractID:         "@aragaer.com/eve-market-export/result;1",
+    QueryInterface:     XPCOMUtils.generateQI([Ci.nsIEveMarketExport]),
 };
 
 var components = [EveMarketExportService, EveMarketExport];
