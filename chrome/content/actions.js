@@ -1,5 +1,49 @@
+var status;
+
 function onLoad() {
+    status = document.getElementById('status');
     println("Application initialized.");
+
+    var tabbox = document.getElementById('main-tabs-list');
+    var tabs = document.getElementById('main-tabs');
+    var tabpanels = document.getElementById('main-panels');
+
+    var list_file = Cc["@mozilla.org/file/directory_service;1"].
+            getService(Ci.nsIProperties).get('CurProcD', Ci.nsIFile);
+    list_file.append('tools.list');
+    if (list_file.exists()) {
+        var istream = Cc["@mozilla.org/network/file-input-stream;1"].
+                createInstance(Ci.nsIFileInputStream);
+        istream.init(list_file, 0x01, 0444, 0);
+        istream.QueryInterface(Ci.nsILineInputStream);
+        var line = {}, hasmore, lines = [];
+
+        do {
+            hasmore = istream.readLine(line);
+            if (line.value.length)
+                lines.push(line.value);
+        } while (hasmore);
+        
+        lines.forEach(function (line) {
+            var tabpanel = document.createElement('tabpanel');
+            var iframe = document.createElement('iframe');
+            var props = line.split(/\s*\t\s*/);
+            var tool = props[0], name = props[1], chrome = props[2];
+            tabpanel.setAttribute('orient', 'horisontal');
+            tabpanel.setAttribute('flex', '1');
+            iframe.setAttribute('src', chrome);
+            iframe.setAttribute('flex', '1000');
+            tabpanel.appendChild(iframe);
+
+            tabs.appendItem(name);
+            tabpanels.appendChild(tabpanel);
+        });
+    } else {
+        list_file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666); 
+    }
+
+    if (tabbox.hasChildNodes())
+        tabbox.selectedIndex = 0;
 }
 
 function quit() {

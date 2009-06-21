@@ -40,12 +40,6 @@
                 </menu>
                 <menu label="Tools" accesskey="T">
                     <menupopup id="menu_ToolsPopup">
-                        <menuitem label="Pricing"
-                                  accesskey="r"
-                                  command="Tools:Pricing"/>
-                        <menuitem label="Market Data"
-                                  accesskey="M"
-                                  command="Tools:Market"/>
                     </menupopup>
                 </menu>
                 <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">
