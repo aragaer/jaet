@@ -36,15 +36,23 @@ EveMarketExportService.prototype = {
     },
 
     getExportsByRegion: function (regName, aCount) {
-        var res = this.getExports({}).filter(filterByReg(regName));
+        var res = [], records = {};
+        this.getExports({}).forEach(filterByReg(regName, records));
+        for (i in records)
+            res.push(records[i].value);
         aCount.value = res.length;
         return res;
     }
 };
 
-function filterByReg(regName) {
+function filterByReg(regName, records) {
     return function (el) {
-        return el.region == regName;
+        if (el.region != regName)
+            return;
+        var this_date = new Date(el.date);
+        if (records[el.item] && this_date > records[el.item].date)
+            return;
+        records[el.item] = {date: this_date, value : el};
     }
 }
 
@@ -60,7 +68,7 @@ function EveMarketExport(aFile) {
             +dateparts[3].substr(2,2),
             +dateparts[3].substr(4,2)];
     this.date = new Date(dateparts[0], dateparts[1], dateparts[2],
-            times[0], times[1], times[2]).toString();;
+            times[0], times[1], times[2]).toString();
 }
 
 EveMarketExport.prototype = {

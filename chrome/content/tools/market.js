@@ -45,7 +45,6 @@ function initMarketService() {
     var res = Cc["@aragaer.com/eve-market-export/service;1"].
         getService(Ci.nsIEveMarketExportService);
     res.initWithPath(marketPath);
-    println("Market service: "+res);
     return res;
 }
 

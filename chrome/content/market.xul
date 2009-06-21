@@ -24,8 +24,7 @@
                      autocompletesearch="region-autocomplete"
                      completedefaultindex="true" width="200px"/>
             <spacer flex="1"/>
-            <caption label="Price-forming algorithm:"/>
-            <spacer width="10px" />
+            <label value="Price-forming algorithm:" style="margin-top:7px"/>
             <menulist id="price-alg"/>
         </hbox>
         <tree id="items" hidecolumnpicker="true" flex="10" treelines="true">
