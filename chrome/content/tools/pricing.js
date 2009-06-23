@@ -69,5 +69,5 @@ function pricingOnLoad() {
     mat_tree.dataDB = marketDumpDB;
     mat_tree.priceDB = marketCacheDB;
     mat_tree.type = 'manufacture';
-    mat_tree.view = MyTreeView = MaterialTreeView;
+    mat_tree.view = MaterialTreeView;
 }
