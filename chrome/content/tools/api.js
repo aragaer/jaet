@@ -35,15 +35,9 @@ function do_check_and_create_tables(conn) {
     println("ApiDB initialized");
 }
 
-function store_characters(id, chars) {
-    for (i in chars) {
-        ApiDB.executeSimpleSQL("replace into characters values ('"+chars[i][0]+"',"+chars[i][1]+","+acct+");");
-    }
-}
-
 function load_characters(acct) {
     return acct
-        ? ApiDB.doSelectQuery("select name, id from characters where account="+acct+";")
+        ? ApiDB.doSelectQuery("select name, id from characters where account='"+acct+"';")
         : [];
 }
 
@@ -62,7 +56,6 @@ function get_accounts() {
                 ltd : array[3],
                 full: array[4]
             });
-            println(array[1]);
             array.splice(0);
         }
     );
@@ -71,17 +64,17 @@ function get_accounts() {
 
 function update_acct_name(id, name) {
     // We need some way to escape data...
-    ApiDB.executeSimpleSQL("update accounts set name='"+name+"' where id="+id+";");
+    ApiDB.executeSimpleSQL("update accounts set name='"+name+"' where id='"+id+"';");
 }
 
 function store_keys(acct_data) {
     ApiDB.executeSimpleSQL("update accounts set acct_id='"+acct_data.acct_id+"', " +
         "ltd='"+acct_data.ltd+"', full='"+acct_data.full+"' " +
-        "where id="+acct_data.id+";");
+        "where id='"+acct_data.id+"';");
 }
 
 function request_char_list(id) {
-    var data = ApiDB.doSelectQuery("select acct_id, ltd from accounts where id='"+id+"';");
+    var data = ApiDB.doSelectQuery("select acct_id, ltd from accounts where id='"+id+"';")[0];
     var list = EveApiService.getCharacterList(data[0], data[1]);
     if (!list)
         return;
@@ -89,13 +82,20 @@ function request_char_list(id) {
     var result = [];
     for (var node = list.firstChild; node; node = node.nextSibling) {
         if (!node.hasAttributes())
-            continue; 
-        result.push([node.getAttribute('name'),
+            continue;
+        res = [node.getAttribute('name'),
             node.getAttribute('characterID'),
             node.getAttribute('corporationID')
-        ]);
+        ];
+        result.push(res);
+        ApiDB.executeSimpleSQL("replace into characters (name, id, account, corporation) " +
+            "values ('"+res[0]+"',"+res[1]+", "+data[0]+","+res[2]+");");
     }
-
-    store_characters(data[0], result);
     return result;
+}
+
+function delete_account(id) {
+    var acct_id = ApiDB.doSelectQuery("select acct_id from accounts where id='"+id+"';");
+    ApiDB.executeSimpleSQL("delete from characters where account='"+acct_id+"';");
+    ApiDB.executeSimpleSQL("delete from accounts where id='"+id+"';");
 }

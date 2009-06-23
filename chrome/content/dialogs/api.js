@@ -24,7 +24,7 @@ const AcctTreeView = {
     getRowProperties: function (row,props){},
     getCellProperties: function (row,col,props){},
     getColumnProperties: function (colid,col,props){}
-}; 
+};
 
 function close_api() {
     window.close();
@@ -71,7 +71,6 @@ function on_acct_dclick(aEvt) {
 
 function on_acct_select(aEvt) {
     var row = acct_list.currentIndex;
-    println("Acct select "+row);
 
     if (row == -1) {
         api_id.value = '';
@@ -139,9 +138,13 @@ function reload_accts() {
 }
 
 function remove_data() {
-    var row = acct_list.selectedIndex;
+    var row = acct_list.currentIndex;
     if (row == -1)
         return;
 
-    
+    if (!confirm("Are you sure you want to delete accout '"+accts[row].name+"'?"))
+        return;
+
+    delete_account(accts[row].id);
+    reload_accts();
 }
