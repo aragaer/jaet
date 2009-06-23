@@ -5,17 +5,17 @@
 
 
 <window id="preferences" title="&menu_settings.api.label;"
-        flex="1" onload="apiOpen()"
+        flex="1" onload="on_api_load()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/sqlite.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/api.js"/>
 <script type="application/x-javascript" src="api.js"/>
 
-    <command id="API:Close" oncommand="apiClose()"/>
-    <command id="API:Check" oncommand="apiCheck()"/>
-    <command id="API:Add" oncommand="apiAdd()"/>
-    <command id="API:Remove" oncommand="apiRm()"/>
+    <command id="API:Close" oncommand="close_api()"/>
+    <command id="API:Check" oncommand="check_data()"/>
+    <command id="API:Add" oncommand="add_data()"/>
+    <command id="API:Remove" oncommand="remove_data()"/>
 
     <label id="wrong-creds" value="&api.incorrect;" hidden="true" />
 
@@ -23,7 +23,12 @@
         <hbox flex="2">
             <vbox flex="1">
                 <caption label="&api.acct.list.title;" />
-                <richlistbox id="acct-list" flex="1" />
+                <tree id="acct-list" flex="1">
+                    <cols>
+                        <col id="name" />
+                    </cols>
+                    <treechildren/>
+                </tree>
             </vbox>
             <splitter collapse="none" />
             <vbox flex="1">
@@ -43,18 +48,21 @@
                     <button label="&api.check;" command="API:Check" 
                             id="btn-check" disabled="true" width="10px"/>
                     <textbox id="api-id" onkeyup="activate_check()"
+                             onchange="activate_check()"
                              disabled="true"/>
                 </row>
                 <row>
                     <label style="width:10em" value="&api.limited.title;:"/>
                     <img />
                     <textbox id="api-limited" onkeyup="activate_check()"
+                             onchange="activate_check()"
                              disabled="true"/>
                 </row>
                 <row>
                     <label style="width:10em" value="&api.full.title;:"/>
                     <img />
                     <textbox id="api-full" onkeyup="activate_check()"
+                             onchange="activate_check()"
                              disabled="true"/>
                 </row>
             </rows>
