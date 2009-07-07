@@ -162,14 +162,21 @@ MaterialsTreeView.prototype = {
             : undefined;
     },
 
+    _getTotal: function (aRow, cnt) {
+        var parent_idx = this._getParentIndex(this.materials, aRow);
+        return parent_idx == -1
+            ? cnt
+            : cnt * this._getTotal(parent_idx,
+                    this._getRowElement(this.materials, parent_idx).cnt);
+    },
+
     getCellText: function (aRow, aCol) {
         var element = this._getRowElement(this.materials, aRow);
         if (typeof element == 'undefined')
             return null;
         switch (aCol.id) {
         case 'total':
-            var parent = this._getParent(this.materials, aRow);
-            return element.cnt * (parent ? parent.cnt : 1);
+            return this._getTotal(aRow, element.cnt);
         default:
             return element[aCol.id];
         }
