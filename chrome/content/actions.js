@@ -44,6 +44,8 @@ function onLoad() {
 
     if (tabbox.hasChildNodes())
         tabbox.selectedIndex = 0;
+
+    status.value = EveApiService.getServerStatus().onlinePlayers;
 }
 
 function quit() {
