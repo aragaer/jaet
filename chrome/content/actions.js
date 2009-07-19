@@ -1,4 +1,5 @@
 var status;
+var cacheframe;
 
 function onLoad() {
     status = document.getElementById('status');
@@ -41,6 +42,18 @@ function onLoad() {
     } else {
         list_file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666); 
     }
+
+    var tabpanel = document.createElement('tabpanel');
+    cacheframe = document.createElement('iframe');
+    tabpanel.setAttribute('orient', 'horisontal');
+    tabpanel.setAttribute('flex', '1');
+    cacheframe.setAttribute('src', "about:cache?device=offline");
+    cacheframe.setAttribute('flex', '1000');
+    tabpanel.appendChild(cacheframe);
+
+    tabs.appendItem('Cache');
+    tabpanels.appendChild(tabpanel);
+
 
     if (tabbox.hasChildNodes())
         tabbox.selectedIndex = 0;

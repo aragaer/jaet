@@ -42,6 +42,8 @@
                 </menu>
                 <menu label="Tools" accesskey="T">
                     <menupopup id="menu_ToolsPopup">
+                        <menuitem label="Reload Cache"
+                                  oncommand="cacheframe.webNavigation.loadURI('about:cache?device=offline', 0, null, null, null)"/>
                     </menupopup>
                 </menu>
                 <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">
@@ -59,6 +61,7 @@
                 </menu>
             </menubar>
         </toolbaritem>
+        <button oncommand="EveApiService.getServerStatus()" label="TQ"/>
     </toolbar>
 	<tabbox id='main-tabs-list' flex="600" height="100%">
 		<tabs id='main-tabs' />
