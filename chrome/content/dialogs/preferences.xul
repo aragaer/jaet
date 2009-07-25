@@ -28,31 +28,37 @@
             </vbox>
         </radiogroup>
      </prefpane>
-     <prefpane label="Exports" id="exports">
+     <prefpane label="Paths" id="paths">
 <script language="javascript">
 <![CDATA[
-function onPick() {
+function onPick(id, wantdir) {
     var fp = Cc["@mozilla.org/filepicker;1"].
             createInstance(Ci.nsIFilePicker);
-    fp.init(window, "&exports.title;", fp.modeGetFolder);
+    fp.init(window, "&exports.title;", wantdir ? fp.modeGetFolder : fp.modeOpen);
     fp.appendFilters(fp.filterAll);
     fp.show();
     if (fp.file) {
-        tx = document.getElementById("exports-path");
+        tx = document.getElementById(id+"-path");
         tx.value = fp.file.path;
-        document.getElementById('exports').userChangedValue(tx);        
+        document.getElementById('paths').userChangedValue(tx);
     }
 }
 ]]>    
 </script>        
         <preferences>
             <preference id="exports-dir" type="unichar" name="jaet.exports.dir"/>
+            <preference id="static-dump" type="unichar" name="jaet.static_dump_path"/>
         </preferences>
         
         <label value="&exports.title;" />
         <hbox>
             <textbox preference="exports-dir" id="exports-path" width="500"/>
-            <button onclick="onPick()" label="&exports.browse;"/>
+            <button onclick="onPick('exports', true)" label="&exports.browse;"/>
+        </hbox>
+        <label value="Static dump path" />
+        <hbox>
+            <textbox preference="static-dump" id="static-path" width="500"/>
+            <button onclick="onPick('static', false)" label="Browse..."/>
         </hbox>
         
     </prefpane>
