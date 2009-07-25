@@ -5,7 +5,6 @@ const Ci = Components.interfaces;
 const StorageService = Cc["@mozilla.org/storage/service;1"].
         getService(Ci.mozIStorageService);
 
-
 function DBH(db_file) {
     this.conn = StorageService.openDatabase(db_file);
     this.conn.executeSimpleSQL("PRAGMA synchronous = OFF");

@@ -6,7 +6,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const EveApiService = Cc['@aragaer.com/eve-api;1'].
         getService(Ci.nsIEveApiService);
-
 const ApiDB = init_api_db();
 
 function init_api_db() {
@@ -21,6 +20,8 @@ function init_api_db() {
         file.create(file.NORMAL_FILE_TYPE, 0700);
 
     var conn = new DBH(file);
+    var static = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefBranch).getCharPref("jaet.static_dump_path");
 
     try {
         conn.doSelectQuery("select 1 from accounts;");
@@ -34,7 +35,18 @@ function init_api_db() {
         conn.executeSimpleSQL("CREATE TABLE characters " +
             "(name char, id integer, account integer, corporation integer, primary key (id));");
     }
+    try {
+        conn.doSelectQuery("select 1 from assets;");
+    } catch (e) {
+        conn.executeSimpleSQL("CREATE TABLE assets " +
+            "(id integer, char integer, location integer, type integer, " +
+            "quantity integer, flag integer, singleton integer, primary key (id));");
+    }
+
+    conn.executeSimpleSQL("attach database '"+static+"' as static;");
+
     dump("ApiDB initialized\n");
+
     return conn;
 }
 
