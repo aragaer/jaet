@@ -10,14 +10,12 @@ const MaterialTreeView = Cc['@aragaer.com/materials-tree-view;1'].
         getService(Ci.nsITreeView);
 
 function init_market_dump() {
-    var file = DirectoryService.get('CurProcD', Ci.nsIFile);
-    file.append('data');
-    if (!file.exists()) {
-        alert("Static dump not found, aborting");
-        return -1;
-    }
+    var static = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefBranch).getCharPref("jaet.static_dump_path");
 
-    file.append('full.db');
+    var file = Cc["@mozilla.org/file/local;1"].
+            createInstance(Components.interfaces.nsILocalFile); 
+    file.initWithPath(static);
     if (!file.exists()) {
         alert("Static dump not found, aborting");
         return -1;
@@ -27,7 +25,8 @@ function init_market_dump() {
 }
 
 function init_market_cache() {
-    var file = DirectoryService.get('ProfD', Ci.nsIFile);
+    var file = Cc["@mozilla.org/file/directory_service;1"].
+            getService(Ci.nsIProperties).get('ProfD', Ci.nsIFile);
     file.append('data');
     if (!file.exists())
         file.create(file.DIRECTORY_TYPE, 0777);

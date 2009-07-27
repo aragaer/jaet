@@ -13,8 +13,6 @@
 	persist="screenX screenY width height sizemode">
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/tools/sqlite.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/tools/materialstreeview.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/pricing.js"/>
 	
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>

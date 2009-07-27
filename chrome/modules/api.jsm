@@ -43,7 +43,11 @@ function init_api_db() {
             "quantity integer, flag integer, singleton integer, primary key (id));");
     }
 
-    conn.executeSimpleSQL("attach database '"+static+"' as static;");
+    try {
+        conn.executeSimpleSQL("attach database '"+static+"' as static;");
+    } catch (e) {
+        alert("Failed to attach static dump database\nPlease update path in preferences.\n");
+    }
 
     dump("ApiDB initialized\n");
 
