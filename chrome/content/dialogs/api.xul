@@ -8,8 +8,6 @@
         flex="1" onload="on_api_load()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/tools/sqlite.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/tools/api.js"/>
 <script type="application/x-javascript" src="api.js"/>
 
     <command id="API:Close" oncommand="close_api()"/>

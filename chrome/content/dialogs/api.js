@@ -12,7 +12,7 @@ const AcctTreeView = {
     },
     setCellText : function (row,col,value) {
         accts[row].name = value;
-        update_acct_name(accts[row].id, accts[row].name);
+        EveApi.updateAcctName(accts[row].id, accts[row].name);
     },
     setTree: function (treebox) { this.treebox = treebox; },
     isContainer: function (row) { return false; },
@@ -93,7 +93,7 @@ function on_acct_select(aEvt) {
     api_ltd.value = accts[row].ltd;
     api_full.value = accts[row].full;
 
-    load_characters(api_id.value).forEach(function (char) {
+    EveApi.loadCharacters(api_id.value).forEach(function (char) {
         char_list.appendItem(char[0]);
     });
 
@@ -113,9 +113,9 @@ function check_data() {
     accts[row].ltd = document.getElementById('api-limited').value;
     accts[row].full = document.getElementById('api-full').value;
 
-    store_keys(accts[row]);
+    EveApi.storeKeys(accts[row]);
 
-    var ret = request_char_list(accts[row].id);
+    var ret = EveApi.requestCharList(accts[row].id);
     if (!ret) {
         alert(document.getElementById('wrong-creds').value);
         return;
@@ -128,13 +128,13 @@ function check_data() {
 }
 
 function add_data() {
-    add_empty_account();
+    EveApi.addEmptyAccount();
     reload_accts();
 }
 
 function reload_accts() {
     accts.splice(0);
-    get_accounts().forEach(function (a) {
+    EveApi.getAccounts().forEach(function (a) {
         accts.push(a);
     });
     acct_list.view = AcctTreeView;
@@ -148,6 +148,6 @@ function remove_data() {
     if (!confirm("Are you sure you want to delete accout '"+accts[row].name+"'?"))
         return;
 
-    delete_account(accts[row].id);
+    EveApi.deleteAccount(accts[row].id);
     reload_accts();
 }

@@ -57,17 +57,17 @@ function init_api_db() {
 function EveApiWrapper() { }
 
 EveApiWrapper.prototype = {
-    load_characters:    function (acct) {
+    loadCharacters:    function (acct) {
         return acct
             ? ApiDB.doSelectQuery("select name, id from characters where account='"+acct+"';")
             : [];
     },
 
-    add_empty_account:  function () {
+    addEmptyAccount:  function () {
         ApiDB.executeSimpleSQL("insert into accounts (name) values ('');");
     },
 
-    get_accounts:       function () {
+    getAccounts:       function () {
         var res = [];
         ApiDB.doSelectQuery("select name, id, acct_id, ltd, full from accounts;",
             function (array) {
@@ -84,18 +84,18 @@ EveApiWrapper.prototype = {
         return res;
     },
 
-    update_acct_name:   function (id, name) {
+    updateAcctName:   function (id, name) {
         // We need some way to escape data...
         ApiDB.executeSimpleSQL("update accounts set name='"+name+"' where id='"+id+"';");
     },
 
-    store_keys:         function (acct_data) {
+    storeKeys:         function (acct_data) {
         ApiDB.executeSimpleSQL("update accounts set acct_id='"+acct_data.acct_id+"', " +
             "ltd='"+acct_data.ltd+"', full='"+acct_data.full+"' " +
             "where id='"+acct_data.id+"';");
     },
 
-    request_char_list:  function (id) {
+    requestCharList:  function (id) {
         var data = ApiDB.doSelectQuery("select acct_id, ltd from accounts where id='"+id+"';")[0];
         var list = EveApiService.getCharacterList(data[0], data[1]);
         if (!list)
@@ -116,7 +116,7 @@ EveApiWrapper.prototype = {
         return result;
     },
 
-    delete_account:         function (id) {
+    deleteAccount:         function (id) {
         var acct_id = ApiDB.doSelectQuery("select acct_id from accounts where id='"+id+"';");
         ApiDB.executeSimpleSQL("delete from characters where account='"+acct_id+"';");
         ApiDB.executeSimpleSQL("delete from accounts where id='"+id+"';");
@@ -126,7 +126,7 @@ EveApiWrapper.prototype = {
         return ApiDB.doSelectQuery("select id from characters where name='"+name+"';");
     },
 
-    get_character_assets:   function (char_id) {
+    getCharacterAssets:   function (char_id) {
         var data = ApiDB.doSelectQuery("select acct_id, full from characters " +
                 "left join accounts on account=accounts.acct_id " +
                 "where characters.id="+char_id+";")[0];
@@ -136,10 +136,7 @@ EveApiWrapper.prototype = {
             return;
         }
         var assets = EveApiService.getCharacterAssets(data[0], data[1], char_id, {});
-        for each (i in assets) { 
-            var name = ApiDB.doSelectQuery("select typeName from static.invTypes where typeID='"+i.type+"';")
-            dump(i.id+" is "+name+"\n");
-        }
+        return assets;
     },
 };
 
