@@ -47,7 +47,7 @@ function onPick(id, wantdir) {
 </script>        
         <preferences>
             <preference id="exports-dir" type="unichar" name="jaet.exports.dir"/>
-            <preference id="static-dump" type="unichar" name="jaet.static_dump_path"/>
+            <preference id="static-dump" type="unichar" name="eve.static_dump_path"/>
         </preferences>
         
         <label value="&exports.title;" />

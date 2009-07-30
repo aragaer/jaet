@@ -21,7 +21,7 @@ function init_api_db() {
 
     var conn = new DBH(file);
     var static = Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefBranch).getCharPref("jaet.static_dump_path");
+            getService(Ci.nsIPrefBranch).getCharPref("eve.static_dump_path");
 
     try {
         conn.doSelectQuery("select 1 from accounts;");
