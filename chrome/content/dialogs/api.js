@@ -27,7 +27,7 @@ const AcctTreeView = {
 };
 
 function close_api() {
-    accts.forEach(store_keys);
+    accts.forEach(EveApi.storeKeys);
     window.close();
 }
 
@@ -73,7 +73,7 @@ function on_acct_dclick(aEvt) {
 function on_acct_select(aEvt) {
     var row = acct_list.currentIndex;
 
-    accts.forEach(store_keys);
+    accts.forEach(EveApi.storeKeys);
 
     if (row == -1) {
         api_id.value = '';

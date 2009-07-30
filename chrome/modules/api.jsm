@@ -105,7 +105,7 @@ EveApiWrapper.prototype = {
         for (var node = list.firstChild; node; node = node.nextSibling) {
             if (!node.hasAttributes())
                 continue;
-            res = [node.getAttribute('name'),
+            var res = [node.getAttribute('name'),
                 node.getAttribute('characterID'),
                 node.getAttribute('corporationID')
             ];
