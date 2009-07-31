@@ -2,15 +2,13 @@ const my_assets = [];
 var assetsTreeView = {
     rowCount : 10000,
     getCellText : function (row,column) {
+        var data = my_assets[row];
         switch(column.id) {
-        case 'item':
-            return my_assets[row].toString();
-        case 'loc':
-            return '';
-        case 'count':
-            return my_assets[row].quantity;
-        default:
-            return '';
+        case 'item':    return data.toString();
+        case 'loc':     return data.locationString();
+        case 'cont':    return data.containerString();
+        case 'count':   return data.quantity;
+        default:        return '';
         }
     },
     setTree: function (treebox) { this.treebox = treebox; },

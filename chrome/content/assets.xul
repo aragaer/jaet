@@ -27,6 +27,7 @@
 <!--                <treecol id="id" label="Location"/> -->
                 <treecol id="item"  label="Item" flex="10" primary="true" />
                 <treecol id="loc" label="Location" flex="3"/>
+                <treecol id="cont" label="Container" flex="3"/>
                 <treecol id="count" label="Quantity" flex="3"/>
             </treecols>
             <treechildren />
