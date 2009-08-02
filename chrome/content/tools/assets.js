@@ -42,3 +42,23 @@ function loadAssets() {
     document.getElementById('assets').view = assetsTreeView;
 }
 
+function loadCAssets() {
+    var ch = document.getElementById('character');
+    var chid = EveApi.getCharByName(ch.value);
+
+    if (chid == 0) {
+        alert("No character '"+ch.value+"' found");
+        return;
+    }
+
+    println("teh corp!\n");
+    var result = EveApi.getCorporationAssets(chid);
+
+    my_assets.splice(0);
+
+    result.forEach(function (a) {
+        my_assets.push(a);
+    });
+    assetsTreeView.rowCount = my_assets.length;
+    document.getElementById('assets').view = assetsTreeView;
+}

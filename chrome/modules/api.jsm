@@ -137,6 +137,20 @@ EveApiWrapper.prototype = {
         }
         var assets = EveApiService.getCharacterAssets(data[0], data[1], char_id, {});
         return assets;
+
+    },
+
+    getCorporationAssets:   function (char_id) {
+        var data = ApiDB.doSelectQuery("select acct_id, full from characters " +
+                "left join accounts on account=accounts.acct_id " +
+                "where characters.id="+char_id+";")[0];
+
+        if (!data[1] || !data[1].length) {
+            alert("No full key provided for character "+char_id);
+            return;
+        }
+        var assets = EveApiService.getCorporationAssets(data[0], data[1], char_id, {});
+        return assets;
     },
 };
 
