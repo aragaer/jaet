@@ -8,6 +8,7 @@
 ]>
 
 <window id="main" title="&title;" width="800" height="600"
+        onload="onAssetsLoad()"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	persist="screenX screenY width height sizemode">
 
@@ -18,7 +19,7 @@
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
     <vbox flex="1">
         <hbox>
-            <textbox id="character" value="Elegbara"/>
+            <textbox id="character" value="Calm River"/>
             <spacer width="20px" />
             <button label="Push me!" oncommand="loadCAssets()" />
         </hbox>

@@ -152,6 +152,11 @@ EveApiWrapper.prototype = {
         var assets = EveApiService.getCorporationAssets(data[0], data[1], char_id, {});
         return assets;
     },
+
+    getCorporationTowers: function (char_id) {
+        var assets = this.getCorporationAssets(char_id);
+        var result = assets.filter()
+    }
 };
 
 const EveApi = new EveApiWrapper();
