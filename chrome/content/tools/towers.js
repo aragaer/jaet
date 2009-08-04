@@ -1,15 +1,18 @@
 const towerList = [];
+var towersTree;
 var towersTreeView = {
     rowCount:   0,
     getCellText: function (aRow, aCol) {
         var data = towerList[aRow]; 
         switch(aCol.id) {
-        case 'name':    return "Name!!";
+        case 'name':    return 'name';
         case 'type':    return data.toString();
         case 'system':  return data.locationString();
         default:        return '';
         }
     },
+    setCellText: function (row, col) { return },
+    isEditable: function (row,col) { return col.id == 'name'; },
     isContainer: function (aRow) { return false; },
     isContainerOpen: function (aRow) { return false; },
     isContainerEmpty: function (aRow) { return false ; },
@@ -26,10 +29,27 @@ var towersTreeView = {
     getColumnProperties: function (colid,col,props) {}
 };
 
-var towersTree;
+function onTowerDclick(aEvt) {
+    var tbo = towersTree.treeBoxObject;
+    var row = { }, col = { }, child = { };
+
+    // get the row, col and child element at the point
+    tbo.getCellAt(aEvt.clientX, aEvt.clientY, row, col, child);
+
+    if (row.value == -1)
+        return;
+
+    towersTree.startEditing(row.value, towersTree.columns.getNamedColumn('name'));
+}
+
+function onTowerSelect(aEvt) {
+    var row = towersTree.currentIndex;
+}
 
 function onTowersLoad() {
     towersTree = document.getElementById('towerlist');
+    towersTree.addEventListener('select', onTowerSelect, true);
+    towersTree.addEventListener('dblclick', onTowerDclick, true);
 }
 
 function loadTowers() {

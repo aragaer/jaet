@@ -26,19 +26,19 @@
         <hbox flex="10">
             <tree id="towerlist" hidecolumnpicker="true" flex="1">
                 <treecols>
-                    <treecol id="name" flex="2"/>
-                    <treecol id="type" flex="3"/>
-                    <treecol id="system" flex="1"/>
+                    <treecol label="Name" id="name" flex="2"/>
+                    <treecol label="Type" id="type" flex="10"/>
+                    <treecol label="System" id="system" flex="1"/>
                 </treecols>
                 <treechildren />
             </tree>
             <splitter collapse="none" />
             <tree id="fuels" hidecolumnpicker="true" flex="1">
                 <treecols>
-                    <treecol id="fuel" flex="1"/>
-                    <treecol id="amount" flex="1"/>
-                    <treecol id="consumption" flex="1"/>
-                    <treecol id="time" flex="1"/>
+                    <treecol label="Fuel" id="type" flex="1"/>
+                    <treecol label="Amount" id="count" flex="1"/>
+                    <treecol label="Consumption" id="usage" flex="1"/>
+                    <treecol label="Time left" id="time" flex="1"/>
                 </treecols>
                 <treechildren /> 
             </tree>
