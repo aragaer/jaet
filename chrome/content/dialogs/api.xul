@@ -23,7 +23,7 @@
                 <caption label="&api.acct.list.title;"/>
                 <tree id="acct-list" flex="1" hidecolumnpicker="true">
                     <treecols>
-                        <treecol id="name" flex="10"/>
+                        <treecol id="name" flex="10" hideheader="true"/>
                     </treecols>
                     <treechildren/>
                 </tree>
