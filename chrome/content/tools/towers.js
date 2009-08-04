@@ -5,13 +5,17 @@ var towersTreeView = {
     getCellText: function (aRow, aCol) {
         var data = towerList[aRow]; 
         switch(aCol.id) {
-        case 'name':    return 'name';
+        case 'name':    return data.name || 'Enter name...';
         case 'type':    return data.toString();
         case 'system':  return data.locationString();
         default:        return '';
         }
     },
-    setCellText: function (row, col) { return },
+    setCellText: function (row, col, value) {
+        if (col.id != 'name')
+            return;
+        towerList[row].name = value;
+    },
     isEditable: function (row,col) { return col.id == 'name'; },
     isContainer: function (aRow) { return false; },
     isContainerOpen: function (aRow) { return false; },
