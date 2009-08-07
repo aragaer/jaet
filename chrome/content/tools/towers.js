@@ -48,6 +48,7 @@ function onTowerDclick(aEvt) {
 
 function onTowerSelect(aEvt) {
     var row = towersTree.currentIndex;
+    var resources = towerList[row].getFuel({});
 }
 
 function onTowersLoad() {
@@ -71,7 +72,7 @@ function loadTowers() {
         if (a.type.group.id != Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
             return;
 
-        towerList.push(a);
+        towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
     });
     
     towersTreeView.rowCount = towerList.length;
