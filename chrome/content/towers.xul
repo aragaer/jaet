@@ -35,10 +35,10 @@
             <splitter collapse="none" />
             <tree id="fuels" hidecolumnpicker="true" flex="1">
                 <treecols>
-                    <treecol label="Fuel" id="type" flex="1"/>
+                    <treecol label="Fuel type" id="type" flex="10"/>
                     <treecol label="Amount" id="count" flex="1"/>
-                    <treecol label="Consumption" id="usage" flex="1"/>
-                    <treecol label="Time left" id="time" flex="1"/>
+                    <treecol label="Usage" id="usage" flex="1"/>
+                    <treecol label="Time left" id="time" flex="3"/>
                 </treecols>
                 <treechildren /> 
             </tree>
