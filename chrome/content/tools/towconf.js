@@ -1,22 +1,19 @@
 const towerList = [];
+const towerTypes = [];
 var towersTree, fuelTree;
 var towersTreeView = {
     rowCount:   0,
     getCellText: function (aRow, aCol) {
-        var data = towerList[aRow];
+        var t = towerList[aRow];
+        var tt = towerTypes[aRow];
         switch(aCol.id) {
-        case 'name':    return data.name || 'Enter name...';
-        case 'type':    return data.toString();
-        case 'system':  return data.locationString();
+        case 'name':    return t.name;
+        case 'grid':    return t.powerUsage + '/' + tt.powerGrid;
+        case 'cpu':     return t.CPUUsage + '/' + tt.CPU;
         default:        return '';
         }
     },
-    setCellText: function (row, col, value) {
-        if (col.id != 'name')
-            return;
-        towerList[row].name = value;
-    },
-    isEditable: function (row,col) { return col.id == 'name'; },
+    isEditable: function (row,col) { return false; },
     isContainer: function (aRow) { return false; },
     isContainerOpen: function (aRow) { return false; },
     isContainerEmpty: function (aRow) { return false ; },
@@ -48,11 +45,16 @@ function loadTowers() {
 
     var result = EveApi.getCorporationAssets(chid);
     towerList.splice(0);
+    towerTypes.splice(0);
     result.forEach(function (a) {
         if (a.type.group.id != Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
             return;
 
         towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
+        var tt = a.type.QueryInterface(Ci.nsIEveControlTowerType);
+        for (i in tt)
+            println(i + " = " + tt[i]);
+        towerTypes.push(tt);
     });
     
     towersTreeView.rowCount = towerList.length;

@@ -19,7 +19,7 @@
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
     <vbox flex="1">
         <hbox>
-            <textbox id="character" value="Elegbara"/>
+            <textbox id="character" value="Calm River"/>
             <spacer width="20px" />
             <button label="Push me!" oncommand="loadTowers()" />
         </hbox>
