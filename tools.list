@@ -1,3 +1,4 @@
+tconf	Control Tower Configuration	chrome://jaet/content/towconf.xul
 towers	Control Towers		chrome://jaet/content/towers.xul
 corpas	Corporation Assets	chrome://jaet/content/cass.xul
 assets	Assets	                chrome://jaet/content/assets.xul

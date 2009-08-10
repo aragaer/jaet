@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="jaet.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
+%jaet;
+]>
+
+<window id="main" title="&title;" width="800" height="600"
+        onload="onTowersLoad()"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	persist="screenX screenY width height sizemode">
+
+<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/tools/towconf.js"/>
+
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+    <vbox flex="1">
+        <hbox>
+            <textbox id="character" value="Elegbara"/>
+            <spacer width="20px" />
+            <button label="Push me!" oncommand="loadTowers()" />
+        </hbox>
+        <stack>
+        <hbox flex="1">
+            <tree id="towers" flex="10">
+                <treecols>
+                    <treecol id="name" label="Name" flex="3"/>
+                    <treecol id="grid" label="Grid" flex="1"/>
+                    <treecol id="cpu" label="CPU" flex="1"/>
+                </treecols>
+                <treechildren />
+            </tree>
+        </hbox>
+            <hbox>
+            <spacer flex="1"/>
+            <vbox>
+            <spacer flex="1"/>
+            <image src="file:///home/aragaer/Pictures/jaet/03.png" style="opacity:0.3" height="570" width="940"/>
+            <spacer flex="1"/>
+            </vbox>
+            <spacer flex="1"/>
+            </hbox>
+ 
+        </stack>
+    </vbox>
+</window>
+
