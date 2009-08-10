@@ -17,34 +17,38 @@
 
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-    <vbox flex="1">
-        <hbox>
-            <textbox id="character" value="Calm River"/>
-            <spacer width="20px" />
-            <button label="Push me!" oncommand="loadTowers()" />
-        </hbox>
-        <stack>
-        <hbox flex="1">
-            <tree id="towers" flex="10">
-                <treecols>
-                    <treecol id="name" label="Name" flex="3"/>
-                    <treecol id="grid" label="Grid" flex="1"/>
-                    <treecol id="cpu" label="CPU" flex="1"/>
-                </treecols>
-                <treechildren />
-            </tree>
-        </hbox>
-            <hbox>
-            <spacer flex="1"/>
-            <vbox>
-            <spacer flex="1"/>
-            <image src="file:///home/aragaer/Pictures/jaet/03.png" style="opacity:0.3" height="570" width="940"/>
-            <spacer flex="1"/>
-            </vbox>
-            <spacer flex="1"/>
-            </hbox>
- 
-        </stack>
-    </vbox>
+    <grid flex="1">
+        <columns>
+            <column flex="5"/>
+            <splitter collapse="none"/>
+            <column flex="1"/>
+        </columns>
+        <rows>
+            <row>
+                <hbox>
+                    <textbox id="character" value="Calm River"/>
+                    <spacer width="20px" />
+                    <button label="Push me!" oncommand="loadTowers()" />
+                </hbox>
+                <textbox id="system" value="Goram" style="float:right"/>
+            </row>
+            <row flex="1">
+                <tree id="towers" flex="10" hidecolumnpicker="true">
+                    <treecols>
+                        <treecol id="name" label="Name" flex="3"/>
+                        <treecol id="grid" label="Grid" flex="1"/>
+                        <treecol id="cpu" label="CPU" flex="1"/>
+                    </treecols>
+                    <treechildren />
+                </tree>
+                <tree id="structures" flex="1" hidecolumnpicker="true">
+                    <treecols>
+                        <treecol id="struct" label="Structure" flex="1"/>
+                    </treecols>
+                    <treecildren/>
+                </tree>
+            </row>
+        </rows>
+    </grid>
 </window>
 

@@ -1,6 +1,6 @@
 const towerList = [];
 const towerTypes = [];
-var towersTree, fuelTree;
+var towersTree, structTree;
 var towersTreeView = {
     rowCount:   0,
     getCellText: function (aRow, aCol) {
@@ -32,6 +32,7 @@ var towersTreeView = {
 
 function onTowersLoad() {
     towersTree = document.getElementById('towers');
+    structTree = document.getElementById('structures');
 }
 
 function loadTowers() {
@@ -51,10 +52,7 @@ function loadTowers() {
             return;
 
         towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
-        var tt = a.type.QueryInterface(Ci.nsIEveControlTowerType);
-        for (i in tt)
-            println(i + " = " + tt[i]);
-        towerTypes.push(tt);
+        towerTypes.push(a.type.QueryInterface(Ci.nsIEveControlTowerType));
     });
     
     towersTreeView.rowCount = towerList.length;
