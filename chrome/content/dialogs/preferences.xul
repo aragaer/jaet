@@ -38,7 +38,7 @@ function onPick(id, wantdir) {
     fp.appendFilters(fp.filterAll);
     fp.show();
     if (fp.file) {
-        tx = document.getElementById(id+"-path");
+        var tx = document.getElementById(id+"-path");
         tx.value = fp.file.path;
         document.getElementById('paths').userChangedValue(tx);
     }
