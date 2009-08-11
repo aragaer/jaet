@@ -1,9 +1,9 @@
 const towerList = [];
-var towersTree;
+var towersTree, fuelTree;
 var towersTreeView = {
     rowCount:   0,
     getCellText: function (aRow, aCol) {
-        var data = towerList[aRow]; 
+        var data = towerList[aRow];
         switch(aCol.id) {
         case 'name':    return data.name || 'Enter name...';
         case 'type':    return data.toString();
@@ -17,6 +17,54 @@ var towersTreeView = {
         towerList[row].name = value;
     },
     isEditable: function (row,col) { return col.id == 'name'; },
+    isContainer: function (aRow) { return false; },
+    isContainerOpen: function (aRow) { return false; },
+    isContainerEmpty: function (aRow) { return false ; },
+    getLevel: function (aRow) { return 0; },
+    getParentIndex: function (aRow) { return 0; },
+    hasNextSibling: function (aRow, aAfterRow) { return 0; },
+    toggleOpenState: function (aRow) { return; },
+    setTree: function (treebox) { this.treebox = treebox; },
+    isSeparator: function (row) { return false; },
+    isSorted: function () { return false; },
+    getImageSrc: function (row,col) { return null; },
+    getRowProperties: function (row,props) {},
+    getCellProperties: function (row,col,props) {},
+    getColumnProperties: function (colid,col,props) {}
+};
+
+function convertHoursToReadable(hours) {
+    var h = hours % 24;
+    hours = (hours - h)/ 24;
+    var d = hours % 7;
+    var w = (hours - d)/7;
+    var res = [];
+    if (w)
+        res.push(w+"w");
+    if (w || d)
+        res.push(d+"d");
+    res.push(h+"h");
+    return res.join(" ");
+}
+
+const fuelList = [];
+var fuelTreeView = {
+    rowCount:   0,
+    getCellText: function (aRow, aCol) {
+        var data = fuelList[aRow];
+        switch(aCol.id) {
+        case 'type':    return data.toString();
+        case 'count':   return data.count;
+        case 'usage':   return data.realConsumption;
+        case 'time':
+            var h = data.hoursLeft();
+            return h == -1
+                ? 'unused'
+                : convertHoursToReadable(h);
+        default:        return '';
+        }
+    },
+    isEditable: function (row,col) { return false },
     isContainer: function (aRow) { return false; },
     isContainerOpen: function (aRow) { return false; },
     isContainerEmpty: function (aRow) { return false ; },
@@ -48,10 +96,17 @@ function onTowerDclick(aEvt) {
 
 function onTowerSelect(aEvt) {
     var row = towersTree.currentIndex;
+    var resources = towerList[row].getFuel({});
+    fuelList.splice(0);
+    for each (i in resources)
+        fuelList.push(i);
+    fuelTreeView.rowCount = fuelList.length;
+    fuelTree.view = fuelTreeView;
 }
 
 function onTowersLoad() {
     towersTree = document.getElementById('towerlist');
+    fuelTree = document.getElementById('fuels');
     towersTree.addEventListener('select', onTowerSelect, true);
     towersTree.addEventListener('dblclick', onTowerDclick, true);
 }
@@ -71,7 +126,7 @@ function loadTowers() {
         if (a.type.group.id != Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
             return;
 
-        towerList.push(a);
+        towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
     });
     
     towersTreeView.rowCount = towerList.length;
