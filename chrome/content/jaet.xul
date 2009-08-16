@@ -38,10 +38,6 @@
                                   command="File:Exit"/>
                     </menupopup>
                 </menu>
-                <menu label="Tools" accesskey="T">
-                    <menupopup id="menu_ToolsPopup">
-                    </menupopup>
-                </menu>
                 <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">
                     <menupopup id="menu_SettingsPopup">
                         <menuitem label="&menu_settings.pref.label;"

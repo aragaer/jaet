@@ -25,11 +25,10 @@
         <rows>
             <row>
                 <hbox>
-                    <textbox id="character" value="Calm River"/>
+                    <textbox id="character" value=""/>
                     <spacer width="20px" />
                     <button label="Push me!" oncommand="loadTowers()" />
                 </hbox>
-                <textbox id="system" value="Goram"/>
             </row>
             <row flex="1">
                 <tree id="towers" flex="5" hidecolumnpicker="true">
