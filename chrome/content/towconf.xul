@@ -14,9 +14,8 @@
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/towconf.js"/>
-
-<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script src="chrome://global/content/nsDragAndDrop.js"/>
+<script src="chrome://global/content/nsTransferable.js"/>
     <grid flex="1">
         <columns>
             <column flex="5"/>
@@ -30,22 +29,25 @@
                     <spacer width="20px" />
                     <button label="Push me!" oncommand="loadTowers()" />
                 </hbox>
-                <textbox id="system" value="Goram" style="float:right"/>
+                <textbox id="system" value="Goram"/>
             </row>
             <row flex="1">
-                <tree id="towers" flex="10" hidecolumnpicker="true">
+                <tree id="towers" flex="5" hidecolumnpicker="true">
                     <treecols>
                         <treecol id="name" label="Name" flex="3"/>
                         <treecol id="grid" label="Grid" flex="1"/>
                         <treecol id="cpu" label="CPU" flex="1"/>
                     </treecols>
-                    <treechildren />
+                    <treechildren ondragover="nsDragAndDrop.dragOver(event, structDragObserver)"
+                                  ondragdrop="nsDragAndDrop.drop(event, structDragObserver)"/>
                 </tree>
                 <tree id="structures" flex="1" hidecolumnpicker="true">
                     <treecols>
-                        <treecol id="struct" label="Structure" flex="1"/>
+                        <treecol id="struct" label="Structure" flex="4"/>
+                        <treecol id="tower" label="Tower" flex="1"/>
                     </treecols>
-                    <treecildren/>
+                    <treechildren draggable="true" flex="1"
+                        ondraggesture="nsDragAndDrop.startDrag(event, structDragObserver);"/>
                 </tree>
             </row>
         </rows>

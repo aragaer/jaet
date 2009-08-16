@@ -156,7 +156,19 @@ EveApiWrapper.prototype = {
     getCorporationTowers: function (char_id) {
         var assets = this.getCorporationAssets(char_id);
         var result = assets.filter()
-    }
+    },
+
+    getStarbase: function (itemID) {
+        var data = ApiDB.doSelectQuery("select starbaseID " +
+            "from starbaseConfig where itemID='"+itemID+"';");
+
+        return +data[0];
+    },
+
+    setStarbase: function (item, starbaseID) {
+        ApiDB.executeSimpleSQL("replace into starbaseConfig values(" +
+            [item.id, starbaseID, 1, item.type.id].join(',')+");");
+    },
 };
 
 const EveApi = new EveApiWrapper();
