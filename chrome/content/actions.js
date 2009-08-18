@@ -60,17 +60,6 @@ function doQuit (aForceQuit) {
             : Ci.nsIAppStartup.eAttemptQuit);
 }
 
-function pricing() {
-    println("Pricing activated.");
-    openDialog("pricing.xul", "",
-            "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
-}
-
-function market() {
-    println("Market activated.");
-    openDialog("market.xul", "",
-            "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
-}
 
 function setupPreferences() {
     println("Preferences activated.");
@@ -82,13 +71,6 @@ function setupApiKeys() {
     openDialog("dialogs/api.xul", "",
             "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
 }
-
-function openExtManager() {
-    println("Extension manager activated.");
-    openDialog("chrome://mozapps/content/extensions/extensions.xul?type=extensions",
-            "", "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
-}
-
 function openPreferences(paneID) {
     var instantApply = getBoolPref("browser.preferences.instantApply", false);
     var features = "chrome,titlebar,toolbar,centerscreen"
@@ -106,7 +88,3 @@ function openPreferences(paneID) {
         openDialog("dialogs/preferences.xul", "Preferences", features, paneID);
 }
 
-function onAbout (event) {
-    println("onAbout activated.");
-    window.openDialog("dialogs/about.xul", "_blank", "chrome,close,modal");
-}

@@ -20,7 +20,7 @@
         <columns>
             <column flex="5"/>
             <splitter collapse="none"/>
-            <column flex="1"/>
+            <column flex="3"/>
         </columns>
         <rows>
             <row>

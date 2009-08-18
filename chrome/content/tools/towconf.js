@@ -9,7 +9,7 @@ var towersTreeView = {
         var t = towerList[aRow];
         var tt = towerTypes[aRow];
         switch(aCol.id) {
-        case 'name':    return t.name;
+        case 'name':    return t.name || tt.name;
         case 'grid':    return t.powerUsage + '/' + tt.powerGrid;
         case 'cpu':     return t.CPUUsage + '/' + tt.CPU;
         default:        return '';
@@ -69,7 +69,6 @@ function toOpenWindowByType(inType, uri) {
 function onTowersLoad() {
     towersTree = document.getElementById('towers');
     structTree = document.getElementById('structures');
-    loadTowers();
 }
 
 function isSystem(loc) {
@@ -79,8 +78,6 @@ function isSystem(loc) {
 function loadTowers() {
     var ch = document.getElementById('character');
     var chid = EveApi.getCharByName(ch.value);
-    var sys = document.getElementById('system');
-    var sysname = sys.value;
 
     if (chid == 0) {
         alert("No character '"+ch.value+"' found");
@@ -99,7 +96,6 @@ function loadTowers() {
             towerNames["id"+a.id] = a.name;
         } else if (a.type.id != Ci.nsEveItemTypeID.TYPE_OFFICE
                 && isSystem(a.location)) {
-            println(a.type.name+" in "+a.locationString()+"("+a.location+")");
             structList.push(a);
         }
     });
@@ -133,20 +129,20 @@ var structDragObserver = {
         // get the row, col and child element at the point
         tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, child);
         attlist[this.draggedStructure] = towerList[row.value].name;
-        println("Grid usage is "+towerList[row.value].powerUsage+" now");
         EveApi.setStarbase(structList[this.draggedStructure], towerList[row.value].id);
-        println("Grid usage is "+towerList[row.value].powerUsage+" now");
         this.draggedStructure = -1;
         tbo.invalidateRow(row.value);
     },
     onDragOver: function (aEvent, aFlavour, aDragSession) {
         var tbo = towersTreeView.treebox;
         var row = { }, col = { }, child = { };
+        dump('-');
 
         // get the row, col and child element at the point
         tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, child);
 
         aDragSession.canDrop = (row.value != -1);
+
     },
     getSupportedFlavours: function() {
         var flavors = new FlavourSet();

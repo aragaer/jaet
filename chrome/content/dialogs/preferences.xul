@@ -28,39 +28,5 @@
             </vbox>
         </radiogroup>
      </prefpane>
-     <prefpane label="Paths" id="paths">
-<script language="javascript">
-<![CDATA[
-function onPick(id, wantdir) {
-    var fp = Cc["@mozilla.org/filepicker;1"].
-            createInstance(Ci.nsIFilePicker);
-    fp.init(window, "&exports.title;", wantdir ? fp.modeGetFolder : fp.modeOpen);
-    fp.appendFilters(fp.filterAll);
-    fp.show();
-    if (fp.file) {
-        var tx = document.getElementById(id+"-path");
-        tx.value = fp.file.path;
-        document.getElementById('paths').userChangedValue(tx);
-    }
-}
-]]>    
-</script>        
-        <preferences>
-            <preference id="exports-dir" type="unichar" name="jaet.exports.dir"/>
-            <preference id="static-dump" type="unichar" name="eve.static_dump_path"/>
-        </preferences>
-        
-        <label value="&exports.title;" />
-        <hbox>
-            <textbox preference="exports-dir" id="exports-path" width="500"/>
-            <button onclick="onPick('exports', true)" label="&exports.browse;"/>
-        </hbox>
-        <label value="Static dump path" />
-        <hbox>
-            <textbox preference="static-dump" id="static-path" width="500"/>
-            <button onclick="onPick('static', false)" label="Browse..."/>
-        </hbox>
-        
-    </prefpane>
-    <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+     <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 </prefwindow>
