@@ -38,8 +38,10 @@ var structTreeView = {
     rowCount:   0,
     getCellText: function (aRow, aCol) {
         switch (aCol.id) {
-        case 'struct': return structList[aRow].type.name;
-        case 'tower' : return attlist[aRow];
+        case 'struct':
+            return '';
+        case 'tower' :
+            return [structList[aRow].type.name, attlist[aRow]].join('<br />');
         default: break;
         }
     },
@@ -54,7 +56,10 @@ var structTreeView = {
     setTree: function (treebox) { this.treebox = treebox; },
     isSeparator: function (row) { return false; },
     isSorted: function () { return false; },
-    getImageSrc: function (row,col) { return null; },
+    getImageSrc: function (row,col) {
+        if (col.id == 'struct')
+            return 'chrome://jaet/content/images/'+structList[row].type.id+'.png';
+    },
     getRowProperties: function (row,props) {},
     getCellProperties: function (row,col,props) {},
     getColumnProperties: function (colid,col,props) {},

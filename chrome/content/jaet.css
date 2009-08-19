@@ -13,3 +13,8 @@ treechildren:-moz-tree-line(selected, focus) {
 treechildren:-moz-tree-indentation() {
     width: 16px;
 }
+
+tree#structures treechildren::-moz-tree-row {
+    height: 128px;
+}
+
