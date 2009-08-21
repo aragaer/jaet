@@ -99,8 +99,7 @@ function loadTowers() {
             towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
             towerTypes.push(a.type.QueryInterface(Ci.nsIEveControlTowerType));
             towerNames["id"+a.id] = a.name;
-        } else if (a.type.id != Ci.nsEveItemTypeID.TYPE_OFFICE
-                && isSystem(a.location)) {
+        } else if (isSystem(a.location)) {
             structList.push(a);
         }
     });
@@ -136,18 +135,16 @@ var structDragObserver = {
         attlist[this.draggedStructure] = towerList[row.value].name;
         EveApi.setStarbase(structList[this.draggedStructure], towerList[row.value].id);
         this.draggedStructure = -1;
-        tbo.invalidateRow(row.value);
+        loadTowers(); // Reload the power/CPU usage values
     },
     onDragOver: function (aEvent, aFlavour, aDragSession) {
         var tbo = towersTreeView.treebox;
         var row = { }, col = { }, child = { };
-        dump('-');
 
         // get the row, col and child element at the point
         tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, child);
 
         aDragSession.canDrop = (row.value != -1);
-
     },
     getSupportedFlavours: function() {
         var flavors = new FlavourSet();
