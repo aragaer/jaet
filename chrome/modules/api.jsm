@@ -36,6 +36,12 @@ function init_api_db() {
             "(name char, id integer, account integer, corporation integer, primary key (id));");
     }
     try {
+        conn.doSelectQuery("select 1 from corporations;");
+    } catch (e) {
+        conn.executeSimpleSQL("CREATE TABLE corporations " +
+            "(name char, ticker char, id integer, alliance integer, primary key (id));");
+    }
+    try {
         conn.doSelectQuery("select 1 from assets;");
     } catch (e) {
         conn.executeSimpleSQL("CREATE TABLE assets " +
@@ -126,6 +132,10 @@ EveApiWrapper.prototype = {
         return ApiDB.doSelectQuery("select id from characters where name='"+name+"';");
     },
 
+    getCorpByName:       function (name) {
+        return ApiDB.doSelectQuery("select id from corporations where name='"+name+"';");
+    },
+
     getCharacterAssets:   function (char_id) {
         var data = ApiDB.doSelectQuery("select acct_id, full from characters " +
                 "left join accounts on account=accounts.acct_id " +
@@ -140,16 +150,20 @@ EveApiWrapper.prototype = {
 
     },
 
-    getCorporationAssets:   function (char_id) {
-        var data = ApiDB.doSelectQuery("select acct_id, full from characters " +
+    getListOfCorps:         function () {
+        return ApiDB.doSelectQuery("select id, name from corporations;");
+    },
+
+    getCorporationAssets:   function (corp_id) {
+        var data = ApiDB.doSelectQuery("select acct_id, full, characters.id from characters " +
                 "left join accounts on account=accounts.acct_id " +
-                "where characters.id="+char_id+";")[0];
+                "where characters.corporation="+corp_id+" and full is not NULL;")[0];
 
         if (!data[1] || !data[1].length) {
-            alert("No full key provided for character "+char_id);
+            alert("No full key provided for corporation "+corp_id);
             return;
         }
-        var assets = EveApiService.getCorporationAssets(data[0], data[1], char_id, {});
+        var assets = EveApiService.getCorporationAssets(data[0], data[1], data[2], {});
         return assets;
     },
 

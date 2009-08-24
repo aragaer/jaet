@@ -82,10 +82,10 @@ function isSystem(loc) {
 
 function loadTowers() {
     var ch = document.getElementById('character');
-    var chid = EveApi.getCharByName(ch.value);
+    var chid = EveApi.getCorpByName(ch.value);
 
     if (chid == 0) {
-        alert("No character '"+ch.value+"' found");
+        alert("No corporation '"+ch.value+"' found");
         return;
     }
 
