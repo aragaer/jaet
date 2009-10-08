@@ -72,8 +72,10 @@ function toOpenWindowByType(inType, uri) {
 }
 
 function onTowersLoad() {
-    towersTree = document.getElementById('towers');
-    structTree = document.getElementById('structures');
+    var corplist = document.getElementById("corporation");
+    EveApi.getListOfCorps().forEach(function (a) {
+        corplist.appendItem(a[1], a[0]);
+    })
 }
 
 function isSystem(loc) {
@@ -81,15 +83,15 @@ function isSystem(loc) {
 }
 
 function loadTowers() {
-    var ch = document.getElementById('character');
-    var chid = EveApi.getCorpByName(ch.value);
+    var corp = document.getElementById('corporation');
+    var corpid = EveApi.getCorpByName(ch.value);
 
-    if (chid == 0) {
+    if (corpid == 0) {
         alert("No corporation '"+ch.value+"' found");
         return;
     }
 
-    var result = EveApi.getCorporationAssets(chid);
+    var result = EveApi.getCorporationAssets(corpid);
     towerList.splice(0);
     towerTypes.splice(0);
     structList.splice(0);

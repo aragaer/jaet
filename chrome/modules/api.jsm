@@ -113,11 +113,14 @@ EveApiWrapper.prototype = {
                 continue;
             var res = [node.getAttribute('name'),
                 node.getAttribute('characterID'),
-                node.getAttribute('corporationID')
+                node.getAttribute('corporationID'),
+                node.getAttribute('corporationName')
             ];
             result.push(res);
             ApiDB.executeSimpleSQL("replace into characters (name, id, account, corporation) " +
                 "values ('"+res[0]+"',"+res[1]+", "+data[0]+","+res[2]+");");
+            ApiDB.executeSimpleSQL("replace into corporations (name, id) " +
+                "values ('"+res[3]+"', "+res[2]+");");
         }
         return result;
     },
@@ -151,7 +154,8 @@ EveApiWrapper.prototype = {
     },
 
     getListOfCorps:         function () {
-        return ApiDB.doSelectQuery("select id, name from corporations;");
+        var res = ApiDB.doSelectQuery("select id, name from corporations;");
+        return res;
     },
 
     getCorporationAssets:   function (corp_id) {
@@ -167,9 +171,20 @@ EveApiWrapper.prototype = {
         return assets;
     },
 
-    getCorporationTowers: function (char_id) {
+    getCorporationTowers: function (char_id, system) {
         var assets = this.getCorporationAssets(char_id);
-        var result = assets.filter()
+        var result = assets.filter(
+            system
+                ?   function (a) {
+                        return a.location == system &&
+                            a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER;
+                    }
+                :   function (a) {
+                        return a.type.group.id == Ci.nsIEveItemGroupID.GROUP_CONTROL_TOWER;
+                    }
+            ).map(function (a) {
+                return a.QueryInterface(Ci.nsIEveControlTower);
+            });
     },
 
     getStarbase: function (itemID) {
@@ -186,4 +201,8 @@ EveApiWrapper.prototype = {
 };
 
 const EveApi = new EveApiWrapper();
+
+function isSystem(loc) {
+    return loc < 60000000;
+}
 

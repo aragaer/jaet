@@ -16,30 +16,11 @@
 <script type="application/x-javascript" src="chrome://jaet/content/tools/towconf.js"/>
 <script src="chrome://global/content/nsDragAndDrop.js"/>
 <script src="chrome://global/content/nsTransferable.js"/>
-    <hbox>
-        <textbox id="character" value=""/>
+    <hbox height="40px">
+        <menulist id="corporation" />
         <spacer width="20px" />
-        <button label="Push me!" oncommand="loadTowers()" />
+        <menulist id="system" />
     </hbox>
-    <hbox flex="1">
-        <tree id="towers" flex="2" hidecolumnpicker="true">
-            <treecols>
-                <treecol id="name" label="Name" flex="3"/>
-                <treecol id="grid" label="Grid" flex="1"/>
-                <treecol id="cpu" label="CPU" flex="1"/>
-            </treecols>
-            <treechildren ondragover="nsDragAndDrop.dragOver(event, structDragObserver)"
-                          ondragdrop="nsDragAndDrop.drop(event, structDragObserver)"/>
-        </tree>
-        <splitter collapse="none"/>
-        <tree id="structures" flex="1" hidecolumnpicker="true">
-            <treecols>
-                <treecol id="struct" label="Structure" width="128px" />
-                <treecol id="tower" label="Tower" flex="1"/>
-            </treecols>
-            <treechildren draggable="true" flex="1"
-                          ondraggesture="nsDragAndDrop.startDrag(event, structDragObserver);"/>
-        </tree>
-    </hbox>
+    <richlistbox id="towers" flex="1" />
 </window>
 
