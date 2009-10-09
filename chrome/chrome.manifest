@@ -1,6 +1,6 @@
 content jaet content/
 locale jaet en-US locale/en_US/
-skin jaet classic/1.0 skin
+skin jaet classic/1.0 skin/
 locale branding en-US locale/branding/
 resource jaet modules/
 

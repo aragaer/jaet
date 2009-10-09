@@ -1,3 +1,4 @@
+// vim:syn=javascript
 EXPORTED_SYMBOLS = ["EveApi"];
 
 Components.utils.import("resource://jaet/sqlite.jsm");
@@ -63,6 +64,7 @@ function init_api_db() {
 function EveApiWrapper() { }
 
 EveApiWrapper.prototype = {
+    db: ApiDB,
     loadCharacters:    function (acct) {
         return acct
             ? ApiDB.doSelectQuery("select name, id from characters where account='"+acct+"';")
@@ -173,14 +175,15 @@ EveApiWrapper.prototype = {
 
     getCorporationTowers: function (char_id, system) {
         var assets = this.getCorporationAssets(char_id);
-        var result = assets.filter(
+        return assets.filter(
             system
                 ?   function (a) {
                         return a.location == system &&
                             a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER;
                     }
                 :   function (a) {
-                        return a.type.group.id == Ci.nsIEveItemGroupID.GROUP_CONTROL_TOWER;
+                        return isSystem(a.location) &&
+                            a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER;
                     }
             ).map(function (a) {
                 return a.QueryInterface(Ci.nsIEveControlTower);

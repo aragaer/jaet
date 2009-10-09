@@ -2,69 +2,6 @@ const towerList = [];
 const towerTypes = [];
 const structList = [];
 const towerNames = {};
-var towersTree, structTree;
-var towersTreeView = {
-    rowCount:   0,
-    getCellText: function (aRow, aCol) {
-        var t = towerList[aRow];
-        var tt = towerTypes[aRow];
-        switch(aCol.id) {
-        case 'name':    return t.name || tt.name;
-        case 'grid':    return t.powerUsage + '/' + tt.powerGrid;
-        case 'cpu':     return t.CPUUsage + '/' + tt.CPU;
-        default:        return '';
-        }
-    },
-    isEditable: function (row,col) { return false; },
-    isContainer: function (aRow) { return false; },
-    isContainerOpen: function (aRow) { return false; },
-    isContainerEmpty: function (aRow) { return false ; },
-    getLevel: function (aRow) { return 0; },
-    getParentIndex: function (aRow) { return -1; },
-    hasNextSibling: function (aRow, aAfterRow) { return 0; },
-    toggleOpenState: function (aRow) { return; },
-    setTree: function (treebox) { this.treebox = treebox; },
-    isSeparator: function (row) { return false; },
-    isSorted: function () { return false; },
-    getImageSrc: function (row,col) { return null; },
-    getRowProperties: function (row,props) {},
-    getCellProperties: function (row,col,props) {},
-    getColumnProperties: function (colid,col,props) {},
-    canDrop: function (index, orientation) { return false; },
-    drop: function (index, orientation) { },
-};
-const attlist = [];
-var structTreeView = {
-    rowCount:   0,
-    getCellText: function (aRow, aCol) {
-        switch (aCol.id) {
-        case 'struct':
-            return '';
-        case 'tower' :
-            return [structList[aRow].type.name, attlist[aRow]].join('<br />');
-        default: break;
-        }
-    },
-    isEditable: function (row,col) { return false; },
-    isContainer: function (aRow) { return false; },
-    isContainerOpen: function (aRow) { return false; },
-    isContainerEmpty: function (aRow) { return false ; },
-    getLevel: function (aRow) { return 0; },
-    getParentIndex: function (aRow) { return -1; },
-    hasNextSibling: function (aRow, aAfterRow) { return 0; },
-    toggleOpenState: function (aRow) { return; },
-    setTree: function (treebox) { this.treebox = treebox; },
-    isSeparator: function (row) { return false; },
-    isSorted: function () { return false; },
-    getImageSrc: function (row,col) {
-        if (col.id == 'struct')
-            return 'chrome://jaet/content/images/'+structList[row].type.id+'.png';
-    },
-    getRowProperties: function (row,props) {},
-    getCellProperties: function (row,col,props) {},
-    getColumnProperties: function (colid,col,props) {},
-    canDrop: function (index, orientation) { return false; },
-};
 
 function toOpenWindowByType(inType, uri) {
   var winopts = "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar";
@@ -72,10 +9,84 @@ function toOpenWindowByType(inType, uri) {
 }
 
 function onTowersLoad() {
+    var clist = document.getElementById("corporation");
+    var slist = document.getElementById("system");
+    CorpRefresh();
+    setInterval(CorpRefresh, 60000);
+    clist.addEventListener("command", function () {
+            println("Corp changed to "+clist.label);
+            SysRefresh(clist.value);
+        }, true);
+    slist.addEventListener("command", function () {
+            println("System changed to "+clist.label);
+            TowersRefresh(slist.value, clist.value);
+        }, true);
+}
+
+function CorpRefresh() {
     var corplist = document.getElementById("corporation");
+    var idx = corplist.selectedIndex;
+    corplist.removeAllItems();
     EveApi.getListOfCorps().forEach(function (a) {
         corplist.appendItem(a[1], a[0]);
-    })
+    });
+    corplist.selectedIndex = idx;
+    SysRefresh(corplist.value);
+}
+
+function SysRefresh(corpid) {
+    var sysList = document.getElementById("system");
+    var systems = {}
+    if (corpid) {
+        EveApi.getCorporationTowers(corpid).forEach(function (a) {
+            systems[a.location] = 1;
+        });
+    }
+    delete(systems[0]);
+    var idx = sysList.selectedIndex;
+    if (idx < 0)
+        idx = 0;
+    sysList.removeAllItems();
+    for (sys in systems) {
+        var name = EveApi.db.doSelectQuery("select solarSystemName from static.mapSolarSystems where solarSystemId="+sys+";");
+        sysList.appendItem(name, sys);
+    }
+    if (!sysList.itemCount) {
+        sysList.appendItem("-", -1);
+    }
+
+    sysList.selectedIndex = idx;
+    TowersRefresh(sysList.value, corpid);
+}
+
+function TowersRefresh(system, corpid) {
+    var towlist = document.getElementById("towers");
+    var structList = [];
+    while (towlist.itemCount)
+        towlist.removeItemAt(0);
+    if (system == -1)
+        return;
+
+    EveApi.getCorporationAssets(corpid).forEach(function (a) {
+        if (a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER) {
+            println("appending item "+a.type.name);
+            var itm = towlist.appendItem(a.name || a.type.name, a.id);
+            println("done, setting class");
+            itm.setAttribute("class", "tower");
+            println("done");
+//            towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
+//            towerTypes.push(a.type.QueryInterface(Ci.nsIEveControlTowerType));
+//            towerNames["id"+a.id] = a.name;
+        } else if (isSystem(a.location)) {
+            structList.push(a);
+        }
+    });
+    if (structList.length) {
+        towlist.insertItemAt(0, "Unused", 0);
+    }
+
+    if (towlist.itemCount == 0)
+        towlist.appendItem("No towers found", -1);
 }
 
 function isSystem(loc) {
@@ -83,14 +94,6 @@ function isSystem(loc) {
 }
 
 function loadTowers() {
-    var corp = document.getElementById('corporation');
-    var corpid = EveApi.getCorpByName(ch.value);
-
-    if (corpid == 0) {
-        alert("No corporation '"+ch.value+"' found");
-        return;
-    }
-
     var result = EveApi.getCorporationAssets(corpid);
     towerList.splice(0);
     towerTypes.splice(0);

@@ -1,3 +1,3 @@
-SUBDIRS = content locale modules
+SUBDIRS = content locale modules skin
 chromedir = $(pkgdatadir)/chrome
 chrome_DATA = chrome.manifest

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
 <?xml-stylesheet href="jaet.css" type="text/css"?>
 
 <!DOCTYPE window [
@@ -16,9 +17,11 @@
 <script type="application/x-javascript" src="chrome://jaet/content/tools/towconf.js"/>
 <script src="chrome://global/content/nsDragAndDrop.js"/>
 <script src="chrome://global/content/nsTransferable.js"/>
-    <hbox height="40px">
+    <hbox>
+        <label value="Corporation: " control="corporation" />
         <menulist id="corporation" />
         <spacer width="20px" />
+        <label value="System: " control="system" />
         <menulist id="system" />
     </hbox>
     <richlistbox id="towers" flex="1" />
