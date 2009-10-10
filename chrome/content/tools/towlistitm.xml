@@ -10,7 +10,7 @@
                 <xul:hbox anonid="label" width="100%">
                     <xul:label xbl:inherits="value=name" class="header" />
                 </xul:hbox>
-                <xul:hbox anonid="fit"/>
+                <xul:richlistbox anonid="fit" orient="horisontal" style="border: none"/>
             </xul:vbox>
             </xul:hbox>
         </content>
@@ -53,8 +53,36 @@
                 ]]></setter>
                 <getter />
             </property>
+            <property name="id" onget="return this.value" />
             <property name="structures">
                 <setter><![CDATA[
+                    var fit = this.fit;
+                    this.structs = val;
+                    while (this.fit.firstChild)
+                        this.fit.removeChild(this.fit.firstChild);
+                    val.forEach(function (el) {
+                        var itm = document.createElement('richlistitem');
+                        itm.setAttribute('name', el.type.name);
+                        fit.appendChild(itm);
+                        itm.item = el;
+                    });
+                ]]></setter>
+            </property>
+        </implementation>
+    </binding>
+    <binding id="struct">
+        <content>
+            <xul:image src="" anonid="img" width="100px" height="100px" />
+        </content>
+        <implementation>
+            <constructor><![CDATA[
+                this._img = document.getAnonymousElementByAttribute(this,"anonid","img");
+                this._item.addEventListener('draggesture', function () { alert('woof!') });
+            ]]></constructor>
+            <property name="item">
+                <setter><![CDATA[
+                    this._item = val;
+                    this._img.src = "chrome://jaet/content/images/"+val.type.id+".png";
                 ]]></setter>
             </property>
         </implementation>

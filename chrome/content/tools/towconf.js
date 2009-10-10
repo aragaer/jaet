@@ -63,7 +63,9 @@ function SysRefresh(corpid) {
 
 function TowersRefresh(system, corpid) {
     var towlist = document.getElementById("towers");
-    var structList = [];
+    towerList.splice(0);
+    structList.splice(0);
+    var structsPerItm = {};
     while (towlist.itemCount)
         towlist.removeItemAt(0);
 
@@ -74,12 +76,23 @@ function TowersRefresh(system, corpid) {
             item.className = 'tower';
             towlist.appendChild(item);
             item.tower = a;
+            towerList.push(item);
         } else if (isSystem(a.location)) {
+            var pos = EveApi.getStarbase(a.id);
             structList.push(a);
+            if (!pos)
+                return;
+            if (!structsPerItm[pos])
+                structsPerItm[pos] = [];
+            structsPerItm[pos].push(a);
         }
     });
     if (towlist.itemCount == 0)
         towlist.appendItem("No towers found", -1);
+
+    towerList.forEach(function (t) {
+        t.structures = structsPerItm[t.id];
+    });
 
     if (structList.length) {
         var item = document.createElement('richlistitem');

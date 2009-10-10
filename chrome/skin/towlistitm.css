@@ -5,3 +5,6 @@ richlistitem.tower {
     -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#towlistitem') !important;
 }
 
+richlistbox[anonid="fit"] richlistitem {
+    -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#struct') !important;
+}
