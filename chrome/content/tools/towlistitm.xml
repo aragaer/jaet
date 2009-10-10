@@ -3,13 +3,61 @@
     xmlns="http://www.mozilla.org/xbl"
     xmlns:xbl="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <binding id="towlistitm" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <binding id="towlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
         <content>
-            <label value="123" />
+            <xul:hbox anonid="wrap" flex="1">
+            <xul:vbox flex="1">
+                <xul:hbox anonid="label" width="100%">
+                    <xul:label xbl:inherits="value=name" class="header" />
+                </xul:hbox>
+                <xul:hbox anonid="fit"/>
+            </xul:vbox>
+            </xul:hbox>
         </content>
-        <handlers>
-            <handler event="click" action="alert('have a day')"/>
-        </handlers>
+        <implementation>
+            <constructor><![CDATA[
+                this.db = Components.classes["@aragaer/eve/db;1"].getService(Components.interfaces.nsIEveDBService);
+                this.fit = document.getAnonymousElementByAttribute(this,"anonid","fit");
+            ]]></constructor>
+            <property name="tower">
+                <setter><![CDATA[
+                    this._tower = val.QueryInterface(Components.interfaces.nsIEveControlTower);
+                    this._tt = val.type.QueryInterface(Components.interfaces.nsIEveControlTowerType);
+                    var ttid = this._tt.id;
+                    var labelbox = document.getAnonymousElementByAttribute(this,"anonid","label");
+                    if (!this.img) {
+                        var wrap = document.getAnonymousElementByAttribute(this,"anonid","wrap");
+                        this.img = document.createElement('image');
+                        wrap.insertBefore(this.img, wrap.firstChild);
+                    }
+                    this.img.setAttribute('src', "chrome://jaet/content/images/"+ttid+".png");
+                    if (!this.tlabel) {
+                        this.tlabel = document.createElement("label");
+                        labelbox.appendChild(this.tlabel);
+                    }
+                    this.tlabel.setAttribute('value',"("+this._tt.name+")");
+                    if (!this.conslabel) {
+                        var sp = document.createElement('spacer');
+                        sp.setAttribute('flex', "100");
+                        labelbox.appendChild(sp);
+                        this.conslabel = document.createElement('label');
+                        labelbox.appendChild(this.conslabel);
+                    }
+
+                    this.conslabel.value = "Power: "+this._tower.powerUsage + '/' + this._tt.powerGrid +
+                            "; CPU: "+this._tower.CPUUsage + '/' + this._tt.CPU;
+
+                    this.setAttribute("name", this._tower.name);
+                    this.setAttribute("value", this._tower.id);
+                    return val;
+                ]]></setter>
+                <getter />
+            </property>
+            <property name="structures">
+                <setter><![CDATA[
+                ]]></setter>
+            </property>
+        </implementation>
     </binding>
 </bindings>
 

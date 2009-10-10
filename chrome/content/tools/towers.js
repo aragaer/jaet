@@ -109,16 +109,30 @@ function onTowersLoad() {
     fuelTree = document.getElementById('fuels');
     towersTree.addEventListener('select', onTowerSelect, true);
     towersTree.addEventListener('dblclick', onTowerDclick, true);
+
+    var clist = document.getElementById("corporation");
+    CorpRefresh();
+    setInterval(CorpRefresh, 60000);
+    clist.addEventListener("command", function () {
+            println("Corp changed to "+clist.label);
+            loadTowers();
+        }, true);
+
+}
+function CorpRefresh() {
+    var corplist = document.getElementById("corporation");
+    var idx = corplist.selectedIndex;
+    corplist.removeAllItems();
+    EveApi.getListOfCorps().forEach(function (a) {
+        corplist.appendItem(a[1], a[0]);
+    });
+    corplist.selectedIndex = idx;
+    if (idx == -1 && corplist.itemCount)
+        corplist.selectedIndex = 0;
 }
 
 function loadTowers() {
-    var ch = document.getElementById('character');
-    var chid = EveApi.getCorpByName(ch.value);
-
-    if (chid == 0) {
-        alert("No corporation '"+ch.value+"' found");
-        return;
-    }
+    var chid = document.getElementById('corporation').value;
 
     var result = EveApi.getCorporationAssets(chid);
     towerList.splice(0);

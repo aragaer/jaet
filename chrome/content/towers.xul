@@ -19,9 +19,8 @@
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
     <vbox flex="1">
         <hbox>
-            <textbox id="character" value=""/>
-            <spacer width="20px" />
-            <button label="Push me!" oncommand="loadTowers()" />
+            <label value="Corporation: " control="corporation" />
+            <menulist id="corporation" />
         </hbox>
         <hbox flex="10">
             <tree id="towerlist" hidecolumnpicker="true" flex="1">

@@ -30,6 +30,8 @@ function CorpRefresh() {
     EveApi.getListOfCorps().forEach(function (a) {
         corplist.appendItem(a[1], a[0]);
     });
+    if (idx == -1 && corplist.itemCount)
+        idx = 0;
     corplist.selectedIndex = idx;
     SysRefresh(corplist.value);
 }
@@ -64,29 +66,28 @@ function TowersRefresh(system, corpid) {
     var structList = [];
     while (towlist.itemCount)
         towlist.removeItemAt(0);
-    if (system == -1)
-        return;
 
     EveApi.getCorporationAssets(corpid).forEach(function (a) {
         if (a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER) {
-            println("appending item "+a.type.name);
-            var itm = towlist.appendItem(a.name || a.type.name, a.id);
-            println("done, setting class");
-            itm.setAttribute("class", "tower");
-            println("done");
-//            towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
-//            towerTypes.push(a.type.QueryInterface(Ci.nsIEveControlTowerType));
-//            towerNames["id"+a.id] = a.name;
+            var item = document.createElement('richlistitem');
+            item.setAttribute('name', a.name);
+            item.className = 'tower';
+            towlist.appendChild(item);
+            item.tower = a;
         } else if (isSystem(a.location)) {
             structList.push(a);
         }
     });
-    if (structList.length) {
-        towlist.insertItemAt(0, "Unused", 0);
-    }
-
     if (towlist.itemCount == 0)
         towlist.appendItem("No towers found", -1);
+
+    if (structList.length) {
+        var item = document.createElement('richlistitem');
+        item.className = 'tower';
+        item.setAttribute('name', "Unused");
+        item.setAttribute('value', 0);
+        towlist.insertBefore(item, towlist.firstChild);
+    }
 }
 
 function isSystem(loc) {
@@ -157,3 +158,4 @@ var structDragObserver = {
         return flavors;
     }
 };
+

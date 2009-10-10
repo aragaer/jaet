@@ -1,5 +1,7 @@
 richlistitem.tower {
-    border-left: thin solid blue;
-    -moz-binding:  url('chrome://jaet/content/tools/towlistitm.xml#towlistitem') !important;
+    border: 1px solid black;
+    margin: 2px;
+    height: 128px;
+    -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#towlistitem') !important;
 }
 
