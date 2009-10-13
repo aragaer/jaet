@@ -60,12 +60,15 @@
                     this.structs = val;
                     while (this.fit.firstChild)
                         this.fit.removeChild(this.fit.firstChild);
+                    if (!val)
+                        return val;
                     val.forEach(function (el) {
                         var itm = document.createElement('richlistitem');
                         itm.setAttribute('name', el.type.name);
                         fit.appendChild(itm);
                         itm.item = el;
                     });
+                    return val;
                 ]]></setter>
             </property>
         </implementation>

@@ -98,13 +98,25 @@ EveApiWrapper.prototype = {
     },
 
     storeKeys:         function (acct_data) {
+        var ltd = acct_data.ltd;
+        var full = acct_data.full;
+        var ltd_string = 'ltd=' + (
+                (ltd && ltd != '')
+                    ? "'"+ltd+"'"
+                    : "NULL"
+                );
+
+        var full_string = 'full=' + (
+                (full && full != '')
+                    ? "'"+full+"'"
+                    : "NULL"
+                );
         ApiDB.executeSimpleSQL("update accounts set acct_id='"+acct_data.acct_id+"', " +
-            "ltd='"+acct_data.ltd+"', full='"+acct_data.full+"' " +
-            "where id='"+acct_data.id+"';");
+            ltd_string + ', ' + full_string + "where id='"+acct_data.id+"';");
     },
 
     requestCharList:  function (id) {
-        var data = ApiDB.doSelectQuery("select acct_id, ltd from accounts where id='"+id+"';")[0];
+        var data = ApiDB.doSelectQuery("select acct_id, coalesce(ltd, full) from accounts where id='"+id+"';")[0];
         var list = EveApiService.getCharacterList(data[0], data[1]);
         if (!list)
             return;

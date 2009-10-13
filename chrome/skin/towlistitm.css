@@ -5,6 +5,11 @@ richlistitem.tower {
     -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#towlistitem') !important;
 }
 
+richlistitem.tower hbox[anonid="wrap"] image {
+    margin: 2px;
+    border: 1px solid black;
+}
+
 richlistbox[anonid="fit"] richlistitem {
     -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#struct') !important;
 }

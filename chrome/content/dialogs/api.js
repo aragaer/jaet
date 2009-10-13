@@ -34,8 +34,9 @@ function close_api() {
 function activate_check() {
     var id = api_id.value;
     var ltd = api_ltd.value;
+    var full = api_full.value;
 
-    document.getElementById('btn-check').disabled = (id == '' || ltd == '');
+    document.getElementById('btn-check').disabled = (id == '' || (ltd == '' && full == ''));
 }
 
 function on_api_load() {
@@ -85,9 +86,10 @@ function on_acct_select(aEvt) {
         api_full.disabled = true;
         document.getElementById('btn-check').disabled = true;
         document.getElementById('btn-remove').disabled = true;
-        char_list_empty();
         return;
     }
+
+    empty_char_list();
 
     api_id.value = accts[row].acct_id;
     api_ltd.value = accts[row].ltd;

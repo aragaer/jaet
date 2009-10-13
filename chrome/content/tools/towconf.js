@@ -69,7 +69,9 @@ function TowersRefresh(system, corpid) {
     while (towlist.itemCount)
         towlist.removeItemAt(0);
 
-    EveApi.getCorporationAssets(corpid).forEach(function (a) {
+    EveApi.getCorporationAssets(corpid).
+            filter(function (a) { return a.location == system }).
+            forEach(function (a) {
         if (a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER) {
             var item = document.createElement('richlistitem');
             item.setAttribute('name', a.name);
@@ -97,7 +99,7 @@ function TowersRefresh(system, corpid) {
     if (structList.length) {
         var item = document.createElement('richlistitem');
         item.className = 'tower';
-        item.setAttribute('name', "Unused");
+        item.setAttribute('name', "Unused in "+system);
         item.setAttribute('value', 0);
         towlist.insertBefore(item, towlist.firstChild);
     }
