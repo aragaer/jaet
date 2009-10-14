@@ -10,18 +10,20 @@
                 <xul:hbox anonid="label" width="100%">
                     <xul:label xbl:inherits="value=name" class="header" />
                 </xul:hbox>
-                <xul:richlistbox anonid="fit" orient="horisontal" style="border: none"/>
+                <xul:hbox style="border: none; overflow-x: auto; overflow-y: hidden">
+                    <xul:hbox anonid="pos_fit"/>
+                </xul:hbox>
             </xul:vbox>
             </xul:hbox>
         </content>
         <implementation>
             <constructor><![CDATA[
                 this.db = Components.classes["@aragaer/eve/db;1"].getService(Components.interfaces.nsIEveDBService);
-                this.fit = document.getAnonymousElementByAttribute(this,"anonid","fit");
+                this.fit = document.getAnonymousElementByAttribute(this,"anonid","pos_fit");
             ]]></constructor>
             <property name="tower">
                 <setter><![CDATA[
-                    this._tower = val.QueryInterface(Components.interfaces.nsIEveControlTower);
+                    this._tower = val; /* Make sure we get nsIEveControlTower! */
                     this._tt = val.type.QueryInterface(Components.interfaces.nsIEveControlTowerType);
                     var ttid = this._tt.id;
                     var labelbox = document.getAnonymousElementByAttribute(this,"anonid","label");
@@ -57,38 +59,60 @@
             <property name="structures">
                 <setter><![CDATA[
                     var fit = this.fit;
+                    var observer = this.dragobserver;
                     this.structs = val;
                     while (this.fit.firstChild)
                         this.fit.removeChild(this.fit.firstChild);
                     if (!val)
                         return val;
                     val.forEach(function (el) {
-                        var itm = document.createElement('richlistitem');
+                        var itm = document.createElement('image');
                         itm.setAttribute('name', el.type.name);
                         fit.appendChild(itm);
                         itm.item = el;
+                        itm.observer = observer;
                     });
                     return val;
                 ]]></setter>
             </property>
         </implementation>
+        <handlers>
+            <handler event="dragenter"><![CDATA[
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+            ]]></handler>
+            <handler event="dragover"><![CDATA[
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+            ]]></handler>
+            <handler event="dragdrop"><![CDATA[
+
+            ]]></handler>
+        </handlers>
     </binding>
-    <binding id="struct">
-        <content>
-            <xul:image src="" anonid="img" width="100px" height="100px" />
-        </content>
+    <binding id="struct" extends="xul:image">
         <implementation>
-            <constructor><![CDATA[
-                this._img = document.getAnonymousElementByAttribute(this,"anonid","img");
-                this._item.addEventListener('draggesture', function () { alert('woof!') });
-            ]]></constructor>
             <property name="item">
                 <setter><![CDATA[
                     this._item = val;
-                    this._img.src = "chrome://jaet/content/images/"+val.type.id+".png";
+                    this.setAttribute('src', "chrome://jaet/content/images/"+val.type.id+".png");
+                    this.setAttribute('tooltiptext', val.type.name);
+                    return val;
                 ]]></setter>
             </property>
+            <property name="draggable" value="true" />
         </implementation>
+        <handlers>
+            <handler event="dragstart"><![CDATA[
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", this._item.type.name);
+            ]]></handler>
+            <handler event="dragend"><![CDATA[
+                if (event.dataTransfer.dropEffect != "move")
+                    return;
+                dump(this._item.type.name+" dropped\n");
+            ]]></handler>
+        </handlers>
     </binding>
 </bindings>
 

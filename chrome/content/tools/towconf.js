@@ -16,6 +16,7 @@ function onTowersLoad() {
     clist.addEventListener("command", function () {
             println("Corp changed to "+clist.label);
             SysRefresh(clist.value);
+            TowersRefresh(slist.value, clist.value);
         }, true);
     slist.addEventListener("command", function () {
             println("System changed to "+clist.label);
@@ -58,7 +59,6 @@ function SysRefresh(corpid) {
     }
 
     sysList.selectedIndex = idx;
-    TowersRefresh(sysList.value, corpid);
 }
 
 function TowersRefresh(system, corpid) {
@@ -77,18 +77,19 @@ function TowersRefresh(system, corpid) {
             item.setAttribute('name', a.name);
             item.className = 'tower';
             towlist.appendChild(item);
-            item.tower = a;
+            item.tower = a.QueryInterface(Ci.nsIEveControlTower);
             towerList.push(item);
         } else if (isSystem(a.location)) {
             var pos = EveApi.getStarbase(a.id);
             structList.push(a);
             if (!pos)
-                return;
+                pos = 'unused';
             if (!structsPerItm[pos])
                 structsPerItm[pos] = [];
             structsPerItm[pos].push(a);
         }
     });
+
     if (towlist.itemCount == 0)
         towlist.appendItem("No towers found", -1);
 
@@ -99,78 +100,14 @@ function TowersRefresh(system, corpid) {
     if (structList.length) {
         var item = document.createElement('richlistitem');
         item.className = 'tower';
-        item.setAttribute('name', "Unused in "+system);
+        item.setAttribute('name', "Unused/Offline");
         item.setAttribute('value', 0);
         towlist.insertBefore(item, towlist.firstChild);
+        item.structures = structsPerItm.unused || [];
     }
 }
 
 function isSystem(loc) {
     return loc < 60000000;
 }
-
-function loadTowers() {
-    var result = EveApi.getCorporationAssets(corpid);
-    towerList.splice(0);
-    towerTypes.splice(0);
-    structList.splice(0);
-    attlist.splice(0);
-    result.forEach(function (a) {
-        if (a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER) {
-            towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
-            towerTypes.push(a.type.QueryInterface(Ci.nsIEveControlTowerType));
-            towerNames["id"+a.id] = a.name;
-        } else if (isSystem(a.location)) {
-            structList.push(a);
-        }
-    });
-
-    structList.forEach(function (a) {
-        var sb = EveApi.getStarbase(a.id);
-        attlist.push(sb ? towerNames["id"+sb] : "");
-    });
-    
-    towersTreeView.rowCount = towerList.length;
-    structTreeView.rowCount = structList.length;
-    towersTree.view = towersTreeView;
-    structTree.view = structTreeView;
-}
-
-var structDragObserver = {
-    draggedStructure : -1,
-    onDragStart: function (aEvent, aXferData, aDragAction) {
-        var row = structTree.currentIndex;
-        if (row == -1)
-            return;
-
-        aXferData.data = new TransferData();
-        aXferData.data.addDataForFlavour('text/unicode', structList[row].type.name);
-        this.draggedStructure = row;
-    },
-    onDrop: function (aEvent, aXferData, aDragSession) {
-        var tbo = towersTreeView.treebox;
-        var row = { }, col = { }, child = { };
-
-        // get the row, col and child element at the point
-        tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, child);
-        attlist[this.draggedStructure] = towerList[row.value].name;
-        EveApi.setStarbase(structList[this.draggedStructure], towerList[row.value].id);
-        this.draggedStructure = -1;
-        loadTowers(); // Reload the power/CPU usage values
-    },
-    onDragOver: function (aEvent, aFlavour, aDragSession) {
-        var tbo = towersTreeView.treebox;
-        var row = { }, col = { }, child = { };
-
-        // get the row, col and child element at the point
-        tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, child);
-
-        aDragSession.canDrop = (row.value != -1);
-    },
-    getSupportedFlavours: function() {
-        var flavors = new FlavourSet();
-        flavors.appendFlavour('text/unicode');
-        return flavors;
-    }
-};
 
