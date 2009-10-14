@@ -70,11 +70,32 @@
                         itm.setAttribute('name', el.type.name);
                         fit.appendChild(itm);
                         itm.item = el;
-                        itm.observer = observer;
+                        itm.pos = this;
                     });
                     return val;
                 ]]></setter>
             </property>
+            <method name="add_struct">
+                <parameter name="struct" />
+                <body><![CDATA[
+                    this.fit.appendChild(struct);
+                    this.structs.push(struct.item);
+                    struct.pos = this;
+                ]]></body>
+            </method>
+            <method name="del_struct">
+                <parameter name="struct" />
+                <body><![CDATA[
+                    this.fit.removeChild(struct);
+                    var i;
+                    for (i = 0; i < this.structs.length; i++)
+                        if (this.structs[i] == struct) {
+                            splice(i, 1);
+                            break;
+                        }
+                    struct.pos = null;
+                ]]></body>
+            </method>
         </implementation>
         <handlers>
             <handler event="dragenter"><![CDATA[
@@ -86,7 +107,8 @@
                 event.dataTransfer.dropEffect = "move";
             ]]></handler>
             <handler event="dragdrop"><![CDATA[
-
+                var item = event.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
+                item.
             ]]></handler>
         </handlers>
     </binding>
@@ -99,18 +121,24 @@
                     this.setAttribute('tooltiptext', val.type.name);
                     return val;
                 ]]></setter>
+                <getter><![CDATA[
+                    return this._item;
+                ]]></getter>
             </property>
             <property name="draggable" value="true" />
+            <method name="moveTo">
+                <parameter name="to" />
+                <body><![CDATA[
+                    this.pos.del_struct(this);
+                    to.add_struct(this);
+                ]]></body>
+            </method>
         </implementation>
         <handlers>
             <handler event="dragstart"><![CDATA[
                 event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.mozSetDataAt('application/x-moz-node', this, 0);
                 event.dataTransfer.setData("text/plain", this._item.type.name);
-            ]]></handler>
-            <handler event="dragend"><![CDATA[
-                if (event.dataTransfer.dropEffect != "move")
-                    return;
-                dump(this._item.type.name+" dropped\n");
             ]]></handler>
         </handlers>
     </binding>

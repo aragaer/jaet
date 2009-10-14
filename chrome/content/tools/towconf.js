@@ -1,13 +1,3 @@
-const towerList = [];
-const towerTypes = [];
-const structList = [];
-const towerNames = {};
-
-function toOpenWindowByType(inType, uri) {
-  var winopts = "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar";
-  window.open(uri, "_blank", winopts);
-}
-
 function onTowersLoad() {
     var clist = document.getElementById("corporation");
     var slist = document.getElementById("system");
