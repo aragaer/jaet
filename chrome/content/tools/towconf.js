@@ -1,3 +1,6 @@
+const towerList = [];
+const structList = [];
+
 function onTowersLoad() {
     var clist = document.getElementById("corporation");
     var slist = document.getElementById("system");
@@ -68,9 +71,10 @@ function TowersRefresh(system, corpid) {
             item.className = 'tower';
             towlist.appendChild(item);
             item.tower = a.QueryInterface(Ci.nsIEveControlTower);
+            item.api = EveApi;
             towerList.push(item);
         } else if (isSystem(a.location)) {
-            var pos = EveApi.getStarbase(a.id);
+            var pos = +EveApi.getStarbase(a.id); // Force it to be number
             structList.push(a);
             if (!pos)
                 pos = 'unused';
@@ -84,7 +88,7 @@ function TowersRefresh(system, corpid) {
         towlist.appendItem("No towers found", -1);
 
     towerList.forEach(function (t) {
-        t.structures = structsPerItm[t.id];
+        t.structures = structsPerItm[t.id] || [];
     });
 
     if (structList.length) {
@@ -94,6 +98,7 @@ function TowersRefresh(system, corpid) {
         item.setAttribute('value', 0);
         towlist.insertBefore(item, towlist.firstChild);
         item.structures = structsPerItm.unused || [];
+        item.api = EveApi;
     }
 }
 

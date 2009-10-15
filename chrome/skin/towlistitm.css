@@ -7,8 +7,8 @@ richlistitem.tower {
     -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#towlistitem') !important;
 }
 
-.tower:-moz-drag-over {
-    background: #c0c0ff;
+richlistitem.tower:-moz-drag-over {
+    background: #c0c0ff !important;
 }
 
 richlistitem.tower hbox[anonid="wrap"] image {

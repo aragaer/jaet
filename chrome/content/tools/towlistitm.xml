@@ -53,12 +53,14 @@
                     this.setAttribute("value", this._tower.id);
                     return val;
                 ]]></setter>
-                <getter />
+                <getter><![CDATA[
+                    return this._tower;
+                ]]></getter>
             </property>
             <property name="id" onget="return this.value" />
             <property name="structures">
                 <setter><![CDATA[
-                    var fit = this.fit;
+                    var me = this;
                     var observer = this.dragobserver;
                     this.structs = val;
                     while (this.fit.firstChild)
@@ -68,9 +70,9 @@
                     val.forEach(function (el) {
                         var itm = document.createElement('image');
                         itm.setAttribute('name', el.type.name);
-                        fit.appendChild(itm);
+                        me.fit.appendChild(itm);
                         itm.item = el;
-                        itm.pos = this;
+                        itm.pos = me;
                     });
                     return val;
                 ]]></setter>
@@ -108,7 +110,7 @@
             ]]></handler>
             <handler event="dragdrop"><![CDATA[
                 var item = event.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
-                item.
+                item.moveTo(this);
             ]]></handler>
         </handlers>
     </binding>
@@ -125,10 +127,13 @@
                     return this._item;
                 ]]></getter>
             </property>
+            <property name="width" value="100px" />
+            <property name="height" value="100px" />
             <property name="draggable" value="true" />
             <method name="moveTo">
                 <parameter name="to" />
                 <body><![CDATA[
+                    to.api.setStarbase(this._item, to.tower ? to.tower.id : 0);
                     this.pos.del_struct(this);
                     to.add_struct(this);
                 ]]></body>
