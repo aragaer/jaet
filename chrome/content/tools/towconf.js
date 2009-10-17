@@ -1,4 +1,4 @@
-const towerList = [];
+const towerList = {};
 const structList = [];
 
 function onTowersLoad() {
@@ -7,12 +7,10 @@ function onTowersLoad() {
     CorpRefresh();
     setInterval(CorpRefresh, 60000);
     clist.addEventListener("command", function () {
-            println("Corp changed to "+clist.label);
             SysRefresh(clist.value);
             TowersRefresh(slist.value, clist.value);
         }, true);
     slist.addEventListener("command", function () {
-            println("System changed to "+clist.label);
             TowersRefresh(slist.value, clist.value);
         }, true);
 }
@@ -21,45 +19,59 @@ function CorpRefresh() {
     var corplist = document.getElementById("corporation");
     var idx = corplist.selectedIndex;
     corplist.removeAllItems();
-    EveApi.getListOfCorps().forEach(function (a) {
-        corplist.appendItem(a[1], a[0]);
-    });
+    for each (let [id, name] in EveApi.getListOfCorps())
+        corplist.appendItem(name, id);
     if (idx == -1 && corplist.itemCount)
         idx = 0;
     corplist.selectedIndex = idx;
     SysRefresh(corplist.value);
 }
 
+const ApiDB = EveApi.db;
+var sysNameStm, sysNameAsyncParam;
+const sysNameQuery = "select solarSystemName from static.mapSolarSystems where solarSystemId=:loc;";
 function SysRefresh(corpid) {
     var sysList = document.getElementById("system");
-    var systems = {}
-    if (corpid) {
-        EveApi.getCorporationTowers(corpid).forEach(function (a) {
-            systems[a.location] = 1;
-        });
-    }
-    delete(systems[0]);
+    var systems = {};
     var idx = sysList.selectedIndex;
+    var thread = Cc["@mozilla.org/thread-manager;1"].
+            getService(Ci.nsIThreadManager).currentThread;
+    var threadsCount = 0;
+    
     if (idx < 0)
         idx = 0;
+
     sysList.removeAllItems();
-    for (sys in systems) {
-        var name = EveApi.db.doSelectQuery("select solarSystemName from static.mapSolarSystems where solarSystemId="+sys+";");
-        sysList.appendItem(name, sys);
-    }
-    if (!sysList.itemCount) {
+    if (corpid)
+        for each (let {location: l} in EveApi.getCorporationTowers(corpid))
+            if (l && !systems[l]++) {
+                if (!sysNameStm) {
+                    sysNameStm = ApiDB.conn.createStatement(sysNameQuery);
+                    sysNameAsyncParam = { handleError: ApiDB.handleError }
+                }
+                sysNameAsyncParam.handleResult =
+                        ApiDB.handleSingleScalarResult('solarSystemName',
+                            function (name) { sysList.appendItem(name, l); });
+                sysNameAsyncParam.handleCompletion =
+                        function (aReason) { threadsCount-- };
+                sysNameStm.params.loc = l;
+                threadsCount++;
+                sysNameStm.executeAsync(sysNameAsyncParam);
+            }
+    while (threadsCount)
+        thread.processNextEvent(true);
+
+    if (!sysList.itemCount)
         sysList.appendItem("-", -1);
-    }
 
     sysList.selectedIndex = idx;
 }
 
 function TowersRefresh(system, corpid) {
     var towlist = document.getElementById("towers");
-    towerList.splice(0);
+    [delete i for each (i in towerList)];
     structList.splice(0);
-    var structsPerItm = {};
-    while (towlist.itemCount)
+    for (let i = towlist.itemCount; i--;)
         towlist.removeItemAt(0);
 
     EveApi.getCorporationAssets(corpid).
@@ -71,24 +83,10 @@ function TowersRefresh(system, corpid) {
             item.className = 'tower';
             towlist.appendChild(item);
             item.tower = a.QueryInterface(Ci.nsIEveControlTower);
-            item.api = EveApi;
-            towerList.push(item);
+            towerList[a.id] = item;
         } else if (isSystem(a.location)) {
-            var pos = +EveApi.getStarbase(a.id); // Force it to be number
             structList.push(a);
-            if (!pos)
-                pos = 'unused';
-            if (!structsPerItm[pos])
-                structsPerItm[pos] = [];
-            structsPerItm[pos].push(a);
         }
-    });
-
-    if (towlist.itemCount == 0)
-        towlist.appendItem("No towers found", -1);
-
-    towerList.forEach(function (t) {
-        t.structures = structsPerItm[t.id] || [];
     });
 
     if (structList.length) {
@@ -97,9 +95,18 @@ function TowersRefresh(system, corpid) {
         item.setAttribute('name', "Unused/Offline");
         item.setAttribute('value', 0);
         towlist.insertBefore(item, towlist.firstChild);
-        item.structures = structsPerItm.unused || [];
-        item.api = EveApi;
+        towerList.unused = item;
     }
+
+    for each (a in structList)
+        EveApi.getStarbase(a.id, function (pos) {
+            if (!pos)
+                pos = 'unused';
+            towerList[pos].addStructure(a);
+        });
+
+    if (towlist.itemCount == 0)
+        towlist.appendItem("No towers found", -1);
 }
 
 function isSystem(loc) {

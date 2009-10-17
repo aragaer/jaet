@@ -1,4 +1,4 @@
-let EXPORTED_SYMBOLS = ["DBH"];
+let EXPORTED_SYMBOLS = ["DBH", "emptyAsyncHandler"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -33,6 +33,31 @@ DBH.prototype = {
         }
         statement.reset();
         return rv;
-    }
+    },
+
+    handleError:        handleError, 
+    handleCompletion:   handleCompletion,
+    handleSingleScalarResult: handleSingleScalarResult,
 };
+
+function handleError(aError) {
+    dump("Error: "+error+"\n");
+}
+
+function handleCompletion(aReason) {
+    if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED)
+        dump("Query canceled or aborted!\n");
+}
+
+function handleSingleScalarResult(col, callback) {
+    return function (aResultSet) {
+        callback(aResultSet.getNextRow().getResultByName(col));
+    }
+}
+
+const emptyAsyncHandler = {
+    handleError:        handleError,
+    handleCompletion:   handleCompletion,
+    handleResult:       function (aResult) { dump("Unexpected result!\n") }
+}
 

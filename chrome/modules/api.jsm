@@ -202,16 +202,46 @@ EveApiWrapper.prototype = {
             });
     },
 
-    getStarbase: function (itemID) {
-        var data = ApiDB.doSelectQuery("select starbaseID " +
-            "from starbaseConfig where itemID='"+itemID+"';");
 
-        return +data[0];
+    _getStarbaseStm: null,
+    getStarbase: function (itemID, callback) {
+        this._getStarbaseStm = ApiDB.conn.createStatement(
+            "select starbaseID from starbaseConfig where itemID=:item_id;"
+        );
+        this.getStarbase = this._getStarbase2;
+        return this._getStarbase2(itemID, callback);
+    },
+    
+    _getStarbase2:  function (itemID, callback) {
+        this._getStarbaseStm.params.item_id = itemID;
+        this._getStarbaseStm.executeAsync({
+            empty:              true,
+            handleResult:       function (aResultSet) {
+                this.empty = false;
+                callback(aResultSet.getNextRow().getResultByName('starbaseID'));
+            },
+            handleError:        ApiDB.handleError,
+            handleCompletion:   function (aReason) {
+                if (this.empty)
+                    callback(0);
+                ApiDB.handleCompletion(aReason);
+            },
+        });
     },
 
-    setStarbase: function (item, starbaseID) {
-        ApiDB.executeSimpleSQL("replace into starbaseConfig values(" +
-            [item.id, starbaseID, 1, item.type.id].join(',')+");");
+    _setStarbaseStm: null,
+    setStarbase:    function (item, starbaseID) {
+        this._setStarbaseStm = ApiDB.conn.createStatement(
+            "replace into starbaseConfig values(:item_id, :starbase_id, 1, :item_type);"
+        );
+        this.setStarbase = this._setStarbase2;
+        return this._setStarbase2(item, starbaseID);
+    },
+    _setStarbase2: function (item, starbaseID) {
+        this._setStarbaseStm.params.item_id = item.id;
+        this._setStarbaseStm.params.starbase_id = starbaseID;
+        this._setStarbaseStm.params.item_type = item.type.id;
+        this._setStarbaseStm.executeAsync(emptyAsyncHandler);
     },
 };
 

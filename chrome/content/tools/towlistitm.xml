@@ -7,7 +7,7 @@
         <content>
             <xul:hbox anonid="wrap" flex="1">
             <xul:vbox flex="1">
-                <xul:hbox anonid="label" width="100%">
+                <xul:hbox anonid="label">
                     <xul:label xbl:inherits="value=name" class="header" />
                 </xul:hbox>
                 <xul:hbox style="border: none; overflow-x: auto; overflow-y: hidden">
@@ -18,18 +18,18 @@
         </content>
         <implementation>
             <constructor><![CDATA[
-                this.db = Components.classes["@aragaer/eve/db;1"].getService(Components.interfaces.nsIEveDBService);
                 this.fit = document.getAnonymousElementByAttribute(this,"anonid","pos_fit");
             ]]></constructor>
-            <property name="tower">
+            <property name="tower" onget="return this._tower">
                 <setter><![CDATA[
-                    this._tower = val; /* Make sure we get nsIEveControlTower! */
-                    this._tt = val.type.QueryInterface(Components.interfaces.nsIEveControlTowerType);
+                    this._tower = val;
+                    this._tt = val.type.QueryInterface(Ci.nsIEveControlTowerType);
                     var ttid = this._tt.id;
                     var labelbox = document.getAnonymousElementByAttribute(this,"anonid","label");
                     if (!this.img) {
                         var wrap = document.getAnonymousElementByAttribute(this,"anonid","wrap");
                         this.img = document.createElement('image');
+                        this.img.setAttribute('width', 128);
                         wrap.insertBefore(this.img, wrap.firstChild);
                     }
                     this.img.setAttribute('src', "chrome://jaet/content/images/"+ttid+".png");
@@ -53,49 +53,41 @@
                     this.setAttribute("value", this._tower.id);
                     return val;
                 ]]></setter>
-                <getter><![CDATA[
-                    return this._tower;
-                ]]></getter>
             </property>
             <property name="id" onget="return this.value" />
             <property name="structures">
                 <setter><![CDATA[
-                    var me = this;
-                    var observer = this.dragobserver;
-                    this.structs = val;
                     while (this.fit.firstChild)
                         this.fit.removeChild(this.fit.firstChild);
-                    if (!val)
-                        return val;
-                    val.forEach(function (el) {
-                        var itm = document.createElement('image');
-                        itm.setAttribute('name', el.type.name);
-                        me.fit.appendChild(itm);
-                        itm.item = el;
-                        itm.pos = me;
-                    });
+                    if (val)
+                        val.forEach(this.addStructure);
                     return val;
                 ]]></setter>
+                <getter><![CDATA[
+                    return this.fit.childNodes.map(function (a) { return a.item });
+                ]]></getter>
             </property>
+            <method name="addStructure">
+                <parameter name="struct" />
+                <body><![CDATA[
+                    var itm = document.createElement('image');
+                    itm.setAttribute('name', struct.type.name);
+                    itm.setAttribute('height', 100);
+                    itm.setAttribute('width', 100);
+                    this.fit.appendChild(itm);
+                    itm.item = struct;
+                ]]></body>
+            </method>
             <method name="add_struct">
                 <parameter name="struct" />
                 <body><![CDATA[
                     this.fit.appendChild(struct);
-                    this.structs.push(struct.item);
-                    struct.pos = this;
                 ]]></body>
             </method>
             <method name="del_struct">
                 <parameter name="struct" />
                 <body><![CDATA[
                     this.fit.removeChild(struct);
-                    var i;
-                    for (i = 0; i < this.structs.length; i++)
-                        if (this.structs[i] == struct) {
-                            splice(i, 1);
-                            break;
-                        }
-                    struct.pos = null;
                 ]]></body>
             </method>
         </implementation>
@@ -103,6 +95,10 @@
             <handler event="dragenter"><![CDATA[
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
+                this.style.background = "#c0c0ff";
+            ]]></handler>
+            <handler event="dragleave"><![CDATA[
+                this.style.background = "none";
             ]]></handler>
             <handler event="dragover"><![CDATA[
                 event.preventDefault();
@@ -116,25 +112,21 @@
     </binding>
     <binding id="struct" extends="xul:image">
         <implementation>
-            <property name="item">
+            <property name="item" onget="return this._item">
                 <setter><![CDATA[
                     this._item = val;
                     this.setAttribute('src', "chrome://jaet/content/images/"+val.type.id+".png");
                     this.setAttribute('tooltiptext', val.type.name);
                     return val;
                 ]]></setter>
-                <getter><![CDATA[
-                    return this._item;
-                ]]></getter>
             </property>
-            <property name="width" value="100px" />
-            <property name="height" value="100px" />
-            <property name="draggable" value="true" />
             <method name="moveTo">
                 <parameter name="to" />
                 <body><![CDATA[
-                    to.api.setStarbase(this._item, to.tower ? to.tower.id : 0);
-                    this.pos.del_struct(this);
+                    EveApi.setStarbase(this._item, to.tower ? to.tower.id : 0);
+                    var pos = document.getBindingParent(this);
+                    if (pos)
+                        pos.del_struct(this);
                     to.add_struct(this);
                 ]]></body>
             </method>
