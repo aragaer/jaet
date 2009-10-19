@@ -42,12 +42,14 @@
                         var sp = document.createElement('spacer');
                         sp.setAttribute('flex', "100");
                         labelbox.appendChild(sp);
-                        this.conslabel = document.createElement('label');
+                        this.conslabel = document.createElement('tow_stats_box');
                         labelbox.appendChild(this.conslabel);
                     }
 
-                    this.conslabel.value = "Power: "+this._tower.powerUsage + '/' + this._tt.powerGrid +
-                            "; CPU: "+this._tower.CPUUsage + '/' + this._tt.CPU;
+                    this.conslabel.grid = this._tower.powerUsage;
+                    this.conslabel.cpu = this._tower.CPUUsage;
+                    this.conslabel.max_grid = this._tt.powerGrid;
+                    this.conslabel.max_cpu = this._tt.CPU;
 
                     this.setAttribute("name", this._tower.name);
                     this.setAttribute("value", this._tower.id);
@@ -96,13 +98,21 @@
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
                 this.style.background = "#c0c0ff";
-            ]]></handler>
-            <handler event="dragleave"><![CDATA[
-                this.style.background = "none";
+                if (this.conslabel) {
+                    this.conslabel.grid+=100;
+                    this.conslabel.cpu+=100;
+                }
             ]]></handler>
             <handler event="dragover"><![CDATA[
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
+            ]]></handler>
+            <handler event="dragleave"><![CDATA[
+                this.style.background = "none";
+                if (this.conslabel) {
+                    this.conslabel.grid-=100;
+                    this.conslabel.cpu-=100;
+                }
             ]]></handler>
             <handler event="dragdrop"><![CDATA[
                 var item = event.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
@@ -120,6 +130,9 @@
                     return val;
                 ]]></setter>
             </property>
+            <property name="width" value="100" />
+            <property name="height" value="100" />
+            <property name="draggable" value="true" />
             <method name="moveTo">
                 <parameter name="to" />
                 <body><![CDATA[
@@ -138,6 +151,31 @@
                 event.dataTransfer.setData("text/plain", this._item.type.name);
             ]]></handler>
         </handlers>
+    </binding>
+    <binding id="fit_stats" extends="xul:hbox">
+        <content>
+            <xul:label value="Power: " />
+            <xul:label anonid="grid" />
+            <xul:label value="/" />
+            <xul:label anonid="max_grid" />
+            <xul:spacer width="50" />
+            <xul:label value="CPU: " />
+            <xul:label anonid="cpu" />
+            <xul:label value="/" />
+            <xul:label anonid="max_cpu" />
+        </content>
+        <implementation>
+            <constructor><![CDATA[
+                this._grid = document.getAnonymousElementByAttribute(this,'anonid','grid');
+                this._max_grid = document.getAnonymousElementByAttribute(this,'anonid','max_grid');
+                this._cpu = document.getAnonymousElementByAttribute(this,'anonid','cpu');
+                this._max_cpu = document.getAnonymousElementByAttribute(this,'anonid','max_cpu');
+            ]]></constructor>
+            <property name="grid" onset="this._grid.value=+val;return val" onget="return +this._grid.value" />
+            <property name="max_grid" onset="this._max_grid.value=+val;return val" onget="return +this._max_grid.value" />
+            <property name="cpu" onset="this._cpu.value=+val;return val" onget="return +this._cpu.value" />
+            <property name="max_cpu" onset="this._max_cpu.value=+val;return val" onget="return +this._max_cpu.value" />
+        </implementation>
     </binding>
 </bindings>
 

@@ -21,3 +21,7 @@ richlistitem.tower hbox[anonid="wrap"] image {
     border: 1px solid black;
     -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#struct') !important;
 }
+
+tow_stats_box {
+    -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#fit_stats') !important;
+}
