@@ -113,7 +113,7 @@ EveApiWrapper.prototype = {
                     : "NULL"
                 );
         ApiDB.executeSimpleSQL("update accounts set acct_id='"+acct_data.acct_id+"', " +
-            ltd_string + ', ' + full_string + "where id='"+acct_data.id+"';");
+            ltd_string + ', ' + full_string + " where id='"+acct_data.id+"';");
     },
 
     requestCharList:  function (id) {
@@ -243,6 +243,30 @@ EveApiWrapper.prototype = {
         this._setStarbaseStm.params.starbase_id = starbaseID;
         this._setStarbaseStm.params.item_type = item.type.id;
         this._setStarbaseStm.executeAsync(emptyAsyncHandler);
+    },
+
+    _getGridCPUReqsStm: null,
+    getGridCPUReqs:     function (typeID, callback) {
+        this._getGridCPUReqsStm = ApiDB.conn.createStatement(
+            "select attributeID, valueInt from static.dgmTypeAttributes where " +
+            "typeID=:type_id and attributeID in (30, 50);"
+        );
+        this.getGridCPUReqs = this._getGridCPUReqs2;
+        return this._getGridCPUReqs2(typeID, callback);
+    },
+    _getGridCPUReqs2:   function (typeID, callback) {
+        this._getGridCPUReqsStm.params.type_id = typeID;
+        this._getGridCPUReqsStm.executeAsync({
+            handleResult:       function (aResultSet) {
+                var res = {};
+                while (row = aResultSet.getNextRow())
+                    res[row.getResultByIndex(0) == 30 ? 'grid' : 'cpu'] =
+                            row.getResultByIndex(1);
+                callback(res);
+            },
+            handleError:        ApiDB.handleError,
+            handleCompletion:   ApiDB.handleCompletion,
+        });
     },
 };
 

@@ -114,7 +114,6 @@ function onTowersLoad() {
     CorpRefresh();
     setInterval(CorpRefresh, 60000);
     clist.addEventListener("command", function () {
-            println("Corp changed to "+clist.label);
             loadTowers();
         }, true);
 

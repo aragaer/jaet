@@ -51,6 +51,8 @@
                     this.conslabel.max_grid = this._tt.powerGrid;
                     this.conslabel.max_cpu = this._tt.CPU;
 
+                    this.conslabel.refresh();
+
                     this.setAttribute("name", this._tower.name);
                     this.setAttribute("value", this._tower.id);
                     return val;
@@ -84,12 +86,22 @@
                 <parameter name="struct" />
                 <body><![CDATA[
                     this.fit.appendChild(struct);
+                    if (this.conslabel) {
+                        this.conslabel.grid += struct.grid;
+                        this.conslabel.cpu  += struct.cpu;
+                        this.conslabel.refresh();
+                    } 
                 ]]></body>
             </method>
             <method name="del_struct">
                 <parameter name="struct" />
                 <body><![CDATA[
                     this.fit.removeChild(struct);
+                    if (this.conslabel) {
+                        this.conslabel.grid -= struct.grid;
+                        this.conslabel.cpu  -= struct.cpu;
+                        this.conslabel.refresh();
+                    } 
                 ]]></body>
             </method>
         </implementation>
@@ -98,10 +110,6 @@
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
                 this.style.background = "#c0c0ff";
-                if (this.conslabel) {
-                    this.conslabel.grid+=100;
-                    this.conslabel.cpu+=100;
-                }
             ]]></handler>
             <handler event="dragover"><![CDATA[
                 event.preventDefault();
@@ -109,10 +117,6 @@
             ]]></handler>
             <handler event="dragleave"><![CDATA[
                 this.style.background = "none";
-                if (this.conslabel) {
-                    this.conslabel.grid-=100;
-                    this.conslabel.cpu-=100;
-                }
             ]]></handler>
             <handler event="dragdrop"><![CDATA[
                 var item = event.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
@@ -127,6 +131,11 @@
                     this._item = val;
                     this.setAttribute('src', "chrome://jaet/content/images/"+val.type.id+".png");
                     this.setAttribute('tooltiptext', val.type.name);
+                    var me = this;
+                    EveApi.getGridCPUReqs(this._item.type.id, function (res) {
+                        me.grid = res.grid;
+                        me.cpu = res.cpu;
+                    });
                     return val;
                 ]]></setter>
             </property>
@@ -147,34 +156,33 @@
         <handlers>
             <handler event="dragstart"><![CDATA[
                 event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setDragImage(this, 0, 0);
                 event.dataTransfer.mozSetDataAt('application/x-moz-node', this, 0);
+                event.dataTransfer.mozSetDataAt('application/x-moz-node', null, 1);
                 event.dataTransfer.setData("text/plain", this._item.type.name);
             ]]></handler>
         </handlers>
     </binding>
     <binding id="fit_stats" extends="xul:hbox">
         <content>
-            <xul:label value="Power: " />
             <xul:label anonid="grid" />
-            <xul:label value="/" />
-            <xul:label anonid="max_grid" />
-            <xul:spacer width="50" />
-            <xul:label value="CPU: " />
             <xul:label anonid="cpu" />
-            <xul:label value="/" />
-            <xul:label anonid="max_cpu" />
         </content>
         <implementation>
             <constructor><![CDATA[
                 this._grid = document.getAnonymousElementByAttribute(this,'anonid','grid');
-                this._max_grid = document.getAnonymousElementByAttribute(this,'anonid','max_grid');
                 this._cpu = document.getAnonymousElementByAttribute(this,'anonid','cpu');
-                this._max_cpu = document.getAnonymousElementByAttribute(this,'anonid','max_cpu');
             ]]></constructor>
-            <property name="grid" onset="this._grid.value=+val;return val" onget="return +this._grid.value" />
-            <property name="max_grid" onset="this._max_grid.value=+val;return val" onget="return +this._max_grid.value" />
-            <property name="cpu" onset="this._cpu.value=+val;return val" onget="return +this._cpu.value" />
-            <property name="max_cpu" onset="this._max_cpu.value=+val;return val" onget="return +this._max_cpu.value" />
+            <property name="grid" onset="this._g=+val;return val" onget="return +this._g" />
+            <property name="max_grid" onset="this._mg=+val;return val" onget="return +this._mg" />
+            <property name="cpu" onset="this._c=+val;return val" onget="return +this._c" />
+            <property name="max_cpu" onset="this._mc=+val;return val" onget="return +this._mc" />
+            <method name="refresh">
+                <body><![CDATA[
+                    this._grid.value=this._g+"/"+this._mg+" mw";
+                    this._cpu.value=this._c+"/"+this._mc+" tf";
+                ]]></body>
+            </method>
         </implementation>
     </binding>
 </bindings>
