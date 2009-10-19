@@ -1,3 +1,4 @@
+// vim:syn=javascript
 let EXPORTED_SYMBOLS = ["DBH", "emptyAsyncHandler"];
 
 const Cc = Components.classes;

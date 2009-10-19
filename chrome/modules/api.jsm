@@ -21,8 +21,9 @@ function init_api_db() {
         file.create(file.NORMAL_FILE_TYPE, 0700);
 
     var conn = new DBH(file);
-    var static = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch).getCharPref("eve.static_dump_path");
+    var static_file = Cc["@mozilla.org/file/directory_service;1"].
+            getService(Ci.nsIProperties).get('CurProcD', Ci.nsIFile);
+    static_file.append('jaet.db');
 
     try {
         conn.doSelectQuery("select 1 from accounts;");
@@ -51,9 +52,9 @@ function init_api_db() {
     }
 
     try {
-        conn.executeSimpleSQL("attach database '"+static+"' as static;");
+        conn.executeSimpleSQL("attach database '"+static_file.path+"' as static;");
     } catch (e) {
-        alert("Failed to attach static dump database\nPlease update path in preferences.\n");
+        dump("Failed to attach static dump database\nPlease update path in preferences.\n");
     }
 
     dump("ApiDB initialized\n");
