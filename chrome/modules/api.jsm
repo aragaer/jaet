@@ -5,7 +5,7 @@ Components.utils.import("resource://jaet/sqlite.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const EveApiService = Cc['@aragaer.com/eve-api;1'].
+const EveApiService = Cc['@aragaer/eve-api;1'].
         getService(Ci.nsIEveApiService);
 const ApiDB = init_api_db();
 
@@ -62,7 +62,21 @@ function init_api_db() {
     return conn;
 }
 
-function EveApiWrapper() { }
+function EveApiWrapper() {
+    var ApiRequester = Cc['@aragaer/eve/api-requester;1'].
+            getService(Ci.nsIEveApiRequester);
+    var replaceCharStm = ApiDB.conn.createStatement("replace into characters (name, id, account, corporation) " +
+                "values (:name, :id, :acct_id, :corp_id);");
+    ApiRequester.addDataObserver('characters', function (doc, aux) {
+        replaceCharStm.params.acct_id = aux.wrappedJSObject.userID;
+        for each (let node in evaluateXPath(doc, "/eveapi/result/rowset/row")) {
+            replaceCharStm.params.name      = node.getAttribute('name');
+            replaceCharStm.params.id        = node.getAttribute('characterID');
+            replaceCharStm.params.corp_id   = node.getAttribute('corporationID');
+            replaceCharStm.execute();
+        }
+    });
+}
 
 EveApiWrapper.prototype = {
     db: ApiDB,
@@ -119,25 +133,8 @@ EveApiWrapper.prototype = {
     requestCharList:  function (id) {
         var data = ApiDB.doSelectQuery("select acct_id, coalesce(ltd, full) from accounts where id='"+id+"';")[0];
         var list = EveApiService.getCharacterList(data[0], data[1]);
-        if (!list)
-            return;
-
-        var result = [];
-        for (var node = list.firstChild; node; node = node.nextSibling) {
-            if (!node.hasAttributes())
-                continue;
-            var res = [node.getAttribute('name'),
-                node.getAttribute('characterID'),
-                node.getAttribute('corporationID'),
-                node.getAttribute('corporationName')
-            ];
-            result.push(res);
-            ApiDB.executeSimpleSQL("replace into characters (name, id, account, corporation) " +
-                "values ('"+res[0]+"',"+res[1]+", "+data[0]+","+res[2]+");");
-            ApiDB.executeSimpleSQL("replace into corporations (name, id) " +
-                "values ('"+res[3]+"', "+res[2]+");");
-        }
-        return result;
+        dump("Done requesting, there should be fresh data now\n");
+        return this.loadCharacters(data[0]);
     },
 
     deleteAccount:         function (id) {
@@ -274,5 +271,25 @@ const EveApi = new EveApiWrapper();
 
 function isSystem(loc) {
     return loc < 60000000;
+}
+
+function evaluateXPath(aNode, aExpr) {
+    var found = [];
+    var res, result;
+    var xpe = Cc["@mozilla.org/dom/xpath-evaluator;1"].
+            createInstance(Ci.nsIDOMXPathEvaluator);
+    var nsResolver = xpe.createNSResolver(aNode.ownerDocument == null
+            ? aNode.documentElement
+            : aNode.ownerDocument.documentElement);
+    try {
+        result = xpe.evaluate(aExpr, aNode, nsResolver, 0, null);
+    } catch (e) {
+        dump("error running xpe with expression '"+aExpr+"'\nCaller:"+
+              evaluateXPath.caller+"\n");
+        return found;
+    }
+    while (res = result.iterateNext())
+        found.push(res);
+    return found;
 }
 
