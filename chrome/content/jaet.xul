@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="jaet.css" type="text/css"?>
+<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
@@ -48,13 +49,13 @@
             </menubar>
         </toolbaritem>
     </toolbar>
-	<tabbox id='main-tabs-list' flex="600" height="100%">
-		<tabs id='main-tabs' />
-		<tabpanels id='main-panels' flex="600"/>
-	</tabbox>
+    <tabbox id='main-tabs-list' flex="600" height="100%">
+	<tabs id='main-tabs' />
+	<tabpanels id='main-panels' flex="600"/>
+    </tabbox>
     <hbox>
         <spacer flex="1"/>
-        <label id="status"/>
+        <label id="status" class="api_status" value=""/>
     </hbox>
 </window>
 

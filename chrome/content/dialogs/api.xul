@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="editlistitem.css" type="text/css"?>
+<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://jaet/locale/jaet.dtd">
 
 
@@ -17,7 +17,6 @@
 
     <label id="wrong-creds" value="&api.incorrect;" hidden="true" />
 
-    <vbox flex="1">
         <hbox flex="2">
             <vbox flex="1">
                 <caption label="&api.acct.list.title;"/>
@@ -31,7 +30,7 @@
             <splitter collapse="none" />
             <vbox flex="1">
                 <caption label="&api.char.list.title;" />
-                <listbox id="char-list" />
+                <listbox id="char-list" flex="1"/>
             </vbox>
         </hbox>
         <grid>
@@ -75,5 +74,8 @@
             <spacer flex="2" />
             <button flex="1" label="&api.close;" command="API:Close" />
         </hbox>
-    </vbox>
+        <hbox>
+            <spacer flex="1" />
+            <label class="api_status" value="" />
+        </hbox>
 </window>

@@ -63,6 +63,7 @@ function init_api_db() {
 }
 
 function EveApiWrapper() {
+/*
     var ApiRequester = Cc['@aragaer/eve/api-requester;1'].
             getService(Ci.nsIEveApiRequester);
     var replaceCharStm = ApiDB.conn.createStatement("replace into characters (name, id, account, corporation) " +
@@ -76,6 +77,7 @@ function EveApiWrapper() {
             replaceCharStm.execute();
         }
     });
+*/
 }
 
 EveApiWrapper.prototype = {

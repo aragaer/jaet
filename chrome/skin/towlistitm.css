@@ -25,3 +25,8 @@ richlistitem.tower hbox[anonid="wrap"] image {
 tow_stats_box {
     -moz-binding: url('chrome://jaet/content/tools/towlistitm.xml#fit_stats') !important;
 }
+
+label.api_status {
+    -moz-binding: url('chrome://jaet/content/tools/status.xml#api_status') !important;
+}
+
