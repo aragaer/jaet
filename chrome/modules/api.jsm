@@ -62,23 +62,7 @@ function init_api_db() {
     return conn;
 }
 
-function EveApiWrapper() {
-/*
-    var ApiRequester = Cc['@aragaer/eve/api-requester;1'].
-            getService(Ci.nsIEveApiRequester);
-    var replaceCharStm = ApiDB.conn.createStatement("replace into characters (name, id, account, corporation) " +
-                "values (:name, :id, :acct_id, :corp_id);");
-    ApiRequester.addDataObserver('characters', function (doc, aux) {
-        replaceCharStm.params.acct_id = aux.wrappedJSObject.userID;
-        for each (let node in evaluateXPath(doc, "/eveapi/result/rowset/row")) {
-            replaceCharStm.params.name      = node.getAttribute('name');
-            replaceCharStm.params.id        = node.getAttribute('characterID');
-            replaceCharStm.params.corp_id   = node.getAttribute('corporationID');
-            replaceCharStm.execute();
-        }
-    });
-*/
-}
+function EveApiWrapper() { }
 
 EveApiWrapper.prototype = {
     db: ApiDB,
@@ -181,11 +165,26 @@ EveApiWrapper.prototype = {
             alert("No full key provided for corporation "+corp_id);
             return;
         }
-        var assets = EveApiService.getCorporationAssets(data[0], data[1], data[2], {});
+        EveApiService.updateCorporationAssets(data[0], data[1], data[2], corp_id);
+        var assets = []; //EveApiService.getCorporationAssets(data[0], data[1], data[2], {});
         return assets;
     },
 
-    getCorporationTowers: function (char_id, system) {
+    updateCorporationAssets:   function (corp_id) {
+        var data = ApiDB.doSelectQuery("select acct_id, full, characters.id from characters " +
+                "left join accounts on account=accounts.acct_id " +
+                "where characters.corporation="+corp_id+" and full is not NULL;")[0];
+
+        if (!data[1] || !data[1].length) {
+            alert("No full key provided for corporation "+corp_id);
+            return;
+        }
+        EveApiService.updateCorporationAssets(data[0], data[1], data[2], corp_id);
+    },
+
+    getCorporationTowers: function (corp_id, system) {
+        this.updateCorporationAssets(corp_id);
+/*
         var assets = this.getCorporationAssets(char_id);
         return assets.filter(
             system
@@ -200,6 +199,8 @@ EveApiWrapper.prototype = {
             ).map(function (a) {
                 return a.QueryInterface(Ci.nsIEveControlTower);
             });
+*/
+        return [];
     },
 
 
