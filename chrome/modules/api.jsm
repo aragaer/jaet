@@ -7,6 +7,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const EveApiService = Cc['@aragaer/eve-api;1'].
         getService(Ci.nsIEveApiService);
+const EveHRManager = Cc['@aragaer/eve-hr-manager;1'].
+        getService(Ci.nsIEveHRManager);
 const ApiDB = init_api_db();
 
 function init_api_db() {
@@ -37,20 +39,6 @@ function init_api_db() {
         conn.executeSimpleSQL("CREATE TABLE characters " +
             "(name char, id integer, account integer, corporation integer, primary key (id));");
     }
-    try {
-        conn.doSelectQuery("select 1 from corporations;");
-    } catch (e) {
-        conn.executeSimpleSQL("CREATE TABLE corporations " +
-            "(name char, ticker char, id integer, alliance integer, primary key (id));");
-    }
-    try {
-        conn.doSelectQuery("select 1 from assets;");
-    } catch (e) {
-        conn.executeSimpleSQL("CREATE TABLE assets " +
-            "(id integer, char integer, location integer, type integer, " +
-            "quantity integer, flag integer, singleton integer, primary key (id));");
-    }
-
     try {
         conn.executeSimpleSQL("attach database '"+static_file.path+"' as static;");
     } catch (e) {
@@ -151,10 +139,7 @@ EveApiWrapper.prototype = {
 
     },
 
-    getListOfCorps:         function () {
-        var res = ApiDB.doSelectQuery("select id, name from corporations;");
-        return res;
-    },
+    getListOfCorps:         function () EveHRManager.getAllCorporations({}),
 
     getCorporationAssets:   function (corp_id) {
         var data = ApiDB.doSelectQuery("select acct_id, full, characters.id from characters " +

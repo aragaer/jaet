@@ -122,9 +122,8 @@ function CorpRefresh() {
     var corplist = document.getElementById("corporation");
     var idx = corplist.selectedIndex;
     corplist.removeAllItems();
-    EveApi.getListOfCorps().forEach(function (a) {
-        corplist.appendItem(a[1], a[0]);
-    });
+    for each (let corp in EveApi.getListOfCorps())
+        corplist.appendItem(corp.name, corp.id);
     corplist.selectedIndex = idx;
     if (idx == -1 && corplist.itemCount)
         corplist.selectedIndex = 0;
