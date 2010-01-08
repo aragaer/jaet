@@ -9,6 +9,8 @@ const EveApiService = Cc['@aragaer/eve-api;1'].
         getService(Ci.nsIEveApiService);
 const EveHRManager = Cc['@aragaer/eve-hr-manager;1'].
         getService(Ci.nsIEveHRManager);
+const EveInventoryService = Cc['@aragaer/eve/inventory;1'].
+        getService(Ci.nsIEveInventoryService);
 const ApiDB = init_api_db();
 
 function init_api_db() {
@@ -142,17 +144,8 @@ EveApiWrapper.prototype = {
     getListOfCorps:         function () EveHRManager.getAllCorporations({}),
 
     getCorporationAssets:   function (corp_id) {
-        var data = ApiDB.doSelectQuery("select acct_id, full, characters.id from characters " +
-                "left join accounts on account=accounts.acct_id " +
-                "where characters.corporation="+corp_id+" and full is not NULL;")[0];
-
-        if (!data[1] || !data[1].length) {
-            alert("No full key provided for corporation "+corp_id);
-            return;
-        }
-        EveApiService.updateCorporationAssets(data[0], data[1], data[2], corp_id);
-        var assets = []; //EveApiService.getCorporationAssets(data[0], data[1], data[2], {});
-        return assets;
+        var corp = EveHRManager.getCorporation(corp_id);
+        return corp.getAssets({});
     },
 
     updateCorporationAssets:   function (corp_id) {
@@ -169,8 +162,8 @@ EveApiWrapper.prototype = {
 
     getCorporationTowers: function (corp_id, system) {
         this.updateCorporationAssets(corp_id);
-/*
-        var assets = this.getCorporationAssets(char_id);
+        var corp = EveHRManager.getCorporation(corp_id);
+        var assets = corp.getAssets({});
         return assets.filter(
             system
                 ?   function (a) {
@@ -181,11 +174,7 @@ EveApiWrapper.prototype = {
                         return isSystem(a.location) &&
                             a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER;
                     }
-            ).map(function (a) {
-                return a.QueryInterface(Ci.nsIEveControlTower);
-            });
-*/
-        return [];
+            ).map(function (a) { return a.QueryInterface(Ci.nsIEveControlTower) });
     },
 
 

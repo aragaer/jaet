@@ -82,7 +82,7 @@ function TowersRefresh(system, corpid) {
             item.setAttribute('name', a.name);
             item.className = 'tower';
             towlist.appendChild(item);
-            item.tower = a.QueryInterface(Ci.nsIEveControlTower);
+            item.tower = a;
             towerList[a.id] = item;
         } else if (isSystem(a.location)) {
             structList.push(a);
@@ -109,7 +109,5 @@ function TowersRefresh(system, corpid) {
         towlist.appendItem("No towers found", -1);
 }
 
-function isSystem(loc) {
-    return loc < 60000000;
-}
+function isSystem(loc) loc < 60000000
 

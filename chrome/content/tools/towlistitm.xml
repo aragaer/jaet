@@ -22,7 +22,7 @@
             ]]></constructor>
             <property name="tower" onget="return this._tower">
                 <setter><![CDATA[
-                    this._tower = val;
+                    this._tower = val.QueryInterface(Ci.nsIEveControlTower);
                     this._tt = val.type.QueryInterface(Ci.nsIEveControlTowerType);
                     var ttid = this._tt.id;
                     var labelbox = document.getAnonymousElementByAttribute(this,"anonid","label");

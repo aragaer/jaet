@@ -113,9 +113,7 @@ function onTowersLoad() {
     var clist = document.getElementById("corporation");
     CorpRefresh();
     setInterval(CorpRefresh, 60000);
-    clist.addEventListener("command", function () {
-            loadTowers();
-        }, true);
+    clist.addEventListener("command", loadTowers, true);
 
 }
 function CorpRefresh() {
@@ -132,14 +130,8 @@ function CorpRefresh() {
 function loadTowers() {
     var chid = document.getElementById('corporation').value;
 
-    var result = EveApi.getCorporationAssets(chid);
     towerList.splice(0);
-    result.forEach(function (a) {
-        if (a.type.group.id != Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
-            return;
-
-        towerList.push(a.QueryInterface(Ci.nsIEveControlTower));
-    });
+    [towerList.push(i) for each (i in EveApi.getCorporationTowers(chid))];
     
     towersTreeView.rowCount = towerList.length;
     towersTree.view = towersTreeView;
