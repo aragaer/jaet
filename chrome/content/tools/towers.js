@@ -121,7 +121,8 @@ function CorpRefresh() {
     var idx = corplist.selectedIndex;
     corplist.removeAllItems();
     for each (let corp in EveApi.getListOfCorps())
-        corplist.appendItem(corp.name, corp.id);
+        if (corp.id > 5000000)
+            corplist.appendItem(corp.name, corp.id);
     corplist.selectedIndex = idx;
     if (idx == -1 && corplist.itemCount)
         corplist.selectedIndex = 0;

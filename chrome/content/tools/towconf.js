@@ -44,7 +44,8 @@ function SysRefresh(corpid) {
     sysList.removeAllItems();
     if (corpid)
         for each (let {location: l} in EveApi.getCorporationTowers(corpid))
-            if (l && !systems[l]++) {
+            if (l && !systems[l]) {
+                systems[l] = 1;
                 if (!sysNameStm) {
                     sysNameStm = ApiDB.conn.createStatement(sysNameQuery);
                     sysNameAsyncParam = { handleError: ApiDB.handleError }
