@@ -30,18 +30,6 @@ function init_api_db() {
     static_file.append('jaet.db');
 
     try {
-        conn.doSelectQuery("select 1 from accounts;");
-    } catch (e) {
-        conn.executeSimpleSQL("CREATE TABLE accounts " +
-            "(name char, id integer, acct_id integer, ltd char, full char, primary key (id));");
-    }
-    try {
-        conn.doSelectQuery("select 1 from characters;");
-    } catch (e) {
-        conn.executeSimpleSQL("CREATE TABLE characters " +
-            "(name char, id integer, account integer, corporation integer, primary key (id));");
-    }
-    try {
         conn.executeSimpleSQL("attach database '"+static_file.path+"' as static;");
     } catch (e) {
         dump("Failed to attach static dump database\nPlease update path in preferences.\n");
@@ -128,17 +116,8 @@ EveApiWrapper.prototype = {
     },
 
     getCharacterAssets:   function (char_id) {
-        var data = ApiDB.doSelectQuery("select acct_id, full from characters " +
-                "left join accounts on account=accounts.acct_id " +
-                "where characters.id="+char_id+";")[0];
-
-        if (!data[1] || !data[1].length) {
-            alert("No full key provided for character "+char_id);
-            return;
-        }
-        var assets = EveApiService.getCharacterAssets(data[0], data[1], char_id, {});
-        return assets;
-
+        var ch = EveHRManager.getCharacter(char_id);
+        return ch.getAssets({});
     },
 
     getListOfCorps:         function () EveHRManager.getAllCorporations({}),
@@ -148,20 +127,7 @@ EveApiWrapper.prototype = {
         return corp.getAssets({});
     },
 
-    updateCorporationAssets:   function (corp_id) {
-        var data = ApiDB.doSelectQuery("select acct_id, full, characters.id from characters " +
-                "left join accounts on account=accounts.acct_id " +
-                "where characters.corporation="+corp_id+" and full is not NULL;")[0];
-
-        if (!data[1] || !data[1].length) {
-            alert("No full key provided for corporation "+corp_id);
-            return;
-        }
-        EveApiService.updateCorporationAssets(data[0], data[1], data[2], corp_id);
-    },
-
     getCorporationTowers: function (corp_id, system) {
-        this.updateCorporationAssets(corp_id);
         var corp = EveHRManager.getCorporation(corp_id);
         var assets = corp.getAssets({});
         return assets.filter(
