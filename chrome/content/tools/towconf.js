@@ -28,86 +28,105 @@ function CorpRefresh() {
 }
 
 const ApiDB = EveApi.db;
-var sysNameStm, sysNameAsyncParam;
-const sysNameQuery = "select solarSystemName from static.mapSolarSystems where solarSystemId=:loc;";
 function SysRefresh(corpid) {
     var sysList = document.getElementById("system");
     var systems = {};
     var idx = sysList.selectedIndex;
-    var thread = Cc["@mozilla.org/thread-manager;1"].
-            getService(Ci.nsIThreadManager).currentThread;
-    var threadsCount = 0;
     
     if (idx < 0)
         idx = 0;
 
     sysList.removeAllItems();
-    if (corpid)
-        for each (let {location: l} in EveApi.getCorporationTowers(corpid))
-            if (l && !systems[l]) {
+    if (corpid) {
+        EveApi.getCorporationTowersAsync(corpid, null, {
+            onItem:         function (itm) {
+                var l = itm.location;
+                if (!l || systems[l])
+                    return;
                 systems[l] = 1;
-                if (!sysNameStm) {
-                    sysNameStm = ApiDB.conn.createStatement(sysNameQuery);
-                    sysNameAsyncParam = { handleError: ApiDB.handleError }
+                sysList.appendItem(itm.locationString(), l);
+                sysList.disabled = false;
+            },
+            onCompletion:   function (r) {
+                if (!sysList.itemCount) {
+                    sysList.disabled = true;
+                    sysList.appendItem("-", -1);
+                    idx = 0;
                 }
-                sysNameAsyncParam.handleResult =
-                        ApiDB.handleSingleScalarResult('solarSystemName',
-                            function (name) { sysList.appendItem(name, l); });
-                sysNameAsyncParam.handleCompletion =
-                        function (aReason) { threadsCount-- };
-                sysNameStm.params.loc = l;
-                threadsCount++;
-                sysNameStm.executeAsync(sysNameAsyncParam);
+
+                sysList.selectedIndex = idx;
+                TowersRefresh(sysList.value, corpid);
+            },
+            onError:        function (e) {
+                dump("Getting POS locations: "+e+"\n");
             }
-    while (threadsCount)
-        thread.processNextEvent(true);
-
-    if (!sysList.itemCount)
+        });
+    } else {
+        sysList.disabled = true;
         sysList.appendItem("-", -1);
-
-    sysList.selectedIndex = idx;
+        sysList.selectedIndex = 0;
+        TowersRefresh(sysList.value, corpid);
+    }
 }
 
 function TowersRefresh(system, corpid) {
     var towlist = document.getElementById("towers");
     [delete i for each (i in towerList)];
-    structList.splice(0);
+    var waitingStructs = {};
+    var haveStructs = 0;
     for (let i = towlist.itemCount; i--;)
         towlist.removeItemAt(0);
 
-    EveApi.getCorporationAssets(corpid).
-            filter(function (a) { return a.location == system }).
-            forEach(function (a) {
-        if (a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER) {
-            var item = document.createElement('richlistitem');
-            item.setAttribute('name', a.name);
-            item.className = 'tower';
-            towlist.appendChild(item);
-            item.tower = a;
-            towerList[a.id] = item;
-        } else if (isSystem(a.location)) {
-            structList.push(a);
-        }
+    towlist.appendItem("No towers found", -1);
+
+    if (!system || system == -1)
+        return;
+
+    EveApi.getCorporationAssetsAsync(corpid, {
+        onItem:     function (a) {
+            if (a.location != system)
+                return;
+
+            if (!haveStructs++) {
+                towlist.removeItemAt(0);
+                var item = document.createElement('richlistitem');
+                item.className = 'tower';
+                item.setAttribute('name', "Unused/Offline");
+                item.setAttribute('value', 0);
+                towlist.appendChild(item);
+                towerList.unused = item;
+            }
+
+            if (a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER) {
+                var item = document.createElement('richlistitem');
+                item.setAttribute('name', a.name);
+                item.className = 'tower';
+                towlist.appendChild(item);
+                item.tower = a;
+                towerList[a.id] = item;
+                if (waitingStructs[a.id]) {
+                    waitingStructs[a.id].forEach(a.addStructure);
+                    delete waitingStructs[a.id];
+                }
+            } else {
+                EveApi.getStarbase(a.id, function (pos) {
+                    if (!pos)
+                        pos = 'unused';
+                    if (towerList[pos])
+                        towerList[pos].addStructure(a);
+                    else {
+                        if (!waitingStructs[pos])
+                            waitingStructs[pos] = [];
+                        waitingStructs[pos].push(a);
+                    }
+                });
+            }
+        },
+        onError:    function (e) {
+            dump("Get structures: "+e+"\n");
+        },
+        onCompletion: function (r) { },
     });
-
-    if (structList.length) {
-        var item = document.createElement('richlistitem');
-        item.className = 'tower';
-        item.setAttribute('name', "Unused/Offline");
-        item.setAttribute('value', 0);
-        towlist.insertBefore(item, towlist.firstChild);
-        towerList.unused = item;
-    }
-
-    for each (a in structList)
-        EveApi.getStarbase(a.id, function (pos) {
-            if (!pos)
-                pos = 'unused';
-            towerList[pos].addStructure(a);
-        });
-
-    if (towlist.itemCount == 0)
-        towlist.appendItem("No towers found", -1);
 }
 
 function isSystem(loc) loc < 60000000

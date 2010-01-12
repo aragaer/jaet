@@ -132,9 +132,13 @@ function loadTowers() {
     var chid = document.getElementById('corporation').value;
 
     towerList.splice(0);
-    [towerList.push(i) for each (i in EveApi.getCorporationTowers(chid))];
-    
-    towersTreeView.rowCount = towerList.length;
-    towersTree.view = towersTreeView;
+    EveApi.getCorporationTowersAsync(chid, null, {
+        onItem:         function (t) {
+            towerList.push(t);
+            towersTreeView.rowCount = towerList.length;
+            towersTree.view = towersTreeView;
+        },
+        onCompletion:   function (r) { }
+    });
 }
 

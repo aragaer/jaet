@@ -127,6 +127,30 @@ EveApiWrapper.prototype = {
         return corp.getAssets({});
     },
 
+    getCorporationAssetsAsync:   function (corp_id, handler) {
+        var corp = EveHRManager.getCorporation(corp_id);
+        corp.getAssetsAsync(handler);
+    },
+
+    getCorporationTowersAsync: function (corp_id, system, handler) {
+        var corp = EveHRManager.getCorporation(corp_id);
+        var assets = corp.getAssetsAsync({
+            onItem: system
+                ?   function (a) {
+                        if (a.location == system &&
+                                a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
+                            handler.onItem(a.QueryInterface(Ci.nsIEveControlTower));
+                    }
+                :   function (a) {
+                        if (isSystem(a.location) &&
+                                a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
+                            handler.onItem(a.QueryInterface(Ci.nsIEveControlTower));
+                    },
+            onError: false,
+            onCompletion:   handler.onCompletion,
+        });
+    },
+
     getCorporationTowers: function (corp_id, system) {
         var corp = EveHRManager.getCorporation(corp_id);
         var assets = corp.getAssets({});
