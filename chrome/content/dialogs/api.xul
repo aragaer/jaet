@@ -12,16 +12,29 @@
 
     <command id="API:Close" oncommand="close_api()"/>
     <command id="API:Check" oncommand="check_data()"/>
-    <command id="API:Add" oncommand="add_data()"/>
+    <command id="API:Add" oncommand="add_acct()"/>
     <command id="API:Remove" oncommand="remove_data()"/>
+    <command id="API:Remove2" oncommand="kill_data()"/>
+    <command id="API:Restore" oncommand="restore_data()"/>
+    <command id="API:Save" oncommand="save_data()"/>
 
     <label id="wrong-creds" value="&api.incorrect;" hidden="true" />
+
+    <menupopup id="acct-list-menu">
+        <menuitem label="&api.add;" command="API:Add"/>
+        <menuitem id="btn-save" label="&api.save;" command="API:Save"/>
+        <menuitem id="btn-check" label="&api.check;" command="API:Check"/>
+        <menuitem id="btn-remove" label="&api.remove;" command="API:Remove"/>
+        <menuitem id="btn-remove2" label="&api.remove2;" command="API:Remove2"/>
+        <menuitem id="btn-restore" label="&api.restore;" command="API:Restore"/>
+    </menupopup>
 
         <hbox flex="2">
             <vbox flex="1">
                 <caption label="&api.acct.list.title;"/>
-                <tree id="acct-list" flex="1" hidecolumnpicker="true">
+                <tree id="acct-list" flex="1" hidecolumnpicker="true" context="acct-list-menu">
                     <treecols>
+                        <treecol id="img" hideheader="true"/>
                         <treecol id="name" flex="10" hideheader="true"/>
                     </treecols>
                     <treechildren/>
@@ -35,47 +48,32 @@
         </hbox>
         <grid>
             <columns>
-                <column flex="3"/>
+                <column/>
+                <column/>
                 <column flex="1" />
-                <column flex="10" />
             </columns>
             <rows>
                 <row>
                     <label style="width:10em" value="&api.id.title;:"/>
-                    <button label="&api.check;" command="API:Check" 
-                            id="btn-check" disabled="true" width="10px"/>
-                    <textbox id="api-id" onkeyup="activate_check()"
-                             onchange="activate_check()"
-                             disabled="true"/>
+                    <spacer width="24px"/>
+                    <textbox id="accountID" disabled="true"/>
                 </row>
                 <row>
                     <label style="width:10em" value="&api.limited.title;:"/>
-                    <img />
-                    <textbox id="api-limited" onkeyup="activate_check()"
-                             onchange="activate_check()"
-                             disabled="true"/>
+                    <image id="ltd_ok"/>
+                    <textbox id="keyLimited" disabled="true"/>
                 </row>
                 <row>
                     <label style="width:10em" value="&api.full.title;:"/>
-                    <img />
-                    <textbox id="api-full" onkeyup="activate_check()"
-                             onchange="activate_check()"
-                             disabled="true"/>
+                    <image id="full_ok"/>
+                    <textbox id="keyFull" disabled="true"/>
                 </row>
             </rows>
         </grid>
         <spacer flex="1" />
-        <hbox>
-            <button flex="1" label="&api.add;" id="btn-add"
-                    command="API:Add" />
-            <spacer flex="2" />
-            <button flex="1" label="&api.remove;" disabled="true"
-                    id="btn-remove" command="API:Remove" />
-            <spacer flex="2" />
-            <button flex="1" label="&api.close;" command="API:Close" />
-        </hbox>
-        <hbox>
-            <spacer flex="1" />
+        <hbox style="-moz-box-align:end">
             <label class="api_status" value="" />
+            <spacer flex="1" />
+            <button label="&api.close;" command="API:Close" />
         </hbox>
 </window>

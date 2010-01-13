@@ -31,7 +31,10 @@
 <!ENTITY api.check "Check">
 <!ENTITY api.add "Add">
 <!ENTITY api.remove "Remove">
+<!ENTITY api.remove2 "Terminate">
+<!ENTITY api.restore "Restore">
 <!ENTITY api.close "Close">
+<!ENTITY api.save "Save">
 
 
 <!ENTITY exports.title "Market Exports">

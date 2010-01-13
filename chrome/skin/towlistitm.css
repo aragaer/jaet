@@ -28,5 +28,6 @@ tow_stats_box {
 
 label.api_status {
     -moz-binding: url('chrome://jaet/content/tools/status.xml#api_status') !important;
+    font-size:10px;
 }
 
