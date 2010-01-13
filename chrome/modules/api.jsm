@@ -55,6 +55,7 @@ EveApiWrapper.prototype = {
     },
 
     getAccounts:       function () {
+/*
         var res = [];
         ApiDB.doSelectQuery("select name, id, acct_id, ltd, full from accounts;",
             function (array) {
@@ -69,6 +70,10 @@ EveApiWrapper.prototype = {
             }
         );
         return res;
+*/
+        var gAM = Cc["@aragaer/eve/auth-manager;1"].getService(Ci.nsIEveAuthManager);
+        var res = gAM.getAccounts({});
+        return res;
     },
 
     updateAcctName:   function (id, name) {
@@ -77,6 +82,8 @@ EveApiWrapper.prototype = {
     },
 
     storeKeys:         function (acct_data) {
+        acct_data.store();
+/*
         var ltd = acct_data.ltd;
         var full = acct_data.full;
         var ltd_string = 'ltd=' + (
@@ -92,6 +99,7 @@ EveApiWrapper.prototype = {
                 );
         ApiDB.executeSimpleSQL("update accounts set acct_id='"+acct_data.acct_id+"', " +
             ltd_string + ', ' + full_string + " where id='"+acct_data.id+"';");
+*/
     },
 
     requestCharList:  function (id) {

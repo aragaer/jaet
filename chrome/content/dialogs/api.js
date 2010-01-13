@@ -4,30 +4,24 @@
 
 const chars = [];
 var acct_list, api_id, api_ltd, api_full, char_list;
-const accts = [];
+var accts;
 const AcctTreeView = {
-    get rowCount() { return accts.length; },
-    getCellText : function (row,col) {
-        return accts[row].name || 'Enter name..';
-    },
-    setCellText : function (row,col,value) {
-        accts[row].name = value;
-        EveApi.updateAcctName(accts[row].id, accts[row].name);
-    },
-    setTree: function (treebox) { this.treebox = treebox; },
-    isContainer: function (row) { return false; },
-    isEditable: function (row,col) { return true; },
-    isSeparator: function (row) { return false; },
-    isSorted: function () { return false; },
-    getLevel: function (row) { return 0; },
-    getImageSrc: function (row,col) { return null; },
-    getRowProperties: function (row,props){},
-    getCellProperties: function (row,col,props){},
-    getColumnProperties: function (colid,col,props){}
+    get rowCount()  accts.length,
+    getCellText:    function (row,col) accts[row].name || 'Enter name..',
+    setCellText:    function (row,col,value) accts[row].name = value,
+    setTree:        function (treebox) this.treebox = treebox,
+    isContainer:    function (row) false,
+    isEditable:     function (row,col) true,
+    isSeparator:    function (row) false,
+    isSorted:       function () false,
+    getLevel:       function (row) 0,
+    getImageSrc:    function (row,col) null,
+    getRowProperties: function (row,props) {},
+    getCellProperties: function (row,col,props) {},
+    getColumnProperties: function (colid,col,props) {}
 };
 
 function close_api() {
-    accts.forEach(EveApi.storeKeys);
     window.close();
 }
 
@@ -53,9 +47,8 @@ function on_api_load() {
 }
 
 function empty_char_list() {
-    while (char_list.hasChildNodes()) {
+    while (char_list.hasChildNodes())
         char_list.removeChild(char_list.firstChild);
-    }
 }
 
 function on_acct_dclick(aEvt) {
@@ -74,8 +67,6 @@ function on_acct_dclick(aEvt) {
 function on_acct_select(aEvt) {
     var row = acct_list.currentIndex;
 
-    accts.forEach(EveApi.storeKeys);
-
     if (row == -1) {
         api_id.value = '';
         api_ltd.value = '';
@@ -91,13 +82,13 @@ function on_acct_select(aEvt) {
 
     empty_char_list();
 
-    api_id.value = accts[row].acct_id;
-    api_ltd.value = accts[row].ltd;
-    api_full.value = accts[row].full;
+    api_id.value = accts[row].accountID;
+    api_ltd.value = accts[row].keyLimited;
+    api_full.value = accts[row].keyFull;
 
-    EveApi.loadCharacters(api_id.value).forEach(function (char) {
-        char_list.appendItem(char[0]);
-    });
+    accts[row].getCharacters({}).forEach(function (ch)
+        char_list.appendItem(ch.name)
+    );
 
     api_id.disabled = false;
     api_ltd.disabled = false;
@@ -111,34 +102,36 @@ function check_data() {
     if (row == -1)
         return;
 
-    accts[row].acct_id = document.getElementById('api-id').value;
-    accts[row].ltd = document.getElementById('api-limited').value;
-    accts[row].full = document.getElementById('api-full').value;
+    accts[row].accountID = document.getElementById('api-id').value;
+    accts[row].keyLimited = document.getElementById('api-limited').value;
+    accts[row].keyFull = document.getElementById('api-full').value;
 
-    EveApi.storeKeys(accts[row]);
+    accts[row].checkLimited(function (ret) {
+        if (ret) {
+            empty_char_list();
 
-    var ret = EveApi.requestCharList(accts[row].id);
-    if (!ret) {
-        alert(document.getElementById('wrong-creds').value);
-        return;
-    }
-    empty_char_list();
+            accts[row].getCharacters({}).forEach(function (ch)
+                char_list.appendItem(ch.name)
+            );
 
-    ret.forEach(function (char) {
-        char_list.appendItem(char[0]);
+            accts[row].checkFull(function (ret) {
+                if (ret) {
+                    dump("Full key is correct!\n");
+                } else
+                    alert(document.getElementById('wrong-creds').value);
+            });
+        } else
+            alert(document.getElementById('wrong-creds').value);
     });
 }
 
 function add_data() {
-    EveApi.addEmptyAccount();
-    reload_accts();
+    accts.push(Cc["@aragaer/eve/account;1"].createInstance(Ci.nsIEveAccount));
+    acct_list.view = AcctTreeView;
 }
 
 function reload_accts() {
-    accts.splice(0);
-    EveApi.getAccounts().forEach(function (a) {
-        accts.push(a);
-    });
+    accts = EveApi.getAccounts();
     acct_list.view = AcctTreeView;
 }
 
@@ -150,6 +143,6 @@ function remove_data() {
     if (!confirm("Are you sure you want to delete accout '"+accts[row].name+"'?"))
         return;
 
-    EveApi.deleteAccount(accts[row].id);
+    accts[row].delete();
     reload_accts();
 }
