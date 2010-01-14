@@ -38,11 +38,12 @@ var accts;
 const AcctTreeView = {
     get rowCount()  accts.length,
     getCellText:    function (row,col) {
+        let itm = accts[row];
         switch (col.id) {
         case 'name':
-            return accts[row].name || 'Enter name..';
+            return itm.name.length ? itm.name : 'Enter name..';
         case 'img':
-            return accts[row].deleted ? 'Restore' : accts[row].isSaved() ? '' : 'Save';
+            return itm.deleted ? 'Restore' : itm.isSaved() ? '' : 'Save';
         default:
             return '';
         };
@@ -173,7 +174,6 @@ function update_data(aEvt) {
     if (row == -1)
         return;
 
-    dump(aEvt.target.id+" = "+aEvt.target.value+"\n");
     accts[row][aEvt.target.id] = aEvt.target.value;
 }
 

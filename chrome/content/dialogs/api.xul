@@ -18,8 +18,6 @@
     <command id="API:Restore" oncommand="restore_data()"/>
     <command id="API:Save" oncommand="save_data()"/>
 
-    <label id="wrong-creds" value="&api.incorrect;" hidden="true" />
-
     <menupopup id="acct-list-menu">
         <menuitem label="&api.add;" command="API:Add"/>
         <menuitem id="btn-save" label="&api.save;" command="API:Save"/>
