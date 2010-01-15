@@ -13,6 +13,8 @@ function onTowersLoad() {
     slist.addEventListener("command", function () {
             TowersRefresh(slist.value, clist.value);
         }, true);
+    var limg = document.getElementById('loading');
+    limg.width = limg.height;
 }
 
 function CorpRefresh() {
@@ -82,6 +84,8 @@ function TowersRefresh(system, corpid) {
     if (!system || system == -1)
         return;
 
+    var limg = document.getElementById('loading');
+    limg.src = "chrome://jaet/content/images/loading.gif";
     EveApi.getCorporationAssetsAsync(corpid, {
         onItem:     function (a) {
             if (a.location != system)
@@ -125,7 +129,9 @@ function TowersRefresh(system, corpid) {
         onError:    function (e) {
             dump("Get structures: "+e+"\n");
         },
-        onCompletion: function (r) { },
+        onCompletion: function (r) {
+            limg.src = '';
+        },
     });
 }
 

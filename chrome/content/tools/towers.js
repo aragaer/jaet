@@ -1,7 +1,7 @@
 const towerList = [];
 var towersTree, fuelTree;
 var towersTreeView = {
-    rowCount:   0,
+    get rowCount() towerList.length,
     getCellText: function (aRow, aCol) {
         var data = towerList[aRow];
         switch(aCol.id) {
@@ -16,21 +16,21 @@ var towersTreeView = {
             return;
         towerList[row].name = value;
     },
-    isEditable: function (row,col) { return col.id == 'name'; },
-    isContainer: function (aRow) { return false; },
-    isContainerOpen: function (aRow) { return false; },
-    isContainerEmpty: function (aRow) { return false ; },
-    getLevel: function (aRow) { return 0; },
-    getParentIndex: function (aRow) { return 0; },
-    hasNextSibling: function (aRow, aAfterRow) { return 0; },
-    toggleOpenState: function (aRow) { return; },
-    setTree: function (treebox) { this.treebox = treebox; },
-    isSeparator: function (row) { return false; },
-    isSorted: function () { return false; },
-    getImageSrc: function (row,col) { return null; },
-    getRowProperties: function (row,props) {},
-    getCellProperties: function (row,col,props) {},
-    getColumnProperties: function (colid,col,props) {}
+    isEditable: function (row,col) col.id == 'name',
+    isContainer:        function (aRow) false,
+    isContainerOpen:    function (aRow) false,
+    isContainerEmpty:   function (aRow) false,
+    getLevel:           function (aRow) 0,
+    getParentIndex:     function (aRow) 0,
+    hasNextSibling:     function (aRow, aAfterRow) 0,
+    toggleOpenState:    function (aRow) { },
+    setTree:            function (treebox) this.treebox = treebox,
+    isSeparator:        function (aRow) false,
+    isSorted:           function () false,
+    getImageSrc:        function (row,col) null,
+    getRowProperties:   function (row,props) { },
+    getCellProperties:  function (row,col,props) { },
+    getColumnProperties: function (colid,col,props) { }
 };
 
 function convertHoursToReadable(hours) {
@@ -47,9 +47,9 @@ function convertHoursToReadable(hours) {
     return res.join(" ");
 }
 
-const fuelList = [];
+var fuelList;
 var fuelTreeView = {
-    rowCount:   0,
+    get rowCount() fuelList.length,
     getCellText: function (aRow, aCol) {
         var data = fuelList[aRow];
         switch(aCol.id) {
@@ -64,21 +64,21 @@ var fuelTreeView = {
         default:        return '';
         }
     },
-    isEditable: function (row,col) { return false },
-    isContainer: function (aRow) { return false; },
-    isContainerOpen: function (aRow) { return false; },
-    isContainerEmpty: function (aRow) { return false ; },
-    getLevel: function (aRow) { return 0; },
-    getParentIndex: function (aRow) { return 0; },
-    hasNextSibling: function (aRow, aAfterRow) { return 0; },
-    toggleOpenState: function (aRow) { return; },
-    setTree: function (treebox) { this.treebox = treebox; },
-    isSeparator: function (row) { return false; },
-    isSorted: function () { return false; },
-    getImageSrc: function (row,col) { return null; },
-    getRowProperties: function (row,props) {},
-    getCellProperties: function (row,col,props) {},
-    getColumnProperties: function (colid,col,props) {}
+    isEditable:         function (row,col) false,
+    isContainer:        function (aRow) false,
+    isContainerOpen:    function (aRow) false,
+    isContainerEmpty:   function (aRow) false,
+    getLevel:           function (aRow) 0,
+    getParentIndex:     function (aRow) 0,
+    hasNextSibling:     function (aRow, aAfterRow) 0,
+    toggleOpenState:    function (aRow) { },
+    setTree:            function (treebox) this.treebox = treebox,
+    isSeparator:        function (aRow) false,
+    isSorted:           function () false,
+    getImageSrc:        function (row,col) null,
+    getRowProperties:   function (row,props) { },
+    getCellProperties:  function (row,col,props) { },
+    getColumnProperties: function (colid,col,props) { }
 };
 
 function onTowerDclick(aEvt) {
@@ -96,11 +96,7 @@ function onTowerDclick(aEvt) {
 
 function onTowerSelect(aEvt) {
     var row = towersTree.currentIndex;
-    var resources = towerList[row].getFuel({});
-    fuelList.splice(0);
-    for each (i in resources)
-        fuelList.push(i);
-    fuelTreeView.rowCount = fuelList.length;
+    fuelList = towerList[row].getFuel({});
     fuelTree.view = fuelTreeView;
 }
 
@@ -115,13 +111,16 @@ function onTowersLoad() {
     setInterval(CorpRefresh, 60000);
     clist.addEventListener("command", loadTowers, true);
 
+    var limg = document.getElementById('loading');
+    limg.width = limg.height;
 }
+
 function CorpRefresh() {
     var corplist = document.getElementById("corporation");
     var idx = corplist.selectedIndex;
     corplist.removeAllItems();
     for each (let corp in EveApi.getListOfCorps())
-        if (corp.id > 5000000)
+        if (corp.getAuthToken(Ci.nsEveAuthTokenType.TYPE_DIRECTOR))
             corplist.appendItem(corp.name, corp.id);
     corplist.selectedIndex = idx;
     if (idx == -1 && corplist.itemCount)
@@ -132,13 +131,21 @@ function loadTowers() {
     var chid = document.getElementById('corporation').value;
 
     towerList.splice(0);
+    towersTree.view = towersTreeView;
+    var limg = document.getElementById('loading');
+    dump(Date.now()+" Start\n");
+    limg.src = "chrome://jaet/content/images/loading.gif";
     EveApi.getCorporationTowersAsync(chid, null, {
         onItem:         function (t) {
+            dump(Date.now()+" "+t+"\n");
             towerList.push(t);
-            towersTreeView.rowCount = towerList.length;
             towersTree.view = towersTreeView;
         },
-        onCompletion:   function (r) { }
+        onCompletion:   function (r) {
+            limg.src = '';
+            dump(Date.now()+" End\n");
+        },
+        onError:        function (e) dump("loadTowers: "+e+"\n"),
     });
 }
 

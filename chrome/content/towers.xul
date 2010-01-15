@@ -18,9 +18,10 @@
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
     <vbox flex="1">
-        <hbox>
+        <hbox style="-moz-box-align:center">
             <label value="Corporation: " control="corporation" />
             <menulist id="corporation" />
+            <image id="loading" />
         </hbox>
         <hbox flex="10">
             <tree id="towerlist" hidecolumnpicker="true" flex="1">

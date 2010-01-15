@@ -86,7 +86,7 @@ EveApiWrapper.prototype = {
         var corp = EveHRManager.getCorporation(corp_id);
         if (!corp)
             return;
-        var assets = corp.getAssetsAsync({
+        var assets = corp.getControlTowersAsync({
             onItem: system
                 ?   function (a) {
                         if (a.location == system &&
