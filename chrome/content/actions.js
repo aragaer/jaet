@@ -38,6 +38,8 @@ function onLoad() {
             tabs.appendItem(name);
             tabpanels.appendChild(tabpanel);
         });
+        if (lines.length == 1)
+            tabs.collapsed = true;
     } else {
         list_file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666); 
     }
@@ -71,6 +73,13 @@ function setupApiKeys() {
     openDialog("dialogs/api.xul", "",
             "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
 }
+
+function setupPOS() {
+    println("POS setup activated.");
+    openDialog("towconf.xul", "",
+            "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
+}
+
 function openPreferences(paneID) {
     var instantApply = getBoolPref("browser.preferences.instantApply", false);
     var features = "chrome,titlebar,toolbar,centerscreen"

@@ -1,11 +1,24 @@
 const towerList = {};
 const structList = [];
+var corps;
 
 function onTowersLoad() {
     var clist = document.getElementById("corporation");
     var slist = document.getElementById("system");
     CorpRefresh();
-    setInterval(CorpRefresh, 60000);
+    Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService).
+        addObserver({
+            observe: function (aTopic, aSubject, aData) {
+                switch (aData) {
+                    case 'characters':
+                        setTimeout(CorpRefresh, 1000);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }, 'eve-data', false)
     clist.addEventListener("command", function () {
             SysRefresh(clist.value);
             TowersRefresh(slist.value, clist.value);
@@ -21,8 +34,9 @@ function CorpRefresh() {
     var corplist = document.getElementById("corporation");
     var idx = corplist.selectedIndex;
     corplist.removeAllItems();
-    for each (let corp in EveApi.getListOfCorps())
-        corplist.appendItem(corp.name, corp.id);
+    corps = EveApi.getListOfCorps();
+    for (i in corps)
+        corplist.appendItem(corps[i].name, i);
     if (idx == -1 && corplist.itemCount)
         idx = 0;
     corplist.selectedIndex = idx;
@@ -30,17 +44,20 @@ function CorpRefresh() {
 }
 
 const ApiDB = EveApi.db;
-function SysRefresh(corpid) {
+function SysRefresh(corpnum) {
     var sysList = document.getElementById("system");
     var systems = {};
     var idx = sysList.selectedIndex;
+    let corp = corps[corpnum];
     
     if (idx < 0)
         idx = 0;
 
     sysList.removeAllItems();
-    if (corpid) {
-        EveApi.getCorporationTowersAsync(corpid, null, {
+    if (corp) {
+        var limg = document.getElementById('loading');
+        limg.src = "chrome://jaet/content/images/loading.gif";
+        corp.getControlTowersAsync({
             onItem:         function (itm) {
                 var l = itm.location;
                 if (!l || systems[l])
@@ -50,6 +67,7 @@ function SysRefresh(corpid) {
                 sysList.disabled = false;
             },
             onCompletion:   function (r) {
+                limg.src = '';
                 if (!sysList.itemCount) {
                     sysList.disabled = true;
                     sysList.appendItem("-", -1);
@@ -57,7 +75,7 @@ function SysRefresh(corpid) {
                 }
 
                 sysList.selectedIndex = idx;
-                TowersRefresh(sysList.value, corpid);
+                TowersRefresh(sysList.value, corpnum);
             },
             onError:        function (e) {
                 dump("Getting POS locations: "+e+"\n");
@@ -67,11 +85,12 @@ function SysRefresh(corpid) {
         sysList.disabled = true;
         sysList.appendItem("-", -1);
         sysList.selectedIndex = 0;
-        TowersRefresh(sysList.value, corpid);
+        TowersRefresh(sysList.value, corpnum);
     }
 }
 
-function TowersRefresh(system, corpid) {
+function TowersRefresh(system, corpnum) {
+    let corp = corps[corpnum];
     var towlist = document.getElementById("towers");
     [delete i for each (i in towerList)];
     var waitingStructs = {};
@@ -86,7 +105,7 @@ function TowersRefresh(system, corpid) {
 
     var limg = document.getElementById('loading');
     limg.src = "chrome://jaet/content/images/loading.gif";
-    EveApi.getCorporationAssetsAsync(corpid, {
+    corp.getStructuresAsync({
         onItem:     function (a) {
             if (a.location != system)
                 return;
@@ -134,6 +153,4 @@ function TowersRefresh(system, corpid) {
         },
     });
 }
-
-function isSystem(loc) loc < 60000000
 

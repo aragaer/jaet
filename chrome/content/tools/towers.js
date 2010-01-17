@@ -108,7 +108,20 @@ function onTowersLoad() {
 
     var clist = document.getElementById("corporation");
     CorpRefresh();
-    setInterval(CorpRefresh, 60000);
+    Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService).
+        addObserver({
+            observe: function (aTopic, aSubject, aData) {
+                switch (aData) {
+                    case 'characters':
+                        setTimeout(CorpRefresh, 1000);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }, 'eve-data', false)
+
     clist.addEventListener("command", loadTowers, true);
 
     var limg = document.getElementById('loading');

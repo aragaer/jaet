@@ -26,5 +26,9 @@
         <image id="loading"/>
     </hbox>
     <richlistbox id="towers" flex="1" />
+    <hbox>
+        <spacer flex="1" />
+        <button label="Close" oncommand="window.close()" />
+    </hbox>
 </window>
 

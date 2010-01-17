@@ -22,6 +22,7 @@
     <command id="File:Exit" oncommand="quit()"/>
     <command id="Settings:Preferences" oncommand="setupPreferences()"/>
     <command id="Settings:ApiKeys" oncommand="setupApiKeys()"/>
+    <command id="Settings:POS" oncommand="setupPOS()"/>
 
     <label id="quit-label" value="&exit_confirm;" hidden="true" />
     
@@ -44,6 +45,8 @@
                         <menuitem label="&menu_settings.api.label;"
                                   accesskey="&menu_settings.api.accesskey;"
                                   command="Settings:ApiKeys"/>
+                        <menuitem label="POS configuration"
+                                  command="Settings:POS"/>
                     </menupopup>
                 </menu>
             </menubar>

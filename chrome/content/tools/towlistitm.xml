@@ -46,11 +46,6 @@
                         labelbox.appendChild(this.conslabel);
                     }
 
-                    this.conslabel.grid = this._tower.powerUsage;
-                    this.conslabel.cpu = this._tower.CPUUsage;
-                    this.conslabel.max_grid = this._tt.powerGrid;
-                    this.conslabel.max_cpu = this._tt.CPU;
-
                     this.conslabel.refresh();
 
                     this.setAttribute("name", this._tower.name);
@@ -58,6 +53,7 @@
                     return val;
                 ]]></setter>
             </property>
+            <property name="tt" onget="return this._tt" />
             <property name="id" onget="return this.value" />
             <property name="structures">
                 <setter><![CDATA[
@@ -68,7 +64,7 @@
                     return val;
                 ]]></setter>
                 <getter><![CDATA[
-                    return this.fit.childNodes.map(function (a) { return a.item });
+                    return this.fit.childNodes.map(function (a) a.item );
                 ]]></getter>
             </property>
             <method name="addStructure">
@@ -78,6 +74,8 @@
                     itm.setAttribute('name', struct.type.name);
                     itm.setAttribute('height', 100);
                     itm.setAttribute('width', 100);
+                    itm.setAttribute('minheight', 100);
+                    itm.setAttribute('minwidth', 100);
                     this.fit.appendChild(itm);
                     itm.item = struct;
                 ]]></body>
@@ -86,22 +84,16 @@
                 <parameter name="struct" />
                 <body><![CDATA[
                     this.fit.appendChild(struct);
-                    if (this.conslabel) {
-                        this.conslabel.grid += struct.grid;
-                        this.conslabel.cpu  += struct.cpu;
+                    if (this.conslabel)
                         this.conslabel.refresh();
-                    } 
                 ]]></body>
             </method>
             <method name="del_struct">
                 <parameter name="struct" />
                 <body><![CDATA[
                     this.fit.removeChild(struct);
-                    if (this.conslabel) {
-                        this.conslabel.grid -= struct.grid;
-                        this.conslabel.cpu  -= struct.cpu;
+                    if (this.conslabel)
                         this.conslabel.refresh();
-                    } 
                 ]]></body>
             </method>
         </implementation>
@@ -131,22 +123,20 @@
                     this._item = val;
                     this.setAttribute('src', "chrome://jaet/content/images/"+val.type.id+".png");
                     this.setAttribute('tooltiptext', val.type.name);
-                    var me = this;
-                    EveApi.getGridCPUReqs(this._item.type.id, function (res) {
-                        me.grid = res.grid;
-                        me.cpu = res.cpu;
-                    });
                     return val;
                 ]]></setter>
             </property>
-            <property name="width" value="100" />
-            <property name="height" value="100" />
             <property name="draggable" value="true" />
             <method name="moveTo">
                 <parameter name="to" />
                 <body><![CDATA[
-                    EveApi.setStarbase(this._item, to.tower ? to.tower.id : 0);
                     var pos = document.getBindingParent(this);
+                    if (to == pos)
+                        return;
+                    if (to.tower)
+                        to.tower.addStructure(this._item)
+                    if (pos.tower)
+                        pos.tower.removeStructure(this._item);
                     if (pos)
                         pos.del_struct(this);
                     to.add_struct(this);
@@ -173,14 +163,13 @@
                 this._grid = document.getAnonymousElementByAttribute(this,'anonid','grid');
                 this._cpu = document.getAnonymousElementByAttribute(this,'anonid','cpu');
             ]]></constructor>
-            <property name="grid" onset="this._g=+val;return val" onget="return +this._g" />
-            <property name="max_grid" onset="this._mg=+val;return val" onget="return +this._mg" />
-            <property name="cpu" onset="this._c=+val;return val" onget="return +this._c" />
-            <property name="max_cpu" onset="this._mc=+val;return val" onget="return +this._mc" />
             <method name="refresh">
                 <body><![CDATA[
-                    this._grid.value=this._g+"/"+this._mg+" mw";
-                    this._cpu.value=this._c+"/"+this._mc+" tf";
+                    var p = document.getBindingParent(this);
+                    var tower = p.tower;
+                    var tt = p.tt;
+                    this._grid.value=tower.powerUsage+"/"+tt.powerGrid+" mw";
+                    this._cpu.value=tower.CPUUsage+"/"+tt.CPU+" tf";
                 ]]></body>
             </method>
         </implementation>

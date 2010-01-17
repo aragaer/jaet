@@ -89,18 +89,20 @@ EveApiWrapper.prototype = {
         var assets = corp.getControlTowersAsync({
             onItem: system
                 ?   function (a) {
-                        if (a.location == system &&
-                                a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
+                        if (a.location == system)
                             handler.onItem(a.QueryInterface(Ci.nsIEveControlTower));
                     }
-                :   function (a) {
-                        if (isSystem(a.location) &&
-                                a.type.group.id == Ci.nsEveItemGroupID.GROUP_CONTROL_TOWER)
-                            handler.onItem(a.QueryInterface(Ci.nsIEveControlTower));
-                    },
-            onError: false,
+                :   function (a) handler.onItem(a.QueryInterface(Ci.nsIEveControlTower)),
+            onError:        handler.onError,
             onCompletion:   handler.onCompletion,
         });
+    },
+
+    getCorporationStructuresAsync: function (corp_id, handler) {
+        var corp = EveHRManager.getCorporation(corp_id);
+        if (!corp)
+            return;
+        var assets = corp.getStructuresAsync(handler);
     },
 
     getCorporationTowers: function (corp_id, system) {
