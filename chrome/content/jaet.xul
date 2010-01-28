@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="jaet.css" type="text/css"?>
+<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
@@ -19,8 +20,11 @@
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
 
     <command id="File:Exit" oncommand="quit()"/>
-    <command id="Settings:Network" oncommand="setupNetwork()"/>
-    <command id="Settings:Extensions" oncommand="openExtManager()"/>
+    <command id="Settings:Preferences" oncommand="setupPreferences()"/>
+    <command id="Settings:ApiKeys" oncommand="setupApiKeys()"/>
+    <command id="Settings:POS" oncommand="setupPOS()"/>
+
+    <label id="quit-label" value="&exit_confirm;" hidden="true" />
     
     <toolbar id="main-toolbar">
         <toolbaritem>
@@ -35,24 +39,26 @@
                 </menu>
                 <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">
                     <menupopup id="menu_SettingsPopup">
-                        <menuitem label="&menu_settings.network.label;"
-                                  accesskey="&menu_settings.network.accesskey;"
-                                  command="Settings:Network"/>
-                        <menuitem label="&menu_settings.extensions.label;"
-                                  accesskey="&menu_settings.extensions.accesskey;"
-                                  command="Settings:Extensions"/>
+                        <menuitem label="&menu_settings.pref.label;"
+                                  accesskey="&menu_settings.pref.accesskey;"
+                                  command="Settings:Preferences"/>
+                        <menuitem label="&menu_settings.api.label;"
+                                  accesskey="&menu_settings.api.accesskey;"
+                                  command="Settings:ApiKeys"/>
+                        <menuitem label="POS configuration"
+                                  command="Settings:POS"/>
                     </menupopup>
                 </menu>
             </menubar>
         </toolbaritem>
     </toolbar>
-	<tabbox id='main-tabs-list' flex="600" height="100%">
-		<tabs id='main-tabs' />
-		<tabpanels id='main-panels' flex="600"/>
-	</tabbox>
+    <tabbox id='main-tabs-list' flex="600" height="100%">
+	<tabs id='main-tabs' />
+	<tabpanels id='main-panels' flex="600"/>
+    </tabbox>
     <hbox>
         <spacer flex="1"/>
-        <label id="status"/>
+        <label id="status" class="api_status" value=""/>
     </hbox>
 </window>
 

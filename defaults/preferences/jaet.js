@@ -19,3 +19,4 @@ pref("general.skins.selectedSkin", "classic/1.0");
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("eve.static_dump_path","jaet.db");

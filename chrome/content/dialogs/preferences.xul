@@ -6,7 +6,7 @@
 <prefwindow id="preferences" title="Preferences"
             windowtype="jaet-preferences"
             type="prefwindow"
-            flex="1" width="400" height="300"
+            flex="1" width="600" height="300"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <prefpane label="Proxy" id="proxy">
         <preferences>
@@ -27,6 +27,6 @@
                 <textbox preference="proxy-auto-url" />
             </vbox>
         </radiogroup>
-    </prefpane>
-    <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+     </prefpane>
+     <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 </prefwindow>
