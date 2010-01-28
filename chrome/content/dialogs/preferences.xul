@@ -2,31 +2,66 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://jaet/locale/jaet.dtd">
 
-
 <prefwindow id="preferences" title="Preferences"
             windowtype="jaet-preferences"
             type="prefwindow"
             flex="1" width="600" height="300"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <prefpane label="Proxy" id="proxy">
+    <prefpane label="Network" id="proxy" image="chrome://jaet/content/images/network.png">
         <preferences>
             <preference id="proxy-type" type="int" name="network.proxy.type"/>
             <preference id="proxy-auto-url" type="unichar" name="network.proxy.autoconfig_url"/>
             <preference id="proxy-manual-url" type="unichar" name="network.proxy.http"/>
             <preference id="proxy-manual-port" type="int" name="network.proxy.http_port"/>
         </preferences>
-        <radiogroup id="net-select" preference="proxy-type">
-            <radio value="0" label="&net.proxy.direct;"/>
-            <vbox>
-                <radio value="1" label="&net.proxy.manual;"/>
-                <textbox preference="proxy-manual-url" />
-                <textbox preference="proxy-manual-port" />
-            </vbox>
-            <vbox>
-                <radio value="2" label="&net.proxy.auto;"/>
-                <textbox preference="proxy-auto-url" />
-            </vbox>
-        </radiogroup>
+        <groupbox>
+            <caption label="Proxy settings" />
+            <radiogroup id="net-select" preference="proxy-type">
+                <radio value="0" label="&net.proxy.direct;"/>
+                <vbox>
+                    <radio value="1" label="&net.proxy.manual;"/>
+                    <hbox style="-moz-box-align:center">
+                        <textbox preference="proxy-manual-url" flex="1"/>
+                        <label value=":"/>
+                        <textbox preference="proxy-manual-port" width="50px"/>
+                    </hbox>
+                </vbox>
+                <vbox>
+                    <radio value="2" label="&net.proxy.auto;"/>
+                    <textbox preference="proxy-auto-url" />
+                </vbox>
+            </radiogroup>
+        </groupbox>
      </prefpane>
+     <prefpane label="File paths" id="paths" image="chrome://jaet/content/images/data.png">
+<script language="javascript"><![CDATA[
+function onPick(id, wantdir) {
+    var tx = document.getElementById(id+"-path");
+    var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window, "Static dump path", wantdir ? fp.modeGetFolder : fp.modeOpen);
+    fp.appendFilters(fp.filterAll);
+    fp.displayDirectory = Cc["@mozilla.org/file/directory_service;1"].
+            getService(Ci.nsIProperties).get("CurProcD", Ci.nsIFile);
+    fp.defaultString = tx.value;
+    fp.show();
+    if (fp.file) {
+        tx.value = fp.file.path;
+        document.getElementById('paths').userChangedValue(tx);
+    }
+}
+]]></script>
+        <preferences>
+            <preference id="static-dump" type="unichar" name="eve.static_dump_path"/>
+        </preferences>
+
+        <label value="Static dump path" />
+        <hbox>
+            <textbox preference="static-dump" id="static-path" flex="1"/>
+            <button onclick="onPick('static', false)" label="Browse..."/>
+        </hbox>
+
+    </prefpane>
+
      <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 </prefwindow>
+

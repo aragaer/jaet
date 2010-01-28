@@ -49,7 +49,7 @@ function onLoad() {
 }
 
 function quit() {
-    if (confirm(document.getElementById('quit-label').value))
+    if (confirm("Really quit JAET?"))
         doQuit(false);
 }
 
@@ -72,6 +72,12 @@ function setupApiKeys() {
     println("API keys activated.");
     openDialog("dialogs/api.xul", "",
             "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
+}
+
+function openExtManager() {
+    println("Extension manager activated.");
+    openDialog("chrome://mozapps/content/extensions/extensions.xul?type=extensions",
+            "", "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
 }
 
 function setupPOS() {

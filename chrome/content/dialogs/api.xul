@@ -51,17 +51,17 @@
                 <column flex="1" />
             </columns>
             <rows>
-                <row>
+                <row style="-moz-box-align:center">
                     <label style="width:10em" value="&api.id.title;:"/>
-                    <spacer width="24px"/>
+                    <spacer width="32px"/>
                     <textbox id="accountID" disabled="true"/>
                 </row>
-                <row>
+                <row style="-moz-box-align:center">
                     <label style="width:10em" value="&api.limited.title;:"/>
                     <image id="ltd_ok"/>
                     <textbox id="keyLimited" disabled="true"/>
                 </row>
-                <row>
+                <row style="-moz-box-align:center">
                     <label style="width:10em" value="&api.full.title;:"/>
                     <image id="full_ok"/>
                     <textbox id="keyFull" disabled="true"/>
