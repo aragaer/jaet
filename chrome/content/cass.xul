@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="jaet.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
+%jaet;
+]>
+
+<window id="main" title="&title;" width="800" height="600"
+        onload="onAssetsLoad()"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	persist="screenX screenY width height sizemode">
+
+<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/tools/assets.js"/>
+
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+    <vbox flex="1">
+        <hbox>
+            <textbox id="character" value="Calm River"/>
+            <spacer width="20px" />
+            <button label="Push me!" oncommand="loadCAssets()" />
+        </hbox>
+        <tree id="assets" hidecolumnpicker="true" flex="10" treelines="true">
+            <treecols>
+<!--                <treecol id="id" label="Location"/> -->
+                <treecol id="item"  label="Item" flex="10" primary="true" />
+                <treecol id="loc" label="Location" flex="3"/>
+                <treecol id="cont" label="Container" flex="3"/>
+                <treecol id="count" label="Quantity" flex="3"/>
+            </treecols>
+            <treechildren />
+        </tree>
+    </vbox>
+</window>
+
