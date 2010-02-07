@@ -25,6 +25,8 @@ function onLoad() {
         } while (hasmore);
         
         lines.forEach(function (line) {
+            if (line[0] == '#')
+                return;
             var tabpanel = document.createElement('tabpanel');
             var iframe = document.createElement('iframe');
             var props = line.split(/\s*\t\s*/);
