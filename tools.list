@@ -1,2 +1,3 @@
+production	Production planner	chrome://jaet/content/tools/production.xul
 pricing	Material browser	chrome://jaet/content/pricing.xul
 towers	Control Towers		chrome://jaet/content/towers.xul

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
+%jaet;
+]>
+
+<window	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onload="productionPlannerOnLoad();">
+
+<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/tools/production.js"/>
+	
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+    <vbox flex="1">
+        <textbox id="item" type="autocomplete" force-complete="true"
+                 autocompletesearch="item-type-autocomplete"/>
+        <tree id="materials" hidecolumnpicker="true" flex="10" treelines="true">
+            <treecols>
+                <treecol id="mat"  label="Material" flex="10" primary="true" />
+                <splitter class="tree-splitter"/>
+                <treecol id="cnt"  label="Count" flex="2"/>
+                <treecol id="total"  label="Total" flex="3"/>
+                <treecol id="isk"  label="Price" flex="2"/>
+                <treecol id="date" label="Last Updated" flex="3"/>
+            </treecols>
+            <treechildren />
+        </tree>
+    </vbox>
+</window>
+
