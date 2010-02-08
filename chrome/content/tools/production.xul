@@ -15,16 +15,25 @@
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
     <vbox flex="1">
-        <textbox id="item" type="autocomplete" force-complete="true"
-                 autocompletesearch="item-type-autocomplete"/>
-        <tree id="materials" hidecolumnpicker="true" flex="10" treelines="true">
+        <textbox id="item" type="autocomplete" forceComplete="true"
+                 autocompletesearch="item-type-autocomplete"
+                 completedefaultindex="true"
+                 onchange="selectProduct()"/>
+        <tree id="production" hidecolumnpicker="true" flex="10" treelines="true">
             <treecols>
-                <treecol id="mat"  label="Material" flex="10" primary="true" />
-                <splitter class="tree-splitter"/>
-                <treecol id="cnt"  label="Count" flex="2"/>
-                <treecol id="total"  label="Total" flex="3"/>
-                <treecol id="isk"  label="Price" flex="2"/>
-                <treecol id="date" label="Last Updated" flex="3"/>
+                <treecol id="itm"   label="Item"    flex="10" primary="true" />
+                <treecol id="ME"    label="me"      flex="1" />
+                <treecol id="cnt"   label="Quantity" flex="2" />
+                <treecol id="isk"   label="Price"   flex="2" />
+            </treecols>
+            <treechildren />
+        </tree>
+        <splitter collapse="none" />
+        <tree id="materials" hidecolumnpicker="true" flex="5" treelines="true">
+            <treecols>
+                <treecol id="itm"   label="Material"    flex="10" primary="true"/>
+                <treecol id="cnt"   label="Quantity"    flex="2" />
+                <treecol id="isk"   label="Cost"        flex="2" />
             </treecols>
             <treechildren />
         </tree>

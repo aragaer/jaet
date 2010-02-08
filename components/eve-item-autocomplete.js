@@ -32,18 +32,16 @@ ItemTypeAutoCompleteResult.prototype = {
     classID:          R_CLASS_ID,
     contractID:       R_CONTRACT_ID,
 
-    get searchString() this._searchString,
-    get searchResult() this._searchResult,
-    get defaultIndex() this._defaultIndex,
-    get errorDescription() this._errorDescription,
-    get matchCount() this._results.length,
-    getValueAt: function (index) this._results[index],
-    getCommentAt: function (index) "",
-    getStyleAt: function (index) null,
-    getImageAt : function (index) "",
-    removeValueAt: function (index, removeFromDb) {
-        this._results.splice(index, 1);
-    },
+    get searchString()      this._searchString,
+    get searchResult()      this._searchResult,
+    get defaultIndex()      this._defaultIndex,
+    get errorDescription()  this._errorDescription,
+    get matchCount()        this._results.length,
+    getValueAt:     function (index) this._results[index],
+    getCommentAt:   function (index) "",
+    getStyleAt:     function (index) null,
+    getImageAt:     function (index) "",
+    removeValueAt:  function (index, removeFromDb) this._results.splice(index, 1),
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult]),
 };
@@ -51,10 +49,9 @@ ItemTypeAutoCompleteResult.prototype = {
 var query;
 // Implements nsIAutoCompleteSearch
 function ItemTypeAutoCompleteSearch() {
-    dump("EITAC constructor\n");
     Cc["@mozilla.org/observer-service;1"].
-	    getService(Ci.nsIObserverService).
-	    addObserver(this, 'eve-db-init', false);
+            getService(Ci.nsIObserverService).
+            addObserver(this, 'eve-db-init', false);
     this.observe('','eve-db-init',''); // Force the first init
 }
 
@@ -78,17 +75,15 @@ ItemTypeAutoCompleteSearch.prototype = {
         var sslc = searchString.toLowerCase();
         var ssl = searchString.length;
         var results = [];
-	if (ssl >= 5) {
-	    query.params.pattern = sslc+"%";
-	    try {
-		while (query.step())
-		    results.push(query.row.tn);
-	    } catch (e) {
-		dump("Error in item type autocomplete: "+e+"\n");
-	    } finally {
-		query.reset();
-	    }
-	}
+        query.params.pattern = sslc+"%";
+        try {
+            while (query.step())
+                results.push(query.row.typeName);
+        } catch (e) {
+            dump("Error in item type autocomplete: "+e+"\n");
+        } finally {
+            query.reset();
+        }
         var newResult = new ItemTypeAutoCompleteResult(searchString,
                 Ci.nsIAutoCompleteResult.RESULT_SUCCESS, 0, "", results);
         listener.onSearchResult(this, newResult);
@@ -100,13 +95,10 @@ ItemTypeAutoCompleteSearch.prototype = {
     observe:            function (aSubject, aTopic, aData) {
         switch (aTopic) {
         case 'eve-db-init':
-	    var dbs = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);
+            var dbs = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);
             var conn = dbs.getConnection();
-	    try {
-	    query = conn.createStatement("select typeName as tn from static.invTypes where typeName like :pattern limit 5;");
-	    } catch (e) {
-		dump("eitac: "+e+"\n");
-	    }
+            query = conn.createStatement("select typeName from static.invTypes " +
+                    "where typeName like :pattern limit 5;");
         }
     },
 
