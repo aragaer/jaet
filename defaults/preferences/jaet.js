@@ -1,4 +1,4 @@
-pref("toolkit.defaultChromeURI", "chrome://jaet/content/jaet.xul");
+pref("toolkit.defaultChromeURI", "chrome://jaet/content/tools/pp.xul");
 pref("general.useragent.locale", "en_US");    		
 pref("browser.preferences.instantApply", true);
 pref("browser.dom.window.dump.enabled", true);

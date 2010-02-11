@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
+%jaet;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title="JAET Production Planner" onload="ppOnload()" width="800" height="600"
+    persist="screenX screenY width height sizemode" id="pp-main">
+
+<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
+<script><![CDATA[
+function ppOnload() {
+    var tabpanel = document.createElement('tabpanel');
+    var iframe = document.createElement('iframe');
+    var tabbox = document.getElementById('tabbox');
+
+    tabpanel.setAttribute('flex', '1');
+    iframe.setAttribute('src', 'chrome://jaet/content/tools/pp_tab.xul');
+    iframe.setAttribute('flex', '1');
+    tabpanel.appendChild(iframe);
+
+    tabbox.tabs.appendItem('Orca');
+    tabbox.tabpanels.appendChild(tabpanel);
+    tabbox.selectedIndex = 0;
+}
+]]></script>
+
+    <command id="File:New" oncommand="quit()"/>
+    <command id="File:Open" oncommand="quit()"/>
+    <command id="File:Save" oncommand="quit()"/>
+    <command id="File:Export" oncommand="quit()"/>
+    <command id="File:Exit" oncommand="quit()"/>
+
+    <command id="Settings:BP" oncommand="quit()"/>
+    <command id="Settings:Pref" oncommand="quit()"/>
+
+    <menubar id="pp-menubar">
+        <menu label="File" accesskey="F">
+            <menupopup id="pp-file-popup">
+                <menuitem label="New" command="File:New"/>
+                <menuitem label="Open" command="File:Open"/>
+                <menuitem label="Save" command="File:Save"/>
+                <menuseparator/>
+                <menuitem label="Export..." command="File:Export"/>
+                <menuseparator/>
+                <menuitem label="Quit" command="File:Exit"/>
+            </menupopup>
+        </menu>
+        <menu label="Settings" accesskey="S">
+            <menupopup id="pp-settings-popup">
+                <menuitem label="Blueprints" command="Settings:BP"/>
+                <menuseparator/>
+                <menuitem label="Preferences" command="Settings:Pref"/>
+            </menupopup>
+        </menu>
+    </menubar>
+    <tabbox id="tabbox" flex="1">
+        <tabs id="tabs" />
+        <tabpanels id="tabpanels" flex="1" />
+    </tabbox>
+</window>
