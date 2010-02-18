@@ -31,3 +31,10 @@ label.api_status {
     font-size:10px;
 }
 
+splitter grippy {
+    background-color:red;
+}
+
+splitter[state='collapsed'] grippy {
+    background-color:green;
+}

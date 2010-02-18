@@ -26,7 +26,7 @@ function ppOnload() {
     iframe.setAttribute('flex', '1');
     tabpanel.appendChild(iframe);
 
-    tabbox.tabs.appendItem('Orca');
+    tabbox.tabs.appendItem('Rifters');
     tabbox.tabpanels.appendChild(tabpanel);
     tabbox.selectedIndex = 0;
 }

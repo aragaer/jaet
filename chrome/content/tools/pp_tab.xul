@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="pp_tab_onLoad()">
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 	
@@ -9,48 +11,46 @@
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/pp.js"/>
 
-    <hbox flex="1">
-        <vbox flex="1">
+    <menupopup id="to-buy-menu">
+        <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>
+        <menuitem id="btn-acquired" label="Already acquired" oncommand="gotIt1()"/>
+        <menuitem id="btn-do-buy" label="Buy" oncommand="boughtIt1()"/>
+    </menupopup>
+    <menupopup id="to-build-menu">
+        <menuitem id="btn-buy" label="Move to 'to buy'" oncommand="buyBuild('buy')"/>
+        <menuitem id="btn-do-build" label="Manufacture" oncommand="builtIt1()"/>
+    </menupopup>
+    <menupopup id="order-menu">
+        <menuitem id="btn-add" label="Add item" oncommand="addToProject1()"/>
+        <menuitem id="btn-remove" label="Remove item" oncommand="removeFromProject1()"/>
+    </menupopup>
+
+    <hbox flex="1" id="pp-tab-top-box" persist="height">
+        <vbox flex="1" id="order-box" persist="width">
             <label value="Required" />
-            <listbox id="order" flex="1">
-                <listitem value="1234" label="Orca x1"/>
-            </listbox>
+            <listbox id="order" flex="1" context="order-menu"/>
         </vbox>
         <splitter collapse="none"/>
         <vbox flex="1">
             <label value="Spent" />
-            <listbox id="spent" flex="1">
-                <listitem value="1234" label="Isk x123456789"/>
-                <listitem value="1234" label="Tritanium x123567"/>
-            </listbox>
+            <listbox id="spent" flex="1" context="acquired-menu"/>
         </vbox>
     </hbox>
-    <splitter/>
+    <splitter collapse="before" id="h-splitter" persist="state"><grippy /></splitter>
     <hbox flex="5">
-        <vbox flex="1">
+        <vbox flex="1" id="acquired-box" persist="width">
             <label value="Acquired"/>
-            <listbox id="acquired" flex="1">
-                <listitem value="1234" label="Tritanium x123456"/>
-                <listitem value="1234" label="Pyerite x32452"/>
-                <listitem value="1234" label="Capital Cargo Bay x31"/>
-                <listitem value="1234" label="Orca Blueprint ME 2 Runs inf"/>
-            </listbox>
+            <listbox id="acquired" flex="1" />
+        </vbox>
+        <splitter collapse="none"/>
+        <vbox flex="2" id="to-build-box" persist="width">
+            <label value="To build"/>
+            <listbox id="to-build" flex="1" context="to-build-menu"/>
         </vbox>
         <splitter collapse="none"/>
         <vbox flex="1">
-            <label value="To build"/>
-            <listbox id="to-build" flex="1">
-                <listitem value="1234" label="Orca x1"/>
-                <listitem value="1234" label="Capital Cargo Bay x31"/>
-            </listbox>
-        </vbox>
-        <splitter collapse="none"/>
-        <vbox flex="2">
             <label value="To buy"/>
-            <listbox id="to-buy" flex="1">
-                <listitem value="1234" label="Tritanium x123456"/>
-                <listitem value="1234" label="Pyerite x32452"/>
-            </listbox>
+            <listbox id="to-buy" flex="1" context="to-buy-menu"/>
         </vbox>
     </hbox>
 </window>
