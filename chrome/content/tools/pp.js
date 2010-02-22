@@ -73,17 +73,17 @@ function Item(typeID, quantity) {
     this.type = typeID;
     this.quantity = quantity;
 }
-function Blueprint(typeID, productTypeID, me, runs) {
+function Blueprint(typeID, me, runs) {
     this.type = typeID;
-    this.product = productTypeID;
     this.me = me;
     this.runs = runs;
 }
 
-function getBPMEList(productTypeID) {
-    if (!AllBlueprints[productTypeID])
-        AllBlueprints[productTypeID] = [];
-    for each (bp in AllBlueprints[productTypeID].sort(function (a, b) b.me - a.me))
+function getBPMEList(typeID) {
+    var typeID = getItemTypeByID(typeID).bp;
+    if (!AllBlueprints[typeID])
+        AllBlueprints[typeID] = [];
+    for each (bp in AllBlueprints[typeID].sort(function (a, b) b.me - a.me))
         for (var cnt = 0; cnt < bp.runs; cnt++)
             yield {me: bp.me};
     while (true)
@@ -128,10 +128,12 @@ List.prototype = {
         this._items[id].runs += bp.runs;
     },
     removeBP:   function (bp) {
-        var id = bp.type + '_' + bp.me;
+        var id = this._items[bp.type+'_0']
+            ? bp.type + '_0'
+            : bp.type + '_' + bp.me;
         this._items[id].runs -= bp.runs;
-        if (!this._items[id].runs) {
-            this._order = [i for each (i in this._order) if (i != item.type)];
+        if (this._items[id].runs <= 0) {
+            this._order = [i for each (i in this._order) if (i != id)];
             this.treebox.rowCountChanged(this._order.length - 1, -1);
         } else
             this.treebox.invalidate();
@@ -146,7 +148,13 @@ List.prototype = {
     },
     getItem:    function (typeID) {
         let total = this._items[typeID];
-        return total ? new Item(typeID, total) : null;
+        switch (typeof total) {
+            case 'object':
+                [typeID, me] = typeID.split('_');
+                return new Blueprint(typeID, total.me, total.runs);
+            case 'undefined':   return null;
+            default:            return new Item(typeID, total);
+        }
     },
     removeItem: function (item) {
         var q = this._items[item.type] - item.quantity
@@ -164,15 +172,18 @@ List.prototype = {
     getCellText:        function (aRow, aCol) {
         var typeID = this._order[aRow], me;
         var cnt = this._items[typeID];
+        var isbp, isisk;
         if (cnt instanceof Object) {
             [typeID, me] = typeID.split('_');
             cnt = cnt.runs;
-        }
+            isbp = 1;
+        } else if (typeID == 'isk')
+            isisk = 1;
         switch (aCol.id.substr(0,3)) {
-        case 'itm': return getItemTypeByID(typeID).type.name;
+        case 'itm': return isisk ? 'ISK' : getItemTypeByID(typeID).type.name;
         case 'cnt': return cnt;
         case 'isk': return 'N/A';
-        case 'me-': return me || '';
+        case 'me-': return isbp ? +me : '';
         default:    return '';
         }
     },
@@ -253,8 +264,6 @@ function buyBuild(action) {
     item = new Item(item.type, params.out.count);
     /* modify mats */  
     wantToBuild(item.type, action == 'build' ? params.out.count : -params.out.count);
-    src.removeItem(item);
-    dst.addItem(item);
     LOG('want-to-build '+item.type+' '+item.quantity);
 }
 
@@ -280,6 +289,7 @@ function wantToBuild(typeID, count) { // count can be negative
     var waste = type.waste/100, mats = {}, fakes = 0;
     [mats[i] = 0 for (i in type.raw)];
     for each (bp in bp_list) {
+        println("me "+bp.me);
         var wasteMul = 1 + waste/(1+bp.me);
         for (let [m,q] in Iterator(type.raw))
             mats[m] += Math.round(wasteMul*q);
@@ -291,12 +301,62 @@ function wantToBuild(typeID, count) { // count can be negative
             buy[count > 0 ? 'addItem' : 'removeItem'](new Item(m, q));
 
     if (fakes)
-        buy[count > 0 ? 'addBP' : 'removeBP'](new Blueprint(type.bp, typeID, 0, fakes));
+        buy[count > 0 ? 'addBP' : 'removeBP'](new Blueprint(type.bp, 0, fakes));
+
+    if (count > 0) {
+        var item = new Item(typeID, count);
+        buy.removeItem(item);
+        build.addItem(item);
+    } else {
+        var item = new Item(typeID, -count);
+        buy.addItem(item);
+        build.removeItem(item);
+    }
 }
 
 function boughtIt1() {
     let buy = getListByName('buy');
-    
+    let spent = getListByName('spent');
+    let itm = buy.current;
+    var params = {in: itm.constructor == Blueprint
+        ? {dlg: 'blueprint'}
+        : {dlg: 'buy-build', amount: itm.quantity}
+    };
+    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    if (!params.out.count)
+        return;
+    gotItem(itm.type, params);
+    spent.addItem(new Item('isk', 10*(params.in.dlg == 'blueprint' ? 1 : params.out.count)));
+    LOG('buy '+itm.type+' '+params.out.count);
+}
+
+function gotItem(typeID, params) {
+    let buy = getListByName('buy');
+    let acquired = getListByName('acquired');
+    let build = getListByName('build');
+    if (params.in.dlg == 'blueprint') {
+        var bp = new Blueprint(typeID, params.out.me || 0, params.out.count);
+        var in_prod;
+        buy.removeBP(bp);
+        acquired.addBP(bp);
+        for (in_prod in build._items)
+            if (getItemTypeByID(in_prod).bp == typeID)
+                break;
+        if (in_prod) {
+            in_prod = build.getItem(in_prod);
+            wantToBuild(in_prod.type, -in_prod.quantity);
+        }
+        if (!AllBlueprints[bp.type])
+            AllBlueprints[bp.type] = [];
+        AllBlueprints[bp.type].push({me: bp.me, runs: bp.runs});
+        if (in_prod) {
+            wantToBuild(in_prod.type, in_prod.quantity);
+        }
+    } else {
+        var item = new Item(typeID, params.out.count);
+        buy.removeItem(item);
+        acquired.addItem(item);
+    }
 }
 
 function load(projName) {

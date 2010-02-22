@@ -12,8 +12,8 @@ const types = {
         onload:     function () {
             var label = document.getElementById('label-bb');
             amount = document.getElementById('amount-bb');
-            label.value = "Please enter amount between 0 and " + params.in.amount;
-            amount.value = params.in.amount;
+            label.value = "Please enter amount between 1 and " + params.in.amount;
+            amount.max = amount.value = params.in.amount;
         },
         onaccept:   function () {
             params.out.count = +amount.value;
@@ -26,25 +26,19 @@ const types = {
         onaccept:   function () {
             var type = document.getElementById('type-add');
             params.out.typeName = type.value;
-            if (type.value.length && !type.nomatch) {
+            if (type.value.length && !type.nomatch)
                 params.out.count = +document.getElementById('amount-add').value;
-            }
             return true;
         },
         oncancel:   function () true,
     },
     'blueprint':    {
-        onload:     function () {
-            var label = document.getElementById('label-pb');
-            amount = document.getElementById('amount-bp');
-            label.value = "Please enter number of runs between 0 and " + params.in.amount;
-            amount.value = params.in.amount;
-        },
+        onload:     function () { },
         onaccept:   function () {
             params.out.me = +document.getElementById('me').value;
-            params.out.runs = document.getElementById('blueprint').value
+            params.out.count = document.getElementById('is_orig').selected
                 ? Infinity
-                : + document.getElementById('runs');
+                : +document.getElementById('runs').value;
             return true;
         },
         oncancel:   function () true,
@@ -57,12 +51,6 @@ function onLoad() {
     window.height = document.documentElement.scrollHeight;
     params.out = {};
     types[params.in.dlg].onload();
-}
-function checkValue_bb(text) {
-    if (text.value < 0)
-        text.value = 0;
-    else if (text.value > params.in.amount)
-        text.value = params.in.amount;
 }
 function forcecomplete_add(text) {
     if (!text.searchCount) {
@@ -78,13 +66,19 @@ function forcecomplete_add(text) {
     <stack>
         <vbox id="buy-build" collapsed="true">
             <label id="label-bb" value=""/>
-            <textbox id="amount-bb" onchange="checkValue_bb(this)"/>
+            <textbox id="amount-bb" type="number" min="1"/>
         </vbox>
         <radiogroup id="blueprint" collapsed="true">
-            <radio value="1" label="Blueprint Original" checked="true"/>
-            <radio value="0" label="Blueprint Copy" />
-            <textbox id="runs" label="Runs" />
-            <textbox id="me" label="ME" />
+            <radio label="Blueprint Original" selected="true" id="is_orig"/>
+            <radio label="Blueprint Copy" />
+            <hbox>
+                <label value="Runs" />
+                <textbox id="runs" type="number" min="1"/>
+            </hbox>
+            <hbox>
+                <label value="ME" />
+                <textbox id="me" type="number"/>
+            </hbox>
         </radiogroup>
         <vbox id="add-to-proj" collapsed="true">
             <label value="Please choose an item to build" />
@@ -94,7 +88,7 @@ function forcecomplete_add(text) {
                      onsearchcomplete="forcecomplete_add(this)"/>
             <hbox>
                 <label value="amount" />
-                <textbox id="amount-add" value="1" onchange="this.value = +this.value"/>
+                <textbox id="amount-add" value="1" type="number" min="1"/>
             </hbox>
         </vbox>
     </stack>
