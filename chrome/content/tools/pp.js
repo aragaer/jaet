@@ -1,4 +1,3 @@
-const AllItemTypes = {};
 var gEIS, gDB;
 const Queries = {
     getTypeByName:  "select typeID from invTypes where typeName=:tn",
@@ -9,102 +8,198 @@ const Queries = {
 };
 const Stms = { };
 
-const Lists = { };
+const AllItemTypes = {};
+const AllItems = {};
+const AllBlueprints = {};
 
-/*
- * Usage types:
- * extra    - is used "as is" - SUM(for each i in usedby, get amount*use_count)
- * raw      - add ME and wastage
- * blueprint - blueprint
- */
-
-function usage(user, quantity, usageType) {
-    this.user = user;
-    this.quantity = quantity || 1;
-    this.type = usageType || 'extra';
+const ActionLog = [];
+function LOG(text) {
+    ActionLog.push(text);
+    dump(text+"\n");
 }
 
-function itemType(typeID) {
+function ItemType(typeID) {
     this.id = typeID;
-    this.usedby = {}; /* keys - typeIDs, values - usage structs */
-    this.acquired = [];
+    this._type = null;
+    this._bp = null;
+    this._uses = null;
 }
 
-itemType.prototype = {
+function getItemTypeByID(typeID) {
+    if (!AllItemTypes[typeID])
+        AllItemTypes[typeID] = new ItemType(typeID);
+    return AllItemTypes[typeID];
+}
+
+ItemType.prototype = {
     get type() {
-        if (!this._type)
-            this._type = gEIS.getItemType(this.id);
+        this.__defineGetter__('type', function () this._type);
+        this._type = gEIS.getItemType(this.id);
         return this._type;
     },
-    to_buy:     null,
-    to_build:   null,
-    spent:      null,
-    get bp()    {
-        if (this._bp)
-            return this._bp;
+    get bp()    this._getBPAndWaste('_bp'),
+    get waste() this._getBPAndWaste('_waste'),
+
+    _getBPAndWaste: function (arg) {
+        this.__defineGetter__('bp', function () this._bp);
+        this.__defineGetter__('waste', function () this._waste);
         let stm = Stms.getBPByType;
-        var waste;
         try {
             stm.params.tid = this.id;
-            if (stm.step())
-                this._bp = stm.row.blueprintTypeID;
-                waste = stm.row.wasteFactor;
+            if (!stm.step())
+                return;
+            this._bp = stm.row.blueprintTypeID;
+            this._waste = stm.row.wasteFactor;
         } catch (e) {
-            dump("Production planner: getBPByType :"+e+"\n");
-        } finally {
-            stm.reset();
-        }
-        let bp = AllItemTypes[this._bp] = new itemType(this._bp);
-        bp.waste = waste;
-        bp.usedby[this.id] = new usage(this, 1, 'blueprint');
-        return this._bp;
+            dump("Production planner: getBPByType for "+this.id+": "+e+"\n");
+        } finally { stm.reset(); }
+        return this[arg];
     },
-    get uses()  {
-        if (this._uses)
-            return this._uses;
-        this._uses = {};
+    get raw()   {
+        this.__defineGetter__('uses', function () this._uses);
+        this._raw = {};
         let stm = Stms.getRawMats;
         try {
             stm.params.tid = this.id;
-            while (stm.step()) {
-                let mat = stm.row.tid, q = stm.row.quantity;
-                this._uses[mat] = q;
-                switch (true) {
-                case !AllItemTypes[mat]:
-                    AllItemTypes[mat] = new itemType(mat);
-                    /* fall-through */
-                case !AllItemTypes[mat].usedby[this.id]:
-                    AllItemTypes[mat].usedby[this.id] = new usage(this, q, 'raw');
-                    break;
-                default:
-                    AllItemTypes[mat].usedby[this.id].quantity += q;
-                    break;
-                }
-            }
+            while (stm.step())
+                this._raw[stm.row.tid] = stm.row.quantity;
         } catch (e) {
-            dump("Filling 'uses' for "+this._type.name+":"+e+"\n");
-        } finally {
-            stm.reset();
-        }
-        return this._uses;
+            dump("Filling 'uses' for "+this.type.name+": "+e+"\n");
+        } finally { stm.reset(); }
+        return this._raw;
     },
 };
-
-function entry(typeID) {
-    this.id = typeID;
-    this.type = AllItemTypes[typeID] || new itemType(typeID);
+function Item(typeID, quantity) {
+    this.type = typeID;
+    this.quantity = quantity;
+}
+function Blueprint(typeID, productTypeID, me, runs) {
+    this.type = typeID;
+    this.product = productTypeID;
+    this.me = me;
+    this.runs = runs;
 }
 
-entry.prototype = {
-    me:         null,
-    amount:     0,
-    listitem:   null,
+function getBPMEList(productTypeID) {
+    if (!AllBlueprints[productTypeID])
+        AllBlueprints[productTypeID] = [];
+    for each (bp in AllBlueprints[productTypeID].sort(function (a, b) b.me - a.me))
+        for (var cnt = 0; cnt < bp.runs; cnt++)
+            yield {me: bp.me};
+    while (true)
+        yield {me: 0, fake: true};
+}
+
+const showHide = {
+    order:      function (aEvt) 
+        document.getElementById('btn-remove').hidden =
+                (getListByName('order').getRowAt(aEvt.clientX, aEvt.clientY) == -1),
+    build:      function (aEvt) {
+        if (getListByName('build').getRowAt(aEvt.clientX, aEvt.clientY) == -1)
+            aEvt.preventDefault();
+    },
+    buy:        function (aEvt) {
+        var type = getListByName('buy').getItemTypeAt(aEvt.clientX, aEvt.clientY);
+        type
+            ? document.getElementById('btn-build').hidden = !getItemTypeByID(type).bp
+            : aEvt.preventDefault()
+    },
+    acquired:   function (aEvt) { },
+    spent:      function (aEvt) { },
 };
 
-const Project = {listitems: {}, uses: {}};
+const AllLists = {};
+function List(name) {
+    this._name = name;
+    this._list = document.getElementById(name);
+    document.getElementById(name+'-menu').addEventListener('popupshowing', showHide[name], true);
+    this._items = {};
+    this._order = [];
+    this._list.view = this;
+}
+List.prototype = {
+    addBP:      function (bp) {
+        var id = bp.type + '_' + bp.me;
+        if (!this._items[id]) {
+            this._order.push(id);
+            this._items[id] = {me: bp.me, runs: 0};
+            this.treebox.rowCountChanged(this._order.length - 1, 1);
+        }
+        this._items[id].runs += bp.runs;
+    },
+    removeBP:   function (bp) {
+        var id = bp.type + '_' + bp.me;
+        this._items[id].runs -= bp.runs;
+        if (!this._items[id].runs) {
+            this._order = [i for each (i in this._order) if (i != item.type)];
+            this.treebox.rowCountChanged(this._order.length - 1, -1);
+        } else
+            this.treebox.invalidate();
+    },
+    addItem:    function (item) {
+        var q = this._items[item.type] || 0;
+        if (!q) {
+            this._order.push(item.type);
+            this.treebox.rowCountChanged(this._order.length - 1, 1);
+        }
+        this._items[item.type] = q + item.quantity;
+    },
+    getItem:    function (typeID) {
+        let total = this._items[typeID];
+        return total ? new Item(typeID, total) : null;
+    },
+    removeItem: function (item) {
+        var q = this._items[item.type] - item.quantity
+        this._items[item.type] = q;
+        if (!q) {
+            this._order = [i for each (i in this._order) if (i != item.type)];
+            this.treebox.rowCountChanged(this._order.length - 1, -1);
+        } else
+            this.treebox.invalidate();
+    },
+    get current()       this.getItem(this._order[this.selection.currentIndex]),
+    getItemTypeAt:      function (x, y) this._order[this.getRowAt(x, y)],
+    getRowAt:           function (x, y) this.treebox.getRowAt(x, y),
+    get rowCount()      this._order.length,
+    getCellText:        function (aRow, aCol) {
+        var typeID = this._order[aRow], me;
+        var cnt = this._items[typeID];
+        if (cnt instanceof Object) {
+            [typeID, me] = typeID.split('_');
+            cnt = cnt.runs;
+        }
+        switch (aCol.id.substr(0,3)) {
+        case 'itm': return getItemTypeByID(typeID).type.name;
+        case 'cnt': return cnt;
+        case 'isk': return 'N/A';
+        case 'me-': return me || '';
+        default:    return '';
+        }
+    },
+    setCellText:        function (row,col,value) { },
+    isEditable:         function (row,col) false,
+    isContainer:        function (aRow) false,
+    isContainerOpen:    function (aRow) false,
+    isContainerEmpty:   function (aRow) false,
+    getLevel:           function (aRow) 0,
+    getParentIndex:     function (aRow) 0,
+    hasNextSibling:     function (aRow, aAfterRow) 0,
+    toggleOpenState:    function (aRow) { },
+    setTree:            function (treebox) this.treebox = treebox,
+    isSeparator:        function (aRow) false,
+    isSorted:           function () false,
+    getImageSrc:        function (row,col) null,
+    getRowProperties:   function (row,props) { },
+    getCellProperties:  function (row,col,props) { },
+    getColumnProperties: function (colid,col,props) { }
 
-function ListItemValue (entry)
-    entry.type.type.name + (entry.me ? ' (ME: '+entry.me+')' : '') + ' x' + entry.amount;
+};
+
+function getListByName(name) {
+    if (!AllLists[name])
+        AllLists[name] = new List(name);
+    return AllLists[name];
+}
 
 function addToProject1() {
     var params = {in: {dlg: 'add-to-proj'}, out: null};
@@ -120,131 +215,96 @@ function addToProject1() {
 }
 
 function addToProject(typeID, count) {
-    if (!AllItemTypes[typeID])
-        AllItemTypes[typeID] = new itemType(typeID);
-    let itm = AllItemTypes[typeID];
+    var item = new Item(typeID, count);
+    getListByName('order').addItem(item);
+    getListByName('buy').addItem(item);
+    LOG('add '+typeID+' '+count);
+}
 
-    if (!Project.uses[typeID]) {
-        Project.uses[typeID] = 0;
-        Project.listitems[typeID] = Lists.order.appendItem(itm.type.name, typeID);
-        itm.usedby.project = new usage(Project, count, 'extra');
+function removeFromProject1() {
+    let proj = getListByName('order');
+    let buy = getListByName('buy');
+    var item = buy.getItemTypeByID(proj.current.type);
+    if (!item) {
+        alert("Can't remove item from project - not in 'to buy' list!");
+        return;
     }
-    Project.uses[typeID] += count;
-    Project.listitems[typeID].label = itm.type.name + ' x' + Project.uses[typeID];
-
-    if (!itm.to_buy) {
-        itm.to_buy = new entry(typeID);
-        itm.to_buy.listitem = Lists.to_buy.appendItem(itm.type.name, typeID);
-    }
-
-    itm.to_buy.amount += count;
-    itm.to_buy.listitem.label = ListItemValue(itm.to_buy);
+    var params = {in: {dlg: 'buy-build', amount: item.quantity}};
+    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    if (!params.out.count)
+        return;
+    item = new Item(item.type, params.out.count);
+    proj.removeItem(item);
+    buy.removeItem(item);
+    LOG('remove '+item.type+' '+item.quantity);
 }
 
 /* move from 'to buy' to 'to build' or vice versa */
 function buyBuild(action) {
-    var src;
-    switch (action) {
-        case 'buy': src = 'to_build'; break;
-        case 'build': src = 'to_buy'; break;
-        default: return;
-    }
-    if (Lists[src].currentIndex == -1)
+    let src = getListByName(action == 'buy' ? 'build' : 'buy');
+    let dst = getListByName(action);
+    var item = src.current;
+    if (!item)
         return;
-
-    var itm = AllItemTypes[Lists[src].value];
-    var params = {in: {
-            dlg: 'buy-build',
-            itm: itm,
-            amount: itm[src].amount
-        }, out: null};
+    var params = {in: {dlg: 'buy-build', amount: item.quantity}};
     openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
-    if (params.out.count)
-        wantToBuild(itm, action == 'build' ? params.out.count : -params.out.count);
+    if (!params.out.count)
+        return;
+    item = new Item(item.type, params.out.count);
+    /* modify mats */  
+    wantToBuild(item.type, action == 'build' ? params.out.count : -params.out.count);
+    src.removeItem(item);
+    dst.addItem(item);
+    LOG('want-to-build '+item.type+' '+item.quantity);
 }
 
-function wantToBuild(itm, count) { // count can be negative
-    for each (src in ['to_buy', 'to_build'])
-        if (!itm[src]) {
-            itm[src] = new entry(itm.id);
-            itm[src].listitem = Lists[src].appendItem(itm.type.name, itm.id);
-        }
+function wantToBuild(typeID, count) { // count can be negative
+    let buy = getListByName('buy');
+    let build = getListByName('build');
+    let type = getItemTypeByID(typeID);
+    var bp_list = [];
 
-    var me_list = [{me: i.me, runs: i.amount} for each (i in AllItemTypes[itm.bp].acquired)].
-        concat([{me: 0, runs: Infinity, fake: true}]).sort(function (a, b) b.me - a.me);
-/* Debugging */
-    dump("List of blueprints for "+itm.type.name+":\n");
-    for each (i in me_list)
-        dump(i.me+":"+i.runs+"\n");
-
-    var spent = itm.to_build.amount;
-    if (spent) {
+    let (me_list = getBPMEList(typeID)) {
         var spent_list = [];
-        while (bp = me_list.shift())
-            if (spent > bp.runs) {
-                spent -= bp.runs;
-                spent_list.push(bp);
-            } else {
-                bp.runs -= spent;
-                me_list.unshift(bp);
-                spent_list.push({me: bp.me, runs: spent, fake: bp.fake});
-                break;
-            }
-        if (count < 0)
-            me_list = spent_list.reverse();
+        var spent = build.getItem(typeID);
+        if (spent)
+            for (var i = 0; i < spent.quantity; i++)
+                spent_list.unshift(me_list.next());
+        if (count > 0)
+            for (var i = 0; i < count; i++)
+                bp_list.push(me_list.next());
+        else
+            bp_list = spent_list.slice(0, -count);
     }
-    dump("List of blueprints to use for "+itm.type.name+":\n");
-    for each (i in me_list)
-        dump(i.me+":"+i.runs+"\n");
-    itm.to_build.amount += count;
-    itm.to_buy.amount -= count;
 
-    for each (src in ['to_buy', 'to_build'])
-        if (!itm[src].amount) {
-            Lists[src].removeChild(itm[src].listitem);
-            itm[src] = null;
-        } else
-            itm[src].listitem.label = ListItemValue(itm[src]);
-    
-    var waste = AllItemTypes[itm.bp].waste/100;
-    var mats = {};
-    [mats[i] = 0 for (i in itm.uses)];
-    for each (bp in me_list) {
-        var num = count > 0 ? Math.min(count, bp.runs) : -Math.min(-count, bp.runs);
+    var waste = type.waste/100, mats = {}, fakes = 0;
+    [mats[i] = 0 for (i in type.raw)];
+    for each (bp in bp_list) {
         var wasteMul = 1 + waste/(1+bp.me);
-        for (i in itm.uses) {
-            var usage = AllItemTypes[i].usedby[itm.id];
-            mats[i] += num*(usage.type == 'raw'
-                ? Math.round(wasteMul*usage.quantity)
-                : usage.quantity);
-        }
-        if (bp.fake)
-            addMaterialsToBuy(itm.bp, num);
-        count -= num;
-        if (!count)
-            break;
+        for (let [m,q] in Iterator(type.raw))
+            mats[m] += Math.round(wasteMul*q);
+        fakes += bp.fake;
     }
 
-    for (i in mats)
-        addMaterialsToBuy(i, mats[i]);
+    for (let [m, q] in Iterator(mats))
+        if (q)
+            buy[count > 0 ? 'addItem' : 'removeItem'](new Item(m, q));
+
+    if (fakes)
+        buy[count > 0 ? 'addBP' : 'removeBP'](new Blueprint(type.bp, typeID, 0, fakes));
 }
 
-function addMaterialsToBuy(typeID, quantity) { // Also remove - with negative quantity
-    if (!AllItemTypes[typeID])
-        AllItemTypes[typeID] = new itemType(typeID);
-    var itm = AllItemTypes[typeID];
-    if (!itm.to_buy)
-        itm.to_buy = new entry(typeID);
+function boughtIt1() {
+    let buy = getListByName('buy');
+    
+}
 
-    if (!itm.to_buy.listitem)
-        itm.to_buy.listitem = Lists.to_buy.appendItem(itm.type.name, typeID);
+function load(projName) {
+    
+}
 
-    itm.to_buy.amount += quantity;
-    if (!itm.to_buy.amount) {
-        Lists.to_buy.removeChild(itm.to_buy.listitem);
-        itm.to_buy = null;
-    } else
-        itm.to_buy.listitem.label = ListItemValue(itm.to_buy);
+function save(projName) {
+    
 }
 
 function pp_tab_onLoad() {
@@ -258,40 +318,6 @@ function pp_tab_onLoad() {
             dump("production planner: "+e+"\n"+conn.lastErrorString+"\n");
         }
 
-    Lists.order = document.getElementById('order');
-    Lists.to_buy = document.getElementById('to-buy');
-    Lists.to_build = document.getElementById('to-build');
-    Lists.acquired = document.getElementById('acquired');
-
-/* this is for testing only */
-    let stm = Stms.getTypeByName;
-    stm.params.tn = 'Orca';
-    stm.step();
-    var rifterTypeID = stm.row.typeID;
-    stm.reset();
-    
-    addToProject(rifterTypeID, 10);
-    let rifter = AllItemTypes[rifterTypeID];
-    let bp = AllItemTypes[rifter.bp];
-    let bpc = new entry(rifter.bp);
-    bpc.amount = Infinity;
-    bpc.me = 3;
-    bp.acquired.push(bpc);
-    Lists.acquired.appendItem(bp.type.name, rifter.bp).label = ListItemValue(bpc);
-
-    var itmat0;
-    for (i in rifter.uses) {
-        itmat0 = AllItemTypes[i];
-        break;
-    }
-    let bp = AllItemTypes[itmat0.bp];
-    let bpc = new entry(itmat0.bp);
-    bpc.amount = 50;
-    bpc.me = 50;
-    bp.acquired.push(bpc);
-    Lists.acquired.appendItem(bp.type.name, itmat0.bp).label = ListItemValue(bpc);
-
-//    wantToBuild(rifter, 5);
-    
+    [getListByName(i) for (i in showHide)];
 }
 

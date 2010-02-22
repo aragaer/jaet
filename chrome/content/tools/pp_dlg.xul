@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    ondialogaccept="types[params.in.dlg].onaccept()"
+    ondialogcancel="types[params.in.dlg].oncancel()"
+    onload="onLoad();" id="pp-dlg" persist="screenX screenY">
+<script><![CDATA[
+var params, amount;
+const types = {
+    'buy-build':    {
+        onload:     function () {
+            var label = document.getElementById('label-bb');
+            amount = document.getElementById('amount-bb');
+            label.value = "Please enter amount between 0 and " + params.in.amount;
+            amount.value = params.in.amount;
+        },
+        onaccept:   function () {
+            params.out.count = +amount.value;
+            return true;
+        },
+        oncancel:   function () true,
+    },
+    'add-to-proj':  {
+        onload:     function () { },
+        onaccept:   function () {
+            var type = document.getElementById('type-add');
+            params.out.typeName = type.value;
+            if (type.value.length && !type.nomatch) {
+                params.out.count = +document.getElementById('amount-add').value;
+            }
+            return true;
+        },
+        oncancel:   function () true,
+    },
+    'blueprint':    {
+        onload:     function () {
+            var label = document.getElementById('label-pb');
+            amount = document.getElementById('amount-bp');
+            label.value = "Please enter number of runs between 0 and " + params.in.amount;
+            amount.value = params.in.amount;
+        },
+        onaccept:   function () {
+            params.out.me = +document.getElementById('me').value;
+            params.out.runs = document.getElementById('blueprint').value
+                ? Infinity
+                : + document.getElementById('runs');
+            return true;
+        },
+        oncancel:   function () true,
+    },
+};
+function onLoad() {
+    params = window.arguments[0];
+    document.getElementById(params.in.dlg).collapsed = false;
+    window.width = document.documentElement.scrollWidth;
+    window.height = document.documentElement.scrollHeight;
+    params.out = {};
+    types[params.in.dlg].onload();
+}
+function checkValue_bb(text) {
+    if (text.value < 0)
+        text.value = 0;
+    else if (text.value > params.in.amount)
+        text.value = params.in.amount;
+}
+function forcecomplete_add(text) {
+    if (!text.searchCount) {
+        text.value = text.searchParam;
+        return;
+    }
+    var st = text.selectionStart;
+    text.value = text.controller.getValueAt(0);
+    text.selectionStart = st;
+    text.selectionEnd = text.value.length;
+}
+]]></script>
+    <stack>
+        <vbox id="buy-build" collapsed="true">
+            <label id="label-bb" value=""/>
+            <textbox id="amount-bb" onchange="checkValue_bb(this)"/>
+        </vbox>
+        <radiogroup id="blueprint" collapsed="true">
+            <radio value="1" label="Blueprint Original" checked="true"/>
+            <radio value="0" label="Blueprint Copy" />
+            <textbox id="runs" label="Runs" />
+            <textbox id="me" label="ME" />
+        </radiogroup>
+        <vbox id="add-to-proj" collapsed="true">
+            <label value="Please choose an item to build" />
+            <textbox id="type-add" type="autocomplete"
+                     autocompletesearch="item-type-buildable-autocomplete"
+                     highlightnonmatches="true"
+                     onsearchcomplete="forcecomplete_add(this)"/>
+            <hbox>
+                <label value="amount" />
+                <textbox id="amount-add" value="1" onchange="this.value = +this.value"/>
+            </hbox>
+        </vbox>
+    </stack>
+</dialog>
+

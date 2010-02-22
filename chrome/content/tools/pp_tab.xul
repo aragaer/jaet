@@ -11,12 +11,12 @@
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/pp.js"/>
 
-    <menupopup id="to-buy-menu">
+    <menupopup id="buy-menu">
         <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>
         <menuitem id="btn-acquired" label="Already acquired" oncommand="gotIt1()"/>
         <menuitem id="btn-do-buy" label="Buy" oncommand="boughtIt1()"/>
     </menupopup>
-    <menupopup id="to-build-menu">
+    <menupopup id="build-menu">
         <menuitem id="btn-buy" label="Move to 'to buy'" oncommand="buyBuild('buy')"/>
         <menuitem id="btn-do-build" label="Manufacture" oncommand="builtIt1()"/>
     </menupopup>
@@ -24,33 +24,67 @@
         <menuitem id="btn-add" label="Add item" oncommand="addToProject1()"/>
         <menuitem id="btn-remove" label="Remove item" oncommand="removeFromProject1()"/>
     </menupopup>
+    <menupopup id="acquired-menu" />
+    <menupopup id="spent-menu" />
 
     <hbox flex="1" id="pp-tab-top-box" persist="height">
         <vbox flex="1" id="order-box" persist="width">
             <label value="Required" />
-            <listbox id="order" flex="1" context="order-menu"/>
+            <tree id="order" flex="1" context="order-menu" hidecolumnpicker="true">
+                <treecols>
+                    <treecol label="Item" id="itm-order" flex="1"/>
+                    <treecol label="Count" id="cnt-order" />
+                </treecols>
+                <treechildren/>
+            </tree>
         </vbox>
         <splitter collapse="none"/>
         <vbox flex="1">
             <label value="Spent" />
-            <listbox id="spent" flex="1" context="acquired-menu"/>
+            <tree id="spent" flex="1" context="spent-menu" hidecolumnpicker="true">
+                <treecols>
+                    <treecol label="Item" id="itm-spent" flex="1"/>
+                    <treecol label="Count" id="cnt-spent" />
+                </treecols>
+                <treechildren/>
+            </tree>
         </vbox>
     </hbox>
     <splitter collapse="before" id="h-splitter" persist="state"><grippy /></splitter>
     <hbox flex="5">
         <vbox flex="1" id="acquired-box" persist="width">
             <label value="Acquired"/>
-            <listbox id="acquired" flex="1" />
+            <tree id="acquired" flex="1" context="acquired-menu" hidecolumnpicker="true">
+                <treecols>
+                    <treecol label="Item" id="itm-acquired" flex="1"/>
+                    <treecol label="ME" id="me-acquired" />
+                    <treecol label="Count/Runs" id="cnt-acquired" />
+                </treecols>
+                <treechildren/>
+            </tree>
         </vbox>
         <splitter collapse="none"/>
-        <vbox flex="2" id="to-build-box" persist="width">
+        <vbox flex="1" id="to-build-box" persist="width">
             <label value="To build"/>
-            <listbox id="to-build" flex="1" context="to-build-menu"/>
+            <tree id="build" flex="1" context="build-menu" hidecolumnpicker="true">
+                <treecols>
+                    <treecol label="Item" id="itm-build" flex="1"/>
+                    <treecol label="Count" id="cnt-build" />
+                </treecols>
+                <treechildren/>
+            </tree>
         </vbox>
         <splitter collapse="none"/>
         <vbox flex="1">
             <label value="To buy"/>
-            <listbox id="to-buy" flex="1" context="to-buy-menu"/>
+            <tree id="buy" flex="1" context="buy-menu" hidecolumnpicker="true">
+                <treecols>
+                    <treecol label="Item" id="itm-buy" flex="1"/>
+                    <treecol label="Count/Runs" id="cnt-buy" />
+                    <treecol label="Cost" id="isk-buy" />
+                </treecols>
+                <treechildren/>
+            </tree>
         </vbox>
     </hbox>
 </window>
