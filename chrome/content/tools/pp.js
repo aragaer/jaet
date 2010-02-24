@@ -1,4 +1,4 @@
-var gEIS, gDB;
+var gEIS, gDB, gPC;
 const Queries = {
     getTypeByName:  "select typeID from invTypes where typeName=:tn",
     getBPByType:    "select blueprintTypeID, wasteFactor from invBlueprintTypes where productTypeID=:tid",
@@ -34,8 +34,7 @@ function getItemTypeByID(typeID) {
 ItemType.prototype = {
     get type() {
         this.__defineGetter__('type', function () this._type);
-        this._type = gEIS.getItemType(this.id);
-        return this._type;
+        return this._type = gEIS.getItemType(this.id);
     },
     get bp()    this._getBPAndWaste('_bp'),
     get waste() this._getBPAndWaste('_waste'),
@@ -67,6 +66,10 @@ ItemType.prototype = {
             dump("Filling 'uses' for "+this.type.name+": "+e+"\n");
         } finally { stm.reset(); }
         return this._raw;
+    },
+    get price() {
+        this.__defineGetter__('price', function () this._price);
+        return this._price = Math.round(gPC.getPriceForItem(this.id, null)*100)/100;
     },
 };
 function Item(typeID, quantity) {
@@ -173,16 +176,18 @@ List.prototype = {
         var typeID = this._order[aRow], me;
         var cnt = this._items[typeID];
         var isbp, isisk;
+        var type = getItemTypeByID(typeID);
         if (cnt instanceof Object) {
             [typeID, me] = typeID.split('_');
             cnt = cnt.runs;
             isbp = 1;
+            type = getItemTypeByID(typeID);
         } else if (typeID == 'isk')
             isisk = 1;
         switch (aCol.id.substr(0,3)) {
-        case 'itm': return isisk ? 'ISK' : getItemTypeByID(typeID).type.name;
+        case 'itm': return isisk ? 'ISK' : type.type.name;
         case 'cnt': return cnt;
-        case 'isk': return 'N/A';
+        case 'isk': return type ? type.price.toLocaleString() : 'N/A';
         case 'me-': return isbp ? +me : '';
         default:    return '';
         }
@@ -289,16 +294,28 @@ function wantToBuild(typeID, count) { // count can be negative
     var waste = type.waste/100, mats = {}, fakes = 0;
     [mats[i] = 0 for (i in type.raw)];
     for each (bp in bp_list) {
-        println("me "+bp.me);
         var wasteMul = 1 + waste/(1+bp.me);
         for (let [m,q] in Iterator(type.raw))
             mats[m] += Math.round(wasteMul*q);
         fakes += bp.fake;
     }
 
-    for (let [m, q] in Iterator(mats))
-        if (q)
-            buy[count > 0 ? 'addItem' : 'removeItem'](new Item(m, q));
+    for (let [m, q] in Iterator(mats)) {
+        if (!q)
+            continue;
+        if (count > 0) {
+            buy.addItem(new Item(m, q));
+            continue;
+        }
+        var qs = [buy, build].map(function (l) {
+            var itm = l.getItem(m);
+            return itm ? itm.quantity : 0;
+        });
+        q = Math.min(q, qs[0] + qs[1]);
+        if (q > qs[0])
+            wantToBuild(m, qs[0] - q);
+        buy.removeItem(new Item(m, q));
+    }
 
     if (fakes)
         buy[count > 0 ? 'addBP' : 'removeBP'](new Blueprint(type.bp, 0, fakes));
@@ -326,7 +343,7 @@ function boughtIt1() {
     if (!params.out.count)
         return;
     gotItem(itm.type, params);
-    spent.addItem(new Item('isk', 10*(params.in.dlg == 'blueprint' ? 1 : params.out.count)));
+    spent.addItem(new Item('isk', getItemTypeByID(itm.type).price*(params.in.dlg == 'blueprint' ? 1 : params.out.count)));
     LOG('buy '+itm.type+' '+params.out.count);
 }
 
@@ -370,6 +387,8 @@ function save(projName) {
 function pp_tab_onLoad() {
     gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
     gDB  = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);
+    gPC  = Cc["@aragaer/eve/market-data/provider;1?name=eve-central"].
+            getService(Ci.nsIEveMarketDataProviderService);
     var conn = gDB.getConnection();
     for (i in Queries)
         try {

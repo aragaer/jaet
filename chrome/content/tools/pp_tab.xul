@@ -32,8 +32,9 @@
             <label value="Required" />
             <tree id="order" flex="1" context="order-menu" hidecolumnpicker="true">
                 <treecols>
-                    <treecol label="Item" id="itm-order" flex="1"/>
-                    <treecol label="Count" id="cnt-order" />
+                    <treecol label="Item" id="itm-order" flex="1" persist="width"/>
+                    <splitter class="tree-splitter" />
+                    <treecol label="Count" id="cnt-order" persist="width"/>
                 </treecols>
                 <treechildren/>
             </tree>
@@ -43,8 +44,9 @@
             <label value="Spent" />
             <tree id="spent" flex="1" context="spent-menu" hidecolumnpicker="true">
                 <treecols>
-                    <treecol label="Item" id="itm-spent" flex="1"/>
-                    <treecol label="Count" id="cnt-spent" />
+                    <treecol label="Item" id="itm-spent" flex="1" persist="width"/>
+                    <splitter class="tree-splitter" />
+                    <treecol label="Count" id="cnt-spent" persist="width"/>
                 </treecols>
                 <treechildren/>
             </tree>
@@ -52,13 +54,15 @@
     </hbox>
     <splitter collapse="before" id="h-splitter" persist="state"><grippy /></splitter>
     <hbox flex="5">
-        <vbox flex="1" id="acquired-box" persist="width">
-            <label value="Acquired"/>
-            <tree id="acquired" flex="1" context="acquired-menu" hidecolumnpicker="true">
+        <vbox flex="1" id="to-buy-box" persist="width">
+            <label value="To buy"/>
+            <tree id="buy" flex="1" context="buy-menu" hidecolumnpicker="true">
                 <treecols>
-                    <treecol label="Item" id="itm-acquired" flex="1"/>
-                    <treecol label="ME" id="me-acquired" />
-                    <treecol label="Count/Runs" id="cnt-acquired" />
+                    <treecol label="Item" id="itm-buy" flex="1" persist="width"/>
+                    <splitter class="tree-splitter" />
+                    <treecol label="Count/Runs" id="cnt-buy" persist="width"/>
+                    <splitter class="tree-splitter" />
+                    <treecol label="Cost" id="isk-buy" persist="width"/>
                 </treecols>
                 <treechildren/>
             </tree>
@@ -68,20 +72,23 @@
             <label value="To build"/>
             <tree id="build" flex="1" context="build-menu" hidecolumnpicker="true">
                 <treecols>
-                    <treecol label="Item" id="itm-build" flex="1"/>
-                    <treecol label="Count" id="cnt-build" />
+                    <treecol label="Item" id="itm-build" flex="1" persist="width"/>
+                    <splitter class="tree-splitter" />
+                    <treecol label="Count" id="cnt-build" persist="width"/>
                 </treecols>
                 <treechildren/>
             </tree>
         </vbox>
         <splitter collapse="none"/>
-        <vbox flex="1">
-            <label value="To buy"/>
-            <tree id="buy" flex="1" context="buy-menu" hidecolumnpicker="true">
+        <vbox flex="1" id="acquired-box" persist="width">
+            <label value="Acquired"/>
+            <tree id="acquired" flex="1" context="acquired-menu" hidecolumnpicker="true">
                 <treecols>
-                    <treecol label="Item" id="itm-buy" flex="1"/>
-                    <treecol label="Count/Runs" id="cnt-buy" />
-                    <treecol label="Cost" id="isk-buy" />
+                    <treecol label="Item" id="itm-acquired" flex="1" persist="width"/>
+                    <splitter class="tree-splitter" />
+                    <treecol label="ME" id="me-acquired" persist="width"/>
+                    <splitter class="tree-splitter" />
+                    <treecol label="Count/Runs" id="cnt-acquired"persist="width"/>
                 </treecols>
                 <treechildren/>
             </tree>
