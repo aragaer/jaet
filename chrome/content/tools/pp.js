@@ -136,6 +136,7 @@ List.prototype = {
             : bp.type + '_' + bp.me;
         this._items[id].runs -= bp.runs;
         if (this._items[id].runs <= 0) {
+            this._items[id].runs = 0;
             this._order = [i for each (i in this._order) if (i != id)];
             this.treebox.rowCountChanged(this._order.length - 1, -1);
         } else
@@ -168,6 +169,7 @@ List.prototype = {
         } else
             this.treebox.invalidate();
     },
+    get allItems()      this._items,
     get current()       this.getItem(this._order[this.selection.currentIndex]),
     getItemTypeAt:      function (x, y) this._order[this.getRowAt(x, y)],
     getRowAt:           function (x, y) this.treebox.getRowAt(x, y),
@@ -186,7 +188,7 @@ List.prototype = {
             isisk = 1;
         switch (aCol.id.substr(0,3)) {
         case 'itm': return isisk ? 'ISK' : type.type.name;
-        case 'cnt': return cnt;
+        case 'cnt': return cnt.toLocaleString();
         case 'isk': return type ? type.price.toLocaleString() : 'N/A';
         case 'me-': return isbp ? +me : '';
         default:    return '';
@@ -377,11 +379,33 @@ function gotItem(typeID, params) {
 }
 
 function load(projName) {
-    
+    var data = [];
+    for each (i in data)
+        if (i.me !== undefined)
+            getListByName(i.state).addBP(new Blueprint(i.type, +i.me, +str2inf(i.cnt)));
+        else
+            getListByName(i.state).addItem(new Item(i.type, i.cnt));
 }
 
+function inf2str(value) value == Infinity ? 'inf' : value
+function str2inf(value) value == 'inf' ? Infinity : value
+
 function save(projName) {
-    
+    var data = [];
+    ['buy', 'build', 'acquired', 'spent', 'order'].forEach(function (l) {
+        let itms = getListByName(l).allItems;
+        for (i in itms) {
+            var cnt = itms[i];
+            var tmp = {state:l, cnt: cnt, type: i};
+            if (cnt instanceof Object) {
+                [tmp.type, tmp.me] = i.split('_');
+                tmp.cnt = inf2str(cnt.runs);
+            }
+            if (tmp.cnt)
+                data.push(tmp);
+        }
+    });
+    println(JSON.stringify(data));
 }
 
 function pp_tab_onLoad() {
@@ -398,5 +422,6 @@ function pp_tab_onLoad() {
         }
 
     [getListByName(i) for (i in showHide)];
+    load('rifters');
 }
 

@@ -26,15 +26,23 @@ function ppOnload() {
     iframe.setAttribute('flex', '1');
     tabpanel.appendChild(iframe);
 
-    tabbox.tabs.appendItem('Rifters');
+    tabbox.tabs.appendItem('Orca');
     tabbox.tabpanels.appendChild(tabpanel);
     tabbox.selectedIndex = 0;
+}
+
+function save() {
+    var panels = document.getElementById('tabpanels');
+    if (panels.selectedIndex == -1)
+        return;
+    var win = panels.selectedPanel.firstChild.contentWindow;
+    win.save();
 }
 ]]></script>
 
     <command id="File:New" oncommand="quit()"/>
     <command id="File:Open" oncommand="quit()"/>
-    <command id="File:Save" oncommand="quit()"/>
+    <command id="File:Save" oncommand="save()"/>
     <command id="File:Export" oncommand="quit()"/>
     <command id="File:Exit" oncommand="quit()"/>
 
@@ -48,6 +56,7 @@ function ppOnload() {
                 <menuitem label="Open" command="File:Open"/>
                 <menuitem label="Save" command="File:Save"/>
                 <menuseparator/>
+                <menuitem label="Import..." command="File:Import"/>
                 <menuitem label="Export..." command="File:Export"/>
                 <menuseparator/>
                 <menuitem label="Quit" command="File:Exit"/>
