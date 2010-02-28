@@ -31,17 +31,29 @@ function ppOnload() {
     tabbox.selectedIndex = 0;
 }
 
-function save() {
+function currentWindow() {
     var panels = document.getElementById('tabpanels');
-    if (panels.selectedIndex == -1)
-        return;
-    var win = panels.selectedPanel.firstChild.contentWindow;
-    win.save();
+    return panels.selectedIndex == -1
+        ? null
+        : panels.selectedPanel.firstChild.contentWindow;
 }
+
+function save() {
+    var win = currentWindow();
+    if (win)
+        win.save(1);
+}
+
+function open() {
+    var win = currentWindow();
+    if (win)
+        win.load(1);
+}
+
 ]]></script>
 
     <command id="File:New" oncommand="quit()"/>
-    <command id="File:Open" oncommand="quit()"/>
+    <command id="File:Open" oncommand="open()"/>
     <command id="File:Save" oncommand="save()"/>
     <command id="File:Export" oncommand="quit()"/>
     <command id="File:Exit" oncommand="quit()"/>

@@ -5,6 +5,9 @@ const Queries = {
     getRawMats:     "select materialTypeID as tid, quantity from invTypeMaterials where typeID=:tid",
     getExtraMats:   "select requiredTypeID as tid, quantity, damagePerJob from ramTypeRequirements " +
             "where typeID=:bpid;",
+    clearProj:      "delete from projectData where projectID=:proj_id;",
+    addToProj:      "insert into projectData values(:proj_id, :type_id, :state, :count, :me);",
+    loadFromProj:   "select * from projectData where projectID=:proj_id;",
 };
 const Stms = { };
 
@@ -242,7 +245,7 @@ function addToProject(typeID, count) {
 function removeFromProject1() {
     let proj = getListByName('order');
     let buy = getListByName('buy');
-    var item = buy.getItemTypeByID(proj.current.type);
+    var item = buy.getItem(proj.current.type);
     if (!item) {
         alert("Can't remove item from project - not in 'to buy' list!");
         return;
@@ -378,8 +381,32 @@ function gotItem(typeID, params) {
     }
 }
 
-function load(projName) {
+function load(projID) {
+    let stm = Stms.loadFromProj;
+    stm.params.proj_id = projID;
     var data = [];
+    try {
+        while (stm.step()) {
+            var tmp = {
+                state:  stm.row.state,
+                type:   stm.row.typeID,
+                cnt:    stm.row.count,
+            };
+            if (stm.row.me !== undefined)
+                tmp.me = stm.row.me;
+            data.push(tmp);
+        }
+    } catch (e) {
+        var errstr = "Failed to clean project "+projID+": "+e;
+        println(errstr);
+        alert(errstr);
+    } finally {
+        stm.reset();
+    }
+    applyData(data);
+}
+
+function applyData(data) {
     for each (i in data)
         if (i.me !== undefined)
             getListByName(i.state).addBP(new Blueprint(i.type, +i.me, +str2inf(i.cnt)));
@@ -390,7 +417,7 @@ function load(projName) {
 function inf2str(value) value == Infinity ? 'inf' : value
 function str2inf(value) value == 'inf' ? Infinity : value
 
-function save(projName) {
+function gatherForSave() {
     var data = [];
     ['buy', 'build', 'acquired', 'spent', 'order'].forEach(function (l) {
         let itms = getListByName(l).allItems;
@@ -405,7 +432,48 @@ function save(projName) {
                 data.push(tmp);
         }
     });
-    println(JSON.stringify(data));
+    return data;
+}
+
+function save(projID) {
+    var conn = gDB.getConnection();
+    var data = gatherForSave();
+    conn.beginTransaction();
+    let (stm = Stms.clearProj) {
+        stm.params.proj_id = projID;
+        try {
+            stm.execute();
+        } catch (e) {
+            var errstr = "Failed to clean project "+projID+": "+e+"\n"+conn.lastErrorString;
+            println(errstr);
+            alert(errstr);
+            conn.rollbackTransaction();
+            return;
+        } finally {
+            stm.reset();
+        }
+    }
+    let (stm = Stms.addToProj) {
+        for each (d in data) {
+            stm.params.proj_id = projID;
+            stm.params.type_id = d.type;
+            stm.params.state = d.state;
+            stm.params.count = d.cnt;
+            stm.params.me = d.me === undefined ? null : d.me;
+            try {
+                stm.execute();
+            } catch (e) {
+                var errstr = "Failed to store item "+d.type+" in project "+projID+": "+e+"\n"+conn.lastErrorString;
+                println(errstr);
+                alert(errstr);
+                conn.rollbackTransaction();
+                return;
+            } finally {
+                stm.reset();
+            }
+        }
+    }
+    conn.commitTransaction();
 }
 
 function pp_tab_onLoad() {
@@ -414,14 +482,19 @@ function pp_tab_onLoad() {
     gPC  = Cc["@aragaer/eve/market-data/provider;1?name=eve-central"].
             getService(Ci.nsIEveMarketDataProviderService);
     var conn = gDB.getConnection();
+
+    if (!conn.tableExists('projects'))
+        conn.createTable('projects', 'projectID int, projectName char, ' +
+            'projectDescr char, primary key(projectID)');
+    if (!conn.tableExists('projectData'))
+        conn.createTable('projectData', 'projectID int, typeID char, ' +
+            'state char, count float, me int');
+
     for (i in Queries)
         try {
             Stms[i] = conn.createStatement(Queries[i]);
         } catch (e) {
             dump("production planner: "+e+"\n"+conn.lastErrorString+"\n");
         }
-
-    [getListByName(i) for (i in showHide)];
-    load('rifters');
 }
 
