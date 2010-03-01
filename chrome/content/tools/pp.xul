@@ -45,11 +45,9 @@ function save() {
 }
 
 function open() {
-    var win = currentWindow();
-    if (win)
-        win.load(1);
+    var params = {};
+    openDialog("chrome://jaet/content/dialogs/pp.xul", null,"chrome,dialog,modal", params).focus();
 }
-
 ]]></script>
 
     <command id="File:New" oncommand="quit()"/>
@@ -82,6 +80,11 @@ function open() {
             </menupopup>
         </menu>
     </menubar>
+    <toolbar>
+        <toolbarbutton image="chrome://jaet/content/images/new_16.png" command="File:New"/>
+        <toolbarbutton image="chrome://jaet/content/images/open_16.png" command="File:Open"/>
+        <toolbarbutton image="chrome://jaet/content/images/save_16.png" command="File:Save"/>
+    </toolbar>
     <tabbox id="tabbox" flex="1">
         <tabs id="tabs" />
         <tabpanels id="tabpanels" flex="1" />

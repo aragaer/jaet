@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    ondialogaccept="return true" ondialogcancel="return true"
+    onload="onLoad();" id="pp-file-dlg" persist="screenX screenY">
+<script type="application/x-javascript"><![CDATA[
+function onload() {
+}
+]]></script>
+    <hbox>
+        <vbox id="prlist-box" persist="width">
+            <label value="Projects:" />
+            <listbox id="prlist" flex="1"/>
+        </vbox>
+        <splitter collapse="after" id="v-splitter" persist="state"><grippy/></splitter>
+        <vbox id="descr-box" flex="1">
+            <label value="Description"/>
+            <textbox multiline="true" id="descr" value="Choose a project" flex="1"/>
+        </vbox>
+    </hbox>
+</dialog>
