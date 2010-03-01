@@ -438,6 +438,8 @@ function gatherForSave() {
 function save(projID) {
     var conn = gDB.getConnection();
     var data = gatherForSave();
+    if (projID === undefined)
+        projID = projectID;
     conn.beginTransaction();
     let (stm = Stms.clearProj) {
         stm.params.proj_id = projID;
@@ -483,9 +485,6 @@ function pp_tab_onLoad() {
             getService(Ci.nsIEveMarketDataProviderService);
     var conn = gDB.getConnection();
 
-    if (!conn.tableExists('projects'))
-        conn.createTable('projects', 'projectID int, projectName char, ' +
-            'projectDescr char, primary key(projectID)');
     if (!conn.tableExists('projectData'))
         conn.createTable('projectData', 'projectID int, typeID char, ' +
             'state char, count float, me int');
@@ -496,5 +495,8 @@ function pp_tab_onLoad() {
         } catch (e) {
             dump("production planner: "+e+"\n"+conn.lastErrorString+"\n");
         }
+
+    if (projectID !== undefined)
+        load(projectID);
 }
 

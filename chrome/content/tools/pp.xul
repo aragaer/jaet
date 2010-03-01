@@ -16,19 +16,58 @@
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
 <script><![CDATA[
+var panelList = [];
+var tabbox;
+var getNameStm, saveNameStm, checkNameStm;
 function ppOnload() {
-    var tabpanel = document.createElement('tabpanel');
+    tabbox = document.getElementById('tabbox');
+    var conn = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService).getConnection();
+    if (!conn.tableExists('projects'))
+        conn.createTable('projects', 'projectID integer primary key autoincrement, ' +
+            'projectName char, projectDescr char');
+    getNameStm = conn.createStatement("select projectName from projects where projectID=:id");
+    saveNameStm = conn.createStatement("insert into projects (projectName) values(:pname)");
+    checkNameStm = conn.createStatement("select projectID from projects where projectName=:pname");
+
+    for each (id in getCharPref('jaet.production_planner.tabs', '').split(',')) {
+        panelList.push({id: id});
+        openPanel(id);
+    }
+}
+function ppQuit() {
+    if (!confirm("Really quit Production Planner?"))
+        return;
+    Prefs.setCharPref('jaet.production_planner.tabs', [i.id for each (i in panelList)].join(','));
+    doQuit(false);
+}
+function openPanel(id) {
     var iframe = document.createElement('iframe');
-    var tabbox = document.getElementById('tabbox');
+    var tabpanel = document.createElement('tabpanel');
+    var name, stm;
+    if (id)
+        with (stm = getNameStm)
+            try {
+                stm.params.id = id;
+                stm.step();
+                name = stm.row.projectName;
+            } catch (e) {
+                println("getNameStm: "+e);
+            } finally {
+                stm.reset();
+            }
+    else
+        name = "New project";
 
     tabpanel.setAttribute('flex', '1');
-    iframe.setAttribute('src', 'chrome://jaet/content/tools/pp_tab.xul');
     iframe.setAttribute('flex', '1');
+    iframe.setAttribute('src', 'chrome://jaet/content/tools/pp_tab.xul');
     tabpanel.appendChild(iframe);
 
-    tabbox.tabs.appendItem('Orca');
+    var item = tabbox.tabs.appendItem(name, id);
     tabbox.tabpanels.appendChild(tabpanel);
-    tabbox.selectedIndex = 0;
+
+    iframe.contentWindow.projectID = id;
+    tabbox.selectedIndex = tabbox.tabs.getIndexOfItem(item);
 }
 
 function currentWindow() {
@@ -40,24 +79,60 @@ function currentWindow() {
 
 function save() {
     var win = currentWindow();
-    if (win)
-        win.save(1);
+    if (!win)
+        return;
+    if (win.projectID === undefined) {
+        /* do save as dialog */;
+        var name, id, stm;
+        while (!name) {
+            name = prompt("Enter a name");
+            if (name === undefined)
+                return;
+            with (stm = checkNameStm) {
+                stm.params.pname = name;
+                if (stm.step()) {
+                    if (confirm("You already have a project named "+name+"\nOverwrite?"))
+                        id = stm.row.projectID;
+                    else
+                        name = null;
+                    continue;
+                }
+                stm.reset();
+            }
+        }
+        if (!id) {
+            saveNameStm.params.pname = name;
+            saveNameStm.execute();
+            saveNameStm.reset();
+            checkNameStm.params.pname = name;
+            checkNameStm.step();
+            id = checkNameStm.row.projectID;
+            checkNameStm.reset();
+        }
+        tabbox.tabs.selectedItem.label = name;
+        win.projectID = id;
+    }
+    win.save();
 }
 
 function open() {
-    var params = {};
-    openDialog("chrome://jaet/content/dialogs/pp.xul", null,"chrome,dialog,modal", params).focus();
+    var params = {in:{}};
+    openDialog("chrome://jaet/content/dialogs/pp.xul", null, "chrome,dialog,modal", params).focus();
+    if (!params.out)
+        return;
+    panelList.push(params.out);
+    openPanel(params.out.id);
 }
 ]]></script>
 
-    <command id="File:New" oncommand="quit()"/>
+    <command id="File:New" oncommand="openPanel()"/>
     <command id="File:Open" oncommand="open()"/>
     <command id="File:Save" oncommand="save()"/>
-    <command id="File:Export" oncommand="quit()"/>
-    <command id="File:Exit" oncommand="quit()"/>
+    <command id="File:Export" oncommand="ppQuit()()"/>
+    <command id="File:Exit" oncommand="ppQuit()()"/>
 
-    <command id="Settings:BP" oncommand="quit()"/>
-    <command id="Settings:Pref" oncommand="quit()"/>
+    <command id="Settings:BP" oncommand="ppQuit()()"/>
+    <command id="Settings:Pref" oncommand="ppQuit()()"/>
 
     <menubar id="pp-menubar">
         <menu label="File" accesskey="F">

@@ -42,7 +42,7 @@ DBH.prototype = {
 };
 
 function handleError(aError) {
-    dump("Error: "+error+"\n");
+    dump("Error: "+aError+"\n");
 }
 
 function handleCompletion(aReason) {
