@@ -18,14 +18,12 @@ const AllBlueprints = {};
 const ActionLog = [];
 function LOG(text) {
     ActionLog.push(text);
-    dump(text+"\n");
+    println(text);
 }
 
 function ItemType(typeID) {
     this.id = typeID;
-    this._type = null;
-    this._bp = null;
-    this._uses = null;
+    this._type = this._bp = this._uses = null;
 }
 
 function getItemTypeByID(typeID) {
@@ -53,7 +51,7 @@ ItemType.prototype = {
             this._bp = stm.row.blueprintTypeID;
             this._waste = stm.row.wasteFactor;
         } catch (e) {
-            dump("Production planner: getBPByType for "+this.id+": "+e+"\n");
+            println("Production planner: getBPByType for "+this.id+": "+e);
         } finally { stm.reset(); }
         return this[arg];
     },
@@ -70,6 +68,7 @@ ItemType.prototype = {
         } finally { stm.reset(); }
         return this._raw;
     },
+    // TODO: get extra()
     get price() {
         this.__defineGetter__('price', function () this._price);
         return this._price = Math.round(gPC.getPriceForItem(this.id, null)*100)/100;
@@ -99,13 +98,13 @@ function getBPMEList(typeID) {
 const showHide = {
     order:      function (aEvt) 
         document.getElementById('btn-remove').hidden =
-                (getListByName('order').getRowAt(aEvt.clientX, aEvt.clientY) == -1),
+                (Lists.order.getRowAt(aEvt.clientX, aEvt.clientY) == -1),
     build:      function (aEvt) {
-        if (getListByName('build').getRowAt(aEvt.clientX, aEvt.clientY) == -1)
+        if (Lists.build.getRowAt(aEvt.clientX, aEvt.clientY) == -1)
             aEvt.preventDefault();
     },
     buy:        function (aEvt) {
-        var type = getListByName('buy').getItemTypeAt(aEvt.clientX, aEvt.clientY);
+        var type = Lists.buy.getItemTypeAt(aEvt.clientX, aEvt.clientY);
         type
             ? document.getElementById('btn-build').hidden = !getItemTypeByID(type).bp
             : aEvt.preventDefault()
@@ -114,7 +113,7 @@ const showHide = {
     spent:      function (aEvt) { },
 };
 
-const AllLists = {};
+const Lists = {};
 function List(name) {
     this._name = name;
     this._list = document.getElementById(name);
@@ -122,7 +121,9 @@ function List(name) {
     this._items = {};
     this._order = [];
     this._list.view = this;
+    Lists[name] = this;
 }
+// TODO: separate blueprints and everything else
 List.prototype = {
     addBP:      function (bp) {
         var id = bp.type + '_' + bp.me;
@@ -190,11 +191,11 @@ List.prototype = {
         } else if (typeID == 'isk')
             isisk = 1;
         switch (aCol.id.substr(0,3)) {
-        case 'itm': return isisk ? 'ISK' : type.type.name;
-        case 'cnt': return cnt.toLocaleString();
-        case 'isk': return type ? type.price.toLocaleString() : 'N/A';
-        case 'me-': return isbp ? +me : '';
-        default:    return '';
+            case 'itm': return isisk ? 'ISK' : type.type.name;
+            case 'cnt': return cnt.toLocaleString();
+            case 'isk': return type ? type.price.toLocaleString() : 'N/A';
+            case 'me-': return isbp ? +me : '';
+            default:    return '';
         }
     },
     setCellText:        function (row,col,value) { },
@@ -216,12 +217,6 @@ List.prototype = {
 
 };
 
-function getListByName(name) {
-    if (!AllLists[name])
-        AllLists[name] = new List(name);
-    return AllLists[name];
-}
-
 function addToProject1() {
     var params = {in: {dlg: 'add-to-proj'}, out: null};
     openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
@@ -237,14 +232,14 @@ function addToProject1() {
 
 function addToProject(typeID, count) {
     var item = new Item(typeID, count);
-    getListByName('order').addItem(item);
-    getListByName('buy').addItem(item);
+    Lists.order.addItem(item);
+    Lists.buy.addItem(item);
     LOG('add '+typeID+' '+count);
 }
 
 function removeFromProject1() {
-    let proj = getListByName('order');
-    let buy = getListByName('buy');
+    let proj = Lists.order;
+    let buy = Lists.buy;
     var item = buy.getItem(proj.current.type);
     if (!item) {
         alert("Can't remove item from project - not in 'to buy' list!");
@@ -262,8 +257,8 @@ function removeFromProject1() {
 
 /* move from 'to buy' to 'to build' or vice versa */
 function buyBuild(action) {
-    let src = getListByName(action == 'buy' ? 'build' : 'buy');
-    let dst = getListByName(action);
+    let src = Lists[action == 'buy' ? 'build' : 'buy'];
+    let dst = Lists[action];
     var item = src.current;
     if (!item)
         return;
@@ -278,8 +273,8 @@ function buyBuild(action) {
 }
 
 function wantToBuild(typeID, count) { // count can be negative
-    let buy = getListByName('buy');
-    let build = getListByName('build');
+    let buy = Lists.buy;
+    let build = Lists.build;
     let type = getItemTypeByID(typeID);
     var bp_list = [];
 
@@ -337,8 +332,8 @@ function wantToBuild(typeID, count) { // count can be negative
 }
 
 function boughtIt1() {
-    let buy = getListByName('buy');
-    let spent = getListByName('spent');
+    let buy = Lists.buy;
+    let spent = Lists.spent;
     let itm = buy.current;
     var params = {in: itm.constructor == Blueprint
         ? {dlg: 'blueprint'}
@@ -353,9 +348,9 @@ function boughtIt1() {
 }
 
 function gotItem(typeID, params) {
-    let buy = getListByName('buy');
-    let acquired = getListByName('acquired');
-    let build = getListByName('build');
+    let buy = Lists.buy;
+    let acquired = Lists.acquired;
+    let build = Lists.build;
     if (params.in.dlg == 'blueprint') {
         var bp = new Blueprint(typeID, params.out.me || 0, params.out.count);
         var in_prod;
@@ -409,9 +404,9 @@ function load(projID) {
 function applyData(data) {
     for each (i in data)
         if (i.me !== undefined)
-            getListByName(i.state).addBP(new Blueprint(i.type, +i.me, +str2inf(i.cnt)));
+            Lists[i.state].addBP(new Blueprint(i.type, +i.me, +str2inf(i.cnt)));
         else
-            getListByName(i.state).addItem(new Item(i.type, i.cnt));
+            Lists[i.state].addItem(new Item(i.type, i.cnt));
 }
 
 function inf2str(value) value == Infinity ? 'inf' : value
@@ -420,7 +415,7 @@ function str2inf(value) value == 'inf' ? Infinity : value
 function gatherForSave() {
     var data = [];
     ['buy', 'build', 'acquired', 'spent', 'order'].forEach(function (l) {
-        let itms = getListByName(l).allItems;
+        let itms = Lists[l].allItems;
         for (i in itms) {
             var cnt = itms[i];
             var tmp = {state:l, cnt: cnt, type: i};
@@ -495,6 +490,8 @@ function pp_tab_onLoad() {
         } catch (e) {
             dump("production planner: "+e+"\n"+conn.lastErrorString+"\n");
         }
+
+    [new List(i) for (i in showHide)];
 
     if (projectID !== undefined)
         load(projectID);
