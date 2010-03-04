@@ -111,6 +111,7 @@ const showHide = {
     },
     acquired:   function (aEvt) { },
     spent:      function (aEvt) { },
+    unused:     function (aEvt) { },
 };
 
 const Lists = {};
@@ -121,10 +122,13 @@ function List(name) {
     this._items = {};
     this._order = [];
     this._list.view = this;
-    Lists[name] = this;
 }
 // TODO: separate blueprints and everything else
 List.prototype = {
+    treebox:    { // fake
+        rowCountChanged:    function (pos, cnt) false,
+        invalidate:         function () false,
+    },
     addBP:      function (bp) {
         var id = bp.type + '_' + bp.me;
         if (!this._items[id]) {
@@ -275,6 +279,7 @@ function buyBuild(action) {
 function wantToBuild(typeID, count) { // count can be negative
     let buy = Lists.buy;
     let build = Lists.build;
+    let unused = Lists.unused;
     let type = getItemTypeByID(typeID);
     var bp_list = [];
 
@@ -301,20 +306,34 @@ function wantToBuild(typeID, count) { // count can be negative
     }
 
     for (let [m, q] in Iterator(mats)) {
+        var u;
         if (!q)
             continue;
         if (count > 0) {
-            buy.addItem(new Item(m, q));
+            var itm = unused.getItem(m);
+            u = itm ? itm.quantity : 0;
+            if (q > u) {
+                buy.addItem(new Item(m, q - u));
+                if (u)
+                    unused.removeItem(new Item(m, u));
+            } else {
+                unused.removeItem(new Item(m, q));
+            }
             continue;
         }
         var qs = [buy, build].map(function (l) {
             var itm = l.getItem(m);
             return itm ? itm.quantity : 0;
         });
-        q = Math.min(q, qs[0] + qs[1]);
-        if (q > qs[0])
-            wantToBuild(m, qs[0] - q);
-        buy.removeItem(new Item(m, q));
+        if (q > (qs[0] + qs[1])) {
+            if (q > qs[0])
+                wantToBuild(m, qs[0] - q);
+            buy.removeItem(new Item(m, q));
+        } else {
+            wantToBuild(m, -qs[1]);
+            buy.removeItem(new Item(m, qs[0] + qs[1]));
+            unused.addItem(new Item(m, qs[0] + qs[1] - q));
+        }
     }
 
     if (fakes)
@@ -331,7 +350,7 @@ function wantToBuild(typeID, count) { // count can be negative
     }
 }
 
-function boughtIt1() {
+function gotIt1(spend_isk) {
     let buy = Lists.buy;
     let spent = Lists.spent;
     let itm = buy.current;
@@ -343,7 +362,17 @@ function boughtIt1() {
     if (!params.out.count)
         return;
     gotItem(itm.type, params);
-    spent.addItem(new Item('isk', getItemTypeByID(itm.type).price*(params.in.dlg == 'blueprint' ? 1 : params.out.count)));
+    if (params.in.dlg == 'blueprint') {
+        if (spend_isk)
+            spent.addItem(new Item('isk', getItemTypeByID(itm.type).price));
+        else if (params.out.count != Infinity)
+            spent.addBP(new Blueprint(itm.type, params.out.me || 0, params.out.count));
+    } else {
+        if (spend_isk)
+            spent.addItem(new Item('isk', getItemTypeByID(itm.type).price*params.out.count));
+        else
+            spent.addItem(new Item(itm.type, params.out.count));
+    }
     LOG('buy '+itm.type+' '+params.out.count);
 }
 
@@ -387,7 +416,7 @@ function load(projID) {
                 type:   stm.row.typeID,
                 cnt:    stm.row.count,
             };
-            if (stm.row.me !== undefined)
+            if (stm.row.me !== null)
                 tmp.me = stm.row.me;
             data.push(tmp);
         }
@@ -491,7 +520,7 @@ function pp_tab_onLoad() {
             dump("production planner: "+e+"\n"+conn.lastErrorString+"\n");
         }
 
-    [new List(i) for (i in showHide)];
+    [Lists[i] = new List(i) for (i in showHide)];
 
     if (projectID !== undefined)
         load(projectID);

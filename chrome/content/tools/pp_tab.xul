@@ -13,8 +13,8 @@
 
     <menupopup id="buy-menu">
         <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>
-        <menuitem id="btn-acquired" label="Already acquired" oncommand="gotIt1()"/>
-        <menuitem id="btn-do-buy" label="Buy" oncommand="boughtIt1()"/>
+        <menuitem id="btn-acquired" label="Already acquired" oncommand="gotIt1(false)"/>
+        <menuitem id="btn-do-buy" label="Buy" oncommand="gotIt1(true)"/>
     </menupopup>
     <menupopup id="build-menu">
         <menuitem id="btn-buy" label="Move to 'to buy'" oncommand="buyBuild('buy')"/>
@@ -24,8 +24,11 @@
         <menuitem id="btn-add" label="Add item" oncommand="addToProject1()"/>
         <menuitem id="btn-remove" label="Remove item" oncommand="removeFromProject1()"/>
     </menupopup>
-    <menupopup id="acquired-menu" />
+    <menupopup id="acquired-menu">
+        <menuitem id="btn-keep" label="Keep it for other project" oncommand="keepIt1()"/>
+    </menupopup>
     <menupopup id="spent-menu" />
+    <menupopup id="unused-menu" />
 
     <hbox flex="1" id="pp-tab-top-box" persist="height">
         <vbox flex="1" id="order-box" persist="width">
@@ -93,5 +96,6 @@
                 <treechildren/>
             </tree>
         </vbox>
+        <tree id="unused" flex="1" context="unused-menu" hidecolumnpicker="true" collapsed="true" />
     </hbox>
 </window>
