@@ -1,0 +1,10 @@
+tabpanel.project {
+    -moz-binding: url('chrome://jaet/content/tools/pp.xml#project_box') !important;
+}
+splitter grippy {
+    background-color:red;
+}
+
+splitter[state='collapsed'] grippy {
+    background-color:green;
+}

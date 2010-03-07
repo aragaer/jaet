@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://jaet/skin/pp.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
@@ -15,63 +16,17 @@
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/tools/pp.js"/>
 <script><![CDATA[
 var panelList = [];
 var tabbox;
 var getNameStm, saveNameStm, checkNameStm;
-function ppOnload() {
-    tabbox = document.getElementById('tabbox');
-    var conn = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService).getConnection();
-    if (!conn.tableExists('projects'))
-        conn.createTable('projects', 'projectID integer primary key autoincrement not null, ' +
-            'projectName char, projectDescr char');
-    getNameStm = conn.createStatement("select projectName from projects where projectID=:id");
-    saveNameStm = conn.createStatement("insert into projects (projectName) values(:pname)");
-    checkNameStm = conn.createStatement("select projectID from projects where projectName=:pname");
-
-    for each (id in getCharPref('jaet.production_planner.tabs', '').split(','))
-        if (id)
-            openPanel(id);
-}
 function ppQuit() {
     if (!confirm("Really quit Production Planner?"))
         return;
     // TODO: save actual list of opened tabs
     Prefs.setCharPref('jaet.production_planner.tabs', panelList.join(','));
     doQuit(false);
-}
-function openPanel(id) {
-    var iframe = document.createElement('iframe');
-    var tabpanel = document.createElement('tabpanel');
-    var name, stm;
-    if (id) {
-        var stm = getNameStm;
-        try {
-            stm.params.id = id;
-            if (stm.step())
-                name = stm.row.projectName;
-            else
-                return alert("Project "+id+" is not found");
-        } catch (e) {
-            println("getNameStm: "+e);
-        } finally {
-            stm.reset();
-        }
-    } else
-        name = "New project";
-
-    tabpanel.setAttribute('flex', '1');
-    iframe.setAttribute('flex', '1');
-    iframe.setAttribute('src', 'chrome://jaet/content/tools/pp_tab.xul');
-    tabpanel.appendChild(iframe);
-
-    var item = tabbox.tabs.appendItem(name, id);
-    tabbox.tabpanels.appendChild(tabpanel);
-
-    iframe.contentWindow.projectID = id;
-    tabbox.selectedIndex = tabbox.tabs.getIndexOfItem(item);
-    if (id)
-        panelList.push(id);
 }
 
 function currentWindow() {
@@ -166,6 +121,23 @@ function open() {
         <toolbarbutton image="chrome://jaet/content/images/open_16.png" command="File:Open"/>
         <toolbarbutton image="chrome://jaet/content/images/save_16.png" command="File:Save"/>
     </toolbar>
+    <menupopup id="buy-menu">
+        <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>
+        <menuitem id="btn-acquired" label="Already acquired" oncommand="gotIt1(false)"/>
+        <menuitem id="btn-do-buy" label="Buy" oncommand="gotIt1(true)"/>
+    </menupopup>
+    <menupopup id="build-menu">
+        <menuitem id="btn-buy" label="Move to 'to buy'" oncommand="buyBuild('buy')"/>
+        <menuitem id="btn-do-build" label="Manufacture" oncommand="builtIt1()"/>
+    </menupopup>
+    <menupopup id="order-menu">
+        <menuitem id="btn-add" label="Add item" oncommand="addToProject1()"/>
+        <menuitem id="btn-remove" label="Remove item" oncommand="removeFromProject1()"/>
+    </menupopup>
+    <menupopup id="acquired-menu">
+        <menuitem id="btn-keep" label="Keep it for other project" oncommand="keepIt1()"/>
+    </menupopup>
+    <menupopup id="spent-menu" />
     <tabbox id="tabbox" flex="1">
         <tabs id="tabs" />
         <tabpanels id="tabpanels" flex="1" />
