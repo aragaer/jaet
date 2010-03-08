@@ -33,15 +33,14 @@ ItemType.prototype = {
     },
     get bp()    this._getBPAndWaste('_bp'),
     get waste() this._getBPAndWaste('_waste'),
-
     _getBPAndWaste: function (arg) {
-        this.__defineGetter__('bp', function () this._bp);
-        this.__defineGetter__('waste', function () this._waste);
+        this.__defineGetter__('bp',     function () this._bp);
+        this.__defineGetter__('waste',  function () this._waste);
         let stm = Stms.getBPByType;
         try {
             stm.params.tid = this.id;
             if (!stm.step())
-                return;
+                throw new Error("No blueprint for "+this.id);
             this._bp = stm.row.blueprintTypeID;
             this._waste = stm.row.wasteFactor;
         } catch (e) {
@@ -71,25 +70,25 @@ ItemType.prototype = {
 
 const showHide = {
     order:      function (aEvt) {
-        let order = tabbox.tabpanels.selectedPanel.orderView;
+        let order = tabbox.selectedPanel.orderView;
         order.activeRow = order.treebox.getRowAt(aEvt.clientX, aEvt.clientY);
         document.getElementById('btn-remove').hidden = order.activeRow == -1;
     },
     build:      function (aEvt) {
-        let build = tabbox.tabpanels.selectedPanel.buildView;
+        let build = tabbox.selectedPanel.buildView;
         build.activeRow = build.treebox.getRowAt(aEvt.clientX, aEvt.clientY);
         if (build.activeRow == -1)
             aEvt.preventDefault();
     },
     buy:        function (aEvt) {
-        let buy = tabbox.tabpanels.selectedPanel.buyView;
+        let buy = tabbox.selectedPanel.buyView;
         buy.activeRow = buy.treebox.getRowAt(aEvt.clientX, aEvt.clientY);
         if (buy.activeRow == -1 || !buy.active.itm)
             aEvt.preventDefault();
         document.getElementById('btn-build').hidden = !getItemTypeByID(buy.active.type).bp;
     },
     acquired:   function (aEvt) {
-        let acquired = tabbox.tabpanels.selectedPanel.acquiredView;
+        let acquired = tabbox.selectedPanel.acquiredView;
         acquired.activeRow = acquired.treebox.getRowAt(aEvt.clientX, aEvt.clientY);
         if (acquired.activeRow == -1 || !acquired.active.itm)
             aEvt.preventDefault();
@@ -102,7 +101,7 @@ TreeView.prototype = {
     values:             [],
     get rowCount()      this.values.length,
     get active()        this.values[this.activeRow],
-    getCellText:        function (aRow, aCol) this.values[aRow][aCol.id] || '??',
+    getCellText:        function (aRow, aCol) this.values[aRow][aCol.id.split('-')[0]] || '??',
     setCellText:        function (row,col,value) { },
     isEditable:         function (row,col) false,
     isContainer:        function (aRow) false,
@@ -249,6 +248,7 @@ AcquiredTreeView.prototype.rebuild = function () {
         this.values.push({
             type:   itm.type,
             itm:    getItemTypeByID(itm.type).type.name,
+            me:     ' ',
             cnt:    itm.cnt.toLocaleString()
         });
     this.treebox.rowCountChanged(0, this.values.length);
@@ -300,18 +300,19 @@ Project.prototype = {
         this.log(['got', 'kept', 'bought', 'sold'][(count < 0) + 2 * spend_isk] + ' ' +
                 typeID+ ' x'+count);
         if (spend_isk)
-            [typeID, count] = ['isk', getItemTypeByID(typeID).price];
+            [typeID, count] = ['isk', count*getItemTypeByID(typeID).price];
         this._safeAdd(this.spent, typeID, count);
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
     },
     gotBP:          function (bpID, runs, me, spend_isk) {
-//TODO: rewrite this porn
         var id = bpID+'_'+me;
-        this._safeAdd(this.blueprints, id, runs, bpID);
-        if (this.blueprints[id])
-            this.blueprints[id].me = me;
+        if (!this.blueprints[id])
+            this.blueprints[id] = {type : bpID, me: me, cnt: 0};
+        this.blueprints[id].cnt += runs;
+        if (!this.blueprints[id].cnt)
+            delete(this.blueprints[id]);
         this.log(['got', 'kept', 'bought', 'sold'][(runs < 0) + 2 * spend_isk] + ' ' +
                 bpID+ ' x'+runs);
         if (runs !== Infinity) {
@@ -489,6 +490,7 @@ function openPanel(id) {
     var project = tabpanel.project = new Project(tabpanel);
     var item = tabbox.tabs.appendItem(name, id);
     tabbox.tabpanels.appendChild(tabpanel);
+    tabpanel.init(id || -1-Math.floor(100*Math.random()));
     if (id)
         project.load(id);
     tabbox.selectedIndex = tabbox.tabs.getIndexOfItem(item);

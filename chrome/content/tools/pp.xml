@@ -9,11 +9,7 @@
                 <xul:vbox flex="1">
                     <xul:label value="Required" />
                     <xul:tree anonid="order" flex="1" context="order-menu" hidecolumnpicker="true">
-                        <xul:treecols>
-                            <xul:treecol label="Item" id="itm" flex="1" />
-                            <xul:splitter class="tree-splitter" />
-                            <xul:treecol label="Count" id="cnt" />
-                        </xul:treecols>
+                        <xul:treecols/>
                         <xul:treechildren/>
                     </xul:tree>
                 </xul:vbox>
@@ -21,26 +17,17 @@
                 <xul:vbox flex="1">
                     <xul:label value="Spent" />
                     <xul:tree anonid="spent" flex="1" context="spent-menu" hidecolumnpicker="true">
-                        <xul:treecols>
-                            <xul:treecol label="Item" id="itm" flex="1" />
-                            <xul:splitter class="tree-splitter" />
-                            <xul:treecol label="Count" id="cnt" />
-                        </xul:treecols>
+                        <xul:treecols />
                         <xul:treechildren/>
                     </xul:tree>
                 </xul:vbox>
             </xul:hbox>
+            <xul:splitter collapse="before"><xul:grippy /></xul:splitter>
             <xul:hbox flex="5">
                 <xul:vbox flex="1">
                     <xul:label value="To buy"/>
                     <xul:tree anonid="buy" flex="1" context="buy-menu" hidecolumnpicker="true">
-                        <xul:treecols>
-                            <xul:treecol label="Item" id="itm" flex="1" />
-                            <xul:splitter class="tree-splitter" />
-                            <xul:treecol label="Count/Runs" id="cnt" />
-                            <xul:splitter class="tree-splitter" />
-                            <xul:treecol label="Cost" id="isk" />
-                        </xul:treecols>
+                        <xul:treecols/>
                         <xul:treechildren/>
                     </xul:tree>
                 </xul:vbox>
@@ -48,11 +35,7 @@
                 <xul:vbox flex="1">
                     <xul:label value="To build"/>
                     <xul:tree anonid="build" flex="1" context="build-menu" hidecolumnpicker="true">
-                        <xul:treecols>
-                            <xul:treecol label="Item" id="itm" flex="1" />
-                            <xul:splitter class="tree-splitter" />
-                            <xul:treecol label="Count" id="cnt" />
-                        </xul:treecols>
+                        <xul:treecols />
                         <xul:treechildren/>
                     </xul:tree>
                 </xul:vbox>
@@ -60,39 +43,51 @@
                 <xul:vbox flex="1">
                     <xul:label value="Acquired"/>
                     <xul:tree anonid="acquired" flex="1" context="acquired-menu" hidecolumnpicker="true">
-                        <xul:treecols>
-                            <xul:treecol label="Item" id="itm" flex="1" />
-                            <xul:splitter class="tree-splitter" />
-                            <xul:treecol label="ME" id="me" />
-                            <xul:splitter class="tree-splitter" />
-                            <xul:treecol label="Count/Runs" id="cnt" />
-                        </xul:treecols>
+                        <xul:treecols/>
                         <xul:treechildren/>
                     </xul:tree>
                 </xul:vbox>
             </xul:hbox>
         </content>
         <implementation>
-            <constructor><![CDATA[
-                println("Project box constructor");
-                this.orderView = new OrderTreeView();
-                this.orderView.pr = this;
-                document.getAnonymousElementByAttribute(this, 'anonid', 'order').view = this.orderView;
-                this.spentView = new SpentTreeView();
-                this.spentView.pr = this;
-                document.getAnonymousElementByAttribute(this, 'anonid', 'spent').view = this.spentView;
-                this.buyView = new BuyTreeView();
-                this.buyView.pr = this;
-                document.getAnonymousElementByAttribute(this, 'anonid', 'buy').view = this.buyView;
-                this.buildView = new BuildTreeView();
-                this.buildView.pr = this;
-                document.getAnonymousElementByAttribute(this, 'anonid', 'build').view = this.buildView;
-                this.acquiredView = new AcquiredTreeView();
-                this.acquiredView.pr = this;
-                document.getAnonymousElementByAttribute(this, 'anonid', 'acquired').view = this.acquiredView;
-            ]]></constructor>
-            <method name="save">
+            <method name="init">
+                <parameter name="id"/>
                 <body><![CDATA[
+                    println("Project box constructor");
+                    var me = this;
+                    var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+                    [{cons: OrderTreeView,   anonid: 'order',  cols: ['itm', 'cnt']},
+                    {cons: SpentTreeView,    anonid: 'spent',  cols: ['itm', 'cnt']},
+                    {cons: BuyTreeView,      anonid: 'buy',    cols: ['itm', 'cnt', 'isk']},
+                    {cons: BuildTreeView,    anonid: 'build',  cols: ['itm', 'cnt']},
+                    {cons: AcquiredTreeView, anonid: 'acquired',cols:['itm', 'me', 'cnt']}].forEach( function (set) {
+                        var view = set.anonid+'View';
+                        me[view] = new set.cons;
+                        me[view].pr = me;
+                        var tree = document.getAnonymousElementByAttribute(me, 'anonid', set.anonid);
+                        var treecols = tree.getElementsByTagNameNS(xulns, 'treecols')[0];
+                        for (var i = 0; i < set.cols.length; i++) {
+                            var treecol = document.createElementNS(xulns, 'treecol');
+                            treecol.setAttribute('id', set.cols[i]+'-'+set.anonid+'-'+id);
+                            if (i) {
+                                var splitter = document.createElementNS(xulns, 'splitter');
+                                splitter.setAttribute('class', 'tree-splitter');
+                                treecols.appendChild(splitter);
+                            } else
+                                treecol.setAttribute('flex', 1);
+                            var label;
+                            switch (set.cols[i]) {
+                                case 'itm': label = 'Item'; break;
+                                case 'cnt': label = 'Count'; break;
+                                case 'me':  label = 'ME'; break;
+                                case 'isk': label = 'Cost'; break;
+                                default: break;
+                            }
+                            treecol.setAttribute('label', label);
+                            treecols.appendChild(treecol);
+                        }
+                        tree.view = me[view];
+                    });
                 ]]></body>
             </method>
             <method name="rebuild">
@@ -102,10 +97,6 @@
                     this.buyView.rebuild();
                     this.buildView.rebuild();
                     this.acquiredView.rebuild();
-                ]]></body>
-            </method>
-            <method name="load">
-                <body><![CDATA[
                 ]]></body>
             </method>
             <field name="project"/>
