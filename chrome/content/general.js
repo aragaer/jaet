@@ -58,3 +58,8 @@ function getCharPref(prefname, def) {
     } 
 }
 
+function printObj(obj) {
+    var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Ci.nsIDOMSerializer);
+    println(XML(serializer.serializeToString(obj)).toXMLString());
+}
+

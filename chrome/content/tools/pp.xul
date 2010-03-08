@@ -19,62 +19,7 @@
 <script type="application/x-javascript" src="chrome://jaet/content/tools/pp.js"/>
 <script><![CDATA[
 var panelList = [];
-var tabbox;
-var getNameStm, saveNameStm, checkNameStm;
-function ppQuit() {
-    if (!confirm("Really quit Production Planner?"))
-        return;
-    // TODO: save actual list of opened tabs
-    Prefs.setCharPref('jaet.production_planner.tabs', panelList.join(','));
-    doQuit(false);
-}
 
-function currentWindow() {
-    var panels = document.getElementById('tabpanels');
-    return panels.selectedIndex == -1
-        ? null
-        : panels.selectedPanel.firstChild.contentWindow;
-}
-
-function save() {
-    var win = currentWindow();
-    if (!win)
-        return;
-    if (win.projectID === undefined) {
-        /* do save as dialog */;
-        var name, id, stm;
-        while (!name) {
-            name = prompt("Enter a name");
-            if (name === undefined)
-                return;
-            with (stm = checkNameStm) {
-                stm.params.pname = name;
-                if (stm.step()) {
-                    if (confirm("You already have a project named "+name+"\nOverwrite?"))
-                        id = stm.row.projectID;
-                    else
-                        name = null;
-                    stm.reset();
-                    continue;
-                }
-                stm.reset();
-            }
-        }
-        if (!id) {
-            saveNameStm.params.pname = name;
-            saveNameStm.execute();
-            saveNameStm.reset();
-            checkNameStm.params.pname = name;
-            checkNameStm.step();
-            id = checkNameStm.row.projectID;
-            checkNameStm.reset();
-        }
-        tabbox.tabs.selectedItem.label = name;
-        win.projectID = id;
-        panelList.push(id);
-    }
-    win.save();
-}
 
 function open() {
     var params = {in:{}};

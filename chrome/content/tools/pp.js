@@ -1,4 +1,4 @@
-var gEIS, gDB, gPC;
+var gEIS, gDB, gPC, gPS;
 var tabbox;
 const Queries = {
     getTypeByName:  "select typeID from invTypes where typeName=:tn",
@@ -6,6 +6,11 @@ const Queries = {
     getRawMats:     "select materialTypeID as tid, quantity from invTypeMaterials where typeID=:tid",
     getExtraMats:   "select requiredTypeID as tid, quantity, damagePerJob from ramTypeRequirements " +
             "where typeID=:bpid;",
+    getProjName:    "select projectName from projects where projectID=:id;",
+    saveProjName:   "replace into projects (projectID, projectName) values (:id, :pname);",
+    checkProjName:  "select projectID from projects where projectName=:pname;",
+    saveProj:       "update projects set projectData=:pdata where projectID=:id",
+    loadProj:       "select projectData from projects where projectID=:id",
 };
 const Stms = { };
 
@@ -13,7 +18,6 @@ const AllItemTypes = {};
 
 function ItemType(typeID) {
     this.id = typeID;
-    this._type = this._bp = this._uses = null;
 }
 
 function getItemTypeByID(typeID) {
@@ -82,6 +86,7 @@ const showHide = {
         buy.activeRow = buy.treebox.getRowAt(aEvt.clientX, aEvt.clientY);
         if (buy.activeRow == -1 || !buy.active.itm)
             aEvt.preventDefault();
+        document.getElementById('btn-build').hidden = !getItemTypeByID(buy.active.type).bp;
     },
     acquired:   function (aEvt) {
         let acquired = tabbox.tabpanels.selectedPanel.acquiredView;
@@ -147,22 +152,23 @@ SpentTreeView.prototype.rebuild = function () {
 function BuyTreeView() { }
 BuyTreeView.prototype = new TreeView();
 BuyTreeView.prototype.isSeparator = function (aRow) !this.values[aRow].itm;
+BuyTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
 BuyTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
     let tmp = this.tmp = {};
     let tmpbp = this.tmpbp = {};
+    this.bpCount = 0;
     for each (itm in this.pr.project.order)
         tmp[itm.type] = itm.cnt;
     for each (itm in this.pr.project.build) {
         if (!tmp[itm.type])
             tmp[itm.type] = 0;
         tmp[itm.type] -= itm.cnt;
-        println("Removed "+itm.cnt+" of "+itm.type+" from buy list, "+tmp[itm.type]+" left");
         var type = getItemTypeByID(itm.type);
         var waste = type.waste/100;
         var cnt = itm.cnt;
-        var me_list = this.pr.project.getBPMEList();
+        var me_list = this.pr.project.getBPMEList(itm.type);
         while (cnt) {
             var bp = me_list.next();
             var wasteMul = 1 + waste/(1+bp.me);
@@ -192,6 +198,7 @@ BuyTreeView.prototype.rebuild = function () {
             cnt:    tmpbp[i],
             isk:    'N/A',
         });
+        this.bpCount++;
     }
     if (this.values.length)
         this.values.push({itm: false});
@@ -202,7 +209,7 @@ BuyTreeView.prototype.rebuild = function () {
         this.values.push({
             type:   i,
             itm:    type.type.name,
-            cnt:    tmp[i],
+            cnt:    tmp[i].toLocaleString(),
             isk:    type.price.toLocaleString(),
         });
     }
@@ -240,6 +247,7 @@ AcquiredTreeView.prototype.rebuild = function () {
         this.values.push({itm: false});
     for each (itm in this.pr.project.acquired)
         this.values.push({
+            type:   itm.type,
             itm:    getItemTypeByID(itm.type).type.name,
             cnt:    itm.cnt.toLocaleString()
         });
@@ -259,24 +267,22 @@ Project.prototype = {
     log:            function (text) {
         this._log.push(text);
         println(text);
+        this.saved = false;
+    },
+    _safeAdd:       function (list, id, cnt, type) {
+        if (!list[id])
+            list[id] = {type: type || id, cnt: 0}; // id and id are different for blueprints
+        list[id].cnt += cnt;
+        if (!list[id].cnt)
+            delete(list[id]);
     },
     addToOrder:     function (typeID, count) {
-        if (!this.order[typeID])
-            this.order[typeID] = {type: typeID, cnt: 0};
-        this.order[typeID].cnt += count;
+        this._safeAdd(this.order, typeID, count);
         this.box.orderView.rebuild();
         this.box.buyView.rebuild();
         this.log('Add '+typeID+' x'+count);
     },
-    removeFromOrder:function (typeID, count) {
-        this.order[typeID].cnt -= count;
-        if (!this.order[typeID].cnt)
-            delete(this.order[typeID]);
-        this.box.orderView.rebuild();
-        this.box.buyView.rebuild();
-        this.log('Remove '+typeID+' x'+count);
-    },
-    getBPMEList:    function (typeID, count) {
+    getBPMEList:    function (typeID) {
         var bpID = getItemTypeByID(typeID).bp;
         for each (bp in [i for each (i in this.blueprints) if (i.type == bpID)].
                 sort(function (a, b) b.me - a.me))
@@ -284,14 +290,80 @@ Project.prototype = {
         yield {cnt: Infinity, me: 0, fake: true};
     },
     wantToBuild:    function (typeID, count) { // count can be negative
-        if (!this.build[typeID])
-            this.build[typeID] = {type: typeID, cnt: 0};
-        this.build[typeID].cnt += count;
-        if (!this.build[typeID].cnt)
-            delete(this.build[typeID]);
+        this._safeAdd(this.build, typeID, count);
         this.box.buildView.rebuild();
         this.box.buyView.rebuild();
         this.log('Build '+typeID+' x'+count);
+    },
+    gotItem:        function (typeID, count, spend_isk) {
+        this._safeAdd(this.acquired, typeID, count);
+        this.log(['got', 'kept', 'bought', 'sold'][(count < 0) + 2 * spend_isk] + ' ' +
+                typeID+ ' x'+count);
+        if (spend_isk)
+            [typeID, count] = ['isk', getItemTypeByID(typeID).price];
+        this._safeAdd(this.spent, typeID, count);
+        this.box.buyView.rebuild();
+        this.box.acquiredView.rebuild();
+        this.box.spentView.rebuild();
+    },
+    gotBP:          function (bpID, runs, me, spend_isk) {
+//TODO: rewrite this porn
+        var id = bpID+'_'+me;
+        this._safeAdd(this.blueprints, id, runs, bpID);
+        if (this.blueprints[id])
+            this.blueprints[id].me = me;
+        this.log(['got', 'kept', 'bought', 'sold'][(runs < 0) + 2 * spend_isk] + ' ' +
+                bpID+ ' x'+runs);
+        if (runs !== Infinity) {
+//        if (spend_isk)
+//            [id, runs, bpID] = ['isk', getItemTypeByID(typeID).price, null];
+            this._safeAdd(this.spent, bpID, runs);
+        }
+        this.box.buyView.rebuild();
+        this.box.acquiredView.rebuild();
+        this.box.spentView.rebuild();
+    },
+    load:           function (id) {
+        this.id = id;
+        let stm = Stms.loadProj;
+        stm.params.id = id;
+        try {
+            stm.step();
+            var data = JSON.parse(stm.row.projectData);
+            for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
+                this[i] = data[i];
+            for each (bp in this.blueprints)
+                if (bp.cnt == 0)
+                    bp.cnt = Infinity;
+            this.log("Loaded "+id);
+            this.saved = true;
+        } catch (e) {
+            println("Load project "+id+": "+e);
+        } finally {
+            stm.reset();
+        }
+        this.box.rebuild();
+    },
+    save:           function (id) {
+        id = id || this.id;
+        var data = {};
+        for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
+            data[i] = this[i];
+        for each (bp in this.blueprints)
+            if (bp.cnt == Infinity)
+                bp.cnt = 0;
+        let stm = Stms.saveProj;
+        try {
+            stm.params.id = id;
+            stm.params.pdata = JSON.stringify(data);
+            stm.execute();
+            this.log("Saved "+id);
+            this.saved = true;
+        } catch (e) {
+            println("Save project "+id+": "+e);
+        } finally {
+            stm.reset();
+        }
     },
 };
 
@@ -321,7 +393,7 @@ function removeFromProject1() {
     openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
-    project.removeFromOrder(item.type, params.out.count);
+    project.addToOrder(item.type, -params.out.count);
 }
 
 /* move from 'to buy' to 'to build' or vice versa */
@@ -342,58 +414,20 @@ function buyBuild(action) {
 }
 
 function gotIt1(spend_isk) {
-    let buy = Lists.buy;
-    let spent = Lists.spent;
-    let itm = buy.current;
-    var params = {in: itm.constructor == Blueprint
+    let project = tabbox.tabpanels.selectedPanel.project;
+    let buy = tabbox.tabpanels.selectedPanel.buyView;
+    let itm = buy.active;
+    var params = {in: buy.isBlueprint(buy.activeRow)
         ? {dlg: 'blueprint'}
-        : {dlg: 'buy-build', amount: itm.quantity}
+        : {dlg: 'buy-build', amount: itm.cnt}
     };
     openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
-    gotItem(itm.type, params);
-    if (params.in.dlg == 'blueprint') {
-        if (spend_isk)
-            spent.addItem(new Item('isk', getItemTypeByID(itm.type).price));
-        else if (params.out.count != Infinity)
-            spent.addBP(new Blueprint(itm.type, params.out.me || 0, params.out.count));
-    } else {
-        if (spend_isk)
-            spent.addItem(new Item('isk', getItemTypeByID(itm.type).price*params.out.count));
-        else
-            spent.addItem(new Item(itm.type, params.out.count));
-    }
-    LOG('buy '+itm.type+' '+params.out.count);
-}
-
-function gotItem(typeID, params) {
-    let buy = Lists.buy;
-    let acquired = Lists.acquired;
-    let build = Lists.build;
-    if (params.in.dlg == 'blueprint') {
-        var bp = new Blueprint(typeID, params.out.me || 0, params.out.count);
-        var in_prod;
-        buy.removeBP(bp);
-        acquired.addBP(bp);
-        for (in_prod in build._items)
-            if (getItemTypeByID(in_prod).bp == typeID)
-                break;
-        if (in_prod) {
-            in_prod = build.getItem(in_prod);
-            wantToBuild(in_prod.type, -in_prod.quantity);
-        }
-        if (!AllBlueprints[bp.type])
-            AllBlueprints[bp.type] = [];
-        AllBlueprints[bp.type].push({me: bp.me, runs: bp.runs});
-        if (in_prod) {
-            wantToBuild(in_prod.type, in_prod.quantity);
-        }
-    } else {
-        var item = new Item(typeID, params.out.count);
-        buy.removeItem(item);
-        acquired.addItem(item);
-    }
+    if (params.in.dlg == 'blueprint')
+        project.gotBP(itm.type, params.out.count, params.out.me || 0, spend_isk);
+    else
+        project.gotItem(itm.type, params.out.count, spend_isk);
 }
 
 function init() {
@@ -403,6 +437,7 @@ function init() {
     gDB  = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);
     gPC  = Cc["@aragaer/eve/market-data/provider;1?name=eve-central"].
             getService(Ci.nsIEveMarketDataProviderService);
+    gPS  = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
     var conn = gDB.getConnection();
     tabbox = document.getElementById('tabbox');
     if (!conn.tableExists('projects'))
@@ -413,7 +448,7 @@ function init() {
         try {
             Stms[i] = conn.createStatement(Queries[i]);
         } catch (e) {
-            dump("production planner: "+e+"\n"+conn.lastErrorString+"\n");
+            dump("production planner '"+Queries[i]+"': "+e+"\n"+conn.lastErrorString+"\n");
         }
 
     for (i in showHide)
@@ -423,9 +458,6 @@ function init() {
 function ppOnload() {
     init();
     var conn = gDB.getConnection();
-    getNameStm = conn.createStatement("select projectName from projects where projectID=:id");
-    saveNameStm = conn.createStatement("insert into projects (projectName) values(:pname)");
-    checkNameStm = conn.createStatement("select projectID from projects where projectName=:pname");
 
     for each (id in getCharPref('jaet.production_planner.tabs', '').split(','))
         if (id)
@@ -435,13 +467,13 @@ function ppOnload() {
 function openPanel(id) {
     var name, stm;
     if (id) {
-        var stm = getNameStm;
+        let stm = Stms.getProjName;
         try {
             stm.params.id = id;
             if (stm.step())
                 name = stm.row.projectName;
             else
-                return alert("Project "+id+" is not found");
+                return gPS.alert(null, "Project not found", "Project "+id+" is not found");
         } catch (e) {
             println("getNameStm: "+e);
         } finally {
@@ -455,18 +487,83 @@ function openPanel(id) {
     tabpanel.setAttribute('flex', 1);
     tabpanel.setAttribute('orient', 'vertical');
     var project = tabpanel.project = new Project(tabpanel);
-    if (id)
-        project.load(id);
     var item = tabbox.tabs.appendItem(name, id);
     tabbox.tabpanels.appendChild(tabpanel);
-    tabpanel.rebuild();
-
-    tabbox.selectedIndex = tabbox.tabs.getIndexOfItem(item);
     if (id)
-        panelList.push(id);
+        project.load(id);
+    tabbox.selectedIndex = tabbox.tabs.getIndexOfItem(item);
 }
 
-function printObj(obj) {
-    var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Ci.nsIDOMSerializer);
-    println(XML(serializer.serializeToString(obj)).toXMLString());
+function ppQuit() {
+    if (!gPS.confirm(null, "Quit", "Really quit Production Planner?"))
+        return;
+
+    var flags = gPS.BUTTON_POS_0 * gPS.BUTTON_TITLE_SAVE |
+        gPS.BUTTON_POS_1 * gPS.BUTTON_TITLE_IS_STRING |
+        gPS.BUTTON_POS_2 * gPS.BUTTON_TITLE_CANCEL;
+    var panelList = [];
+tabpanels:
+    for (var tp = tabbox.tabpanels.firstChild; tp; tp = tp.nextSibling) {
+        let project = tp.project;
+        tabbox.selectedPanel = tp;
+        while (!project.saved) {
+            switch (gPS.confirmEx(null, "Not saved", "Project '"+tabbox.selectedTab.label+
+                    "' is not saved\nDiscard changes?", flags, "", "Discard", "", null, {})) {
+            case 0:
+                save();
+                break;
+            case 1:
+                if (project.id)
+                    panelList.push(project.id);
+                continue tabpanels;
+            case 2:
+                return;
+            }
+        }
+        panelList.push(project.id);
+    }
+    Prefs.setCharPref('jaet.production_planner.tabs', panelList.join(','));
+    doQuit(false);
 }
+
+function save() {
+    let project = tabbox.selectedPanel.project;
+    if (project.id === undefined) {
+        /* do save as dialog */;
+        var name, id;
+        while (!name) {
+            name = 'New project';
+            if  (!gPS.prompt(null, "Save project", "Enter a name", name, null, {}))
+                return;
+            let (stm = Stms.checkProjName) {
+                stm.params.pname = name;
+                if (stm.step()) {
+                    if (confirm("You already have a project named "+name+"\nOverwrite?"))
+                        id = stm.row.projectID;
+                    else
+                        name = null;
+                    stm.reset();
+                    continue;
+                }
+                stm.reset();
+            }
+        }
+        if (!id) {
+            let (stm = Stms.saveProjName) {
+                stm.params.pname = name;
+                stm.execute();
+                stm.reset();
+            }
+            let (stm = Stms.checkProjName) {
+                stm.params.pname = name;
+                stm.step();
+                id = stm.row.projectID;
+                stm.reset();
+            }
+        }
+        project.id = id;
+        tabbox.selectedTab.label = name;
+    }
+    project.save();
+}
+
