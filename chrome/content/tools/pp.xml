@@ -7,7 +7,11 @@
         <content>
             <xul:hbox flex="1">
                 <xul:vbox flex="1">
-                    <xul:label value="Required" />
+                    <xul:hbox>
+                        <xul:label value="Required" />
+                        <xul:spacer flex="1" />
+                        <xul:label anonid="order-total" />
+                    </xul:hbox>
                     <xul:tree anonid="order" flex="1" context="order-menu" hidecolumnpicker="true">
                         <xul:treecols/>
                         <xul:treechildren/>
@@ -15,7 +19,11 @@
                 </xul:vbox>
                 <xul:splitter collapse="none"/>
                 <xul:vbox flex="1">
-                    <xul:label value="Spent" />
+                    <xul:hbox>
+                        <xul:label value="Spent" />
+                        <xul:spacer flex="1" />
+                        <xul:label anonid="spent-total" />
+                    </xul:hbox>
                     <xul:tree anonid="spent" flex="1" context="spent-menu" hidecolumnpicker="true">
                         <xul:treecols />
                         <xul:treechildren/>
@@ -25,7 +33,11 @@
             <xul:splitter collapse="before"><xul:grippy /></xul:splitter>
             <xul:hbox flex="5">
                 <xul:vbox flex="1">
-                    <xul:label value="To buy"/>
+                    <xul:hbox>
+                        <xul:label value="To buy"/>
+                        <xul:spacer flex="1" />
+                        <xul:label anonid="buy-total" />
+                    </xul:hbox>
                     <xul:tree anonid="buy" flex="1" context="buy-menu" hidecolumnpicker="true">
                         <xul:treecols/>
                         <xul:treechildren/>
@@ -41,7 +53,11 @@
                 </xul:vbox>
                 <xul:splitter collapse="none"/>
                 <xul:vbox flex="1">
-                    <xul:label value="Acquired"/>
+                    <xul:hbox>
+                        <xul:label value="Acquired"/>
+                        <xul:spacer flex="1" />
+                        <xul:label anonid="acquired-total" />
+                    </xul:hbox>
                     <xul:tree anonid="acquired" flex="1" context="acquired-menu" hidecolumnpicker="true">
                         <xul:treecols/>
                         <xul:treechildren/>
@@ -53,7 +69,6 @@
             <method name="init">
                 <parameter name="id"/>
                 <body><![CDATA[
-                    println("Project box constructor");
                     var me = this;
                     var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
                     [{cons: OrderTreeView,   anonid: 'order',  cols: ['itm', 'cnt']},
@@ -64,6 +79,7 @@
                         var view = set.anonid+'View';
                         me[view] = new set.cons;
                         me[view].pr = me;
+                        me[view].totalLabel = document.getAnonymousElementByAttribute(me, 'anonid', set.anonid+'-total');
                         var tree = document.getAnonymousElementByAttribute(me, 'anonid', set.anonid);
                         var treecols = tree.getElementsByTagNameNS(xulns, 'treecols')[0];
                         for (var i = 0; i < set.cols.length; i++) {

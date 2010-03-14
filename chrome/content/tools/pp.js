@@ -63,12 +63,22 @@ ItemType.prototype = {
         return this._raw;
     },
     // TODO: get extra()
+    getPriceAsync:  function (handler, args) {
+        var me = this;
+        if (!this._price || this._price == -1)
+            gPC.getPriceForItemAsync(this.id, {}, function (price) {
+                me._price = price;
+                if (handler)
+                    handler(price, args);
+            });
+        else if (handler)
+            handler(this._price, args);
+    },
     get price() {
         this.__defineGetter__('price', function () this._price);
-        var me = this;
-        gPC.getPriceForItemAsync(this.id, {},
-                function (price) me._price = Math.round(price*100)/100);
-        return this._price = -1;
+        this._price = -1;
+        this.getPriceAsync();
+        return this._price;
     },
 };
 
@@ -102,6 +112,12 @@ const showHide = {
 
 function TreeView() { }
 TreeView.prototype = {
+    get total()         this._total,
+    set total(value) {
+        this._total = Math.round(value*100)/100;
+        if (this.totalLabel)
+            this.totalLabel.value = this._total.toLocaleString()+" ISK total";
+    },
     values:             [],
     get rowCount()      this.values.length,
     get active()        this.values[this.activeRow],
@@ -129,12 +145,17 @@ OrderTreeView.prototype = new TreeView();
 OrderTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
-    for each (itm in this.pr.project.order)
+    this.total = 0;
+    var me = this;
+    for each (itm in this.pr.project.order) {
+        var type = getItemTypeByID(itm.type);
+        type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
         this.values.push({
             type:   itm.type,
-            itm:    getItemTypeByID(itm.type).type.name,
+            itm:    type.type.name,
             cnt:    itm.cnt.toLocaleString()
         });
+    }
     this.treebox.rowCountChanged(0, this.values.length);
 }
 
@@ -143,12 +164,22 @@ SpentTreeView.prototype = new TreeView();
 SpentTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
-    for each (itm in this.pr.project.spent)
+    this.total = 0;
+    var me = this;
+    for each (itm in this.pr.project.spent) {
+        var type;
+        if (itm.type == 'isk')
+            me.total += itm.cnt;
+        else  {
+            type = getItemTypeByID(itm.type);
+            type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
+        }
         this.values.push({
             type:   itm.type,
-            itm:    itm.type == 'isk' ? 'ISK' : getItemTypeByID(itm.type).type.name,
+            itm:    itm.type == 'isk' ? 'ISK' : type.type.name,
             cnt:    itm.cnt.toLocaleString(),
         });
+    }
     this.treebox.rowCountChanged(0, this.values.length);
 }
 
@@ -163,9 +194,10 @@ BuyTreeView.prototype.getImageSrc = function (row,col)
 BuyTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
-    let tmp = this.tmp = {};
-    let tmpbp = this.tmpbp = {};
+    let tmp = this.pr.project.buy = {};
+    let tmpbp = this.pr.project.bp_buy = {};
     this.bpCount = 0;
+    this.total = 0;
     for each (itm in this.pr.project.order)
         tmp[itm.type] = itm.cnt;
     for each (itm in this.pr.project.build) {
@@ -213,15 +245,18 @@ BuyTreeView.prototype.rebuild = function () {
         if (tmp[i] <= 0)
             continue;
         var type = getItemTypeByID(i);
+        var me = this;
         this.values.push({
             type:   i,
             itm:    type.type.name,
             cnt:    tmp[i].toLocaleString(),
+            count:  tmp[i],
             get isk() {
                 var price = getItemTypeByID(this.type).price;
                 if (price == -1)
                     return ' ';
-                price = price.toLocaleString();
+                me.total += this.count*price;
+                price = (Math.round(price*100)/100).toLocaleString();
                 this.__defineGetter__('isk', function () price);
             },
         });
@@ -249,6 +284,8 @@ AcquiredTreeView.prototype.isSeparator = function (aRow) !this.values[aRow].itm;
 AcquiredTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
+    this.total = 0;
+    var me = this;
     for each (itm in this.pr.project.blueprints)
         this.values.push({
             type:   itm.type,
@@ -258,23 +295,24 @@ AcquiredTreeView.prototype.rebuild = function () {
         });
     if (this.values.length)
         this.values.push({itm: false});
-    for each (itm in this.pr.project.acquired)
+    for each (itm in this.pr.project.acquired) {
+        var type = getItemTypeByID(itm.type);
+        type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
         this.values.push({
             type:   itm.type,
-            itm:    getItemTypeByID(itm.type).type.name,
+            itm:    type.type.name,
             me:     ' ',
             cnt:    itm.cnt.toLocaleString()
         });
+    }
     this.treebox.rowCountChanged(0, this.values.length);
 }
 
+const projFields = 'buy bp_buy order blueprints acquired build spent'.split(' ');
 function Project(box) {
     this.box = box;
-    this.order = {};
-    this.blueprints = {};
-    this.acquired = {};
-    this.build = {};
-    this.spent = {};
+    for each (i in projFields)
+        this[i] = {};
     this._log = [];
 }
 Project.prototype = {
@@ -400,11 +438,11 @@ function removeFromProject1() {
     let order = tabbox.tabpanels.selectedPanel.orderView;
     let buy = tabbox.tabpanels.selectedPanel.buyView;
     let item = order.active;
-    if (buy.tmp[item.type] <= 0) {
+    if (project.buy[item.type] <= 0) {
         alert("Can't remove item from project - not in 'to buy' list!");
         return;
     }
-    var params = {in: {dlg: 'buy-build', amount: buy.tmp[item.type]}};
+    var params = {in: {dlg: 'buy-build', amount: project.buy[item.type]}};
     openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
