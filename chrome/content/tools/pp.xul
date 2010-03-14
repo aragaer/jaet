@@ -34,11 +34,11 @@ function open() {
     <command id="File:New" oncommand="openPanel()"/>
     <command id="File:Open" oncommand="open()"/>
     <command id="File:Save" oncommand="save()"/>
-    <command id="File:Export" oncommand="ppQuit()()"/>
-    <command id="File:Exit" oncommand="ppQuit()()"/>
+    <command id="File:Export" oncommand="ppQuit()"/>
+    <command id="File:Exit" oncommand="ppQuit()"/>
 
-    <command id="Settings:BP" oncommand="ppQuit()()"/>
-    <command id="Settings:Pref" oncommand="ppQuit()()"/>
+    <command id="Settings:BP" oncommand="ppQuit()"/>
+    <command id="Settings:Pref" oncommand="ppQuit()"/>
 
     <menubar id="pp-menubar">
         <menu label="File" accesskey="F">

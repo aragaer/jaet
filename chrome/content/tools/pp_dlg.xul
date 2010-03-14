@@ -14,9 +14,16 @@ const types = {
             amount = document.getElementById('amount-bb');
             label.value = "Please enter amount between 1 and " + params.in.amount;
             amount.max = amount.value = params.in.amount;
+            if (params.in.price) {
+                document.getElementById('cost').collapsed = false;
+                document.getElementById('price_pu').value = params.in.price;
+                updateTotal();
+            }
         },
         onaccept:   function () {
             params.out.count = +amount.value;
+            if (params.in.price)
+                params.out.cost = +document.getElementById('price_total').value;
             return true;
         },
         oncancel:   function () true,
@@ -33,12 +40,19 @@ const types = {
         oncancel:   function () true,
     },
     'blueprint':    {
-        onload:     function () { },
+        onload:     function () {
+            if (!params.in.price)
+                return;
+            document.getElementById('bp-cost').collapsed = false;
+            document.getElementById('bp_price').value = params.in.price;
+        },
         onaccept:   function () {
             params.out.me = +document.getElementById('me').value;
             params.out.count = document.getElementById('is_orig').selected
                 ? Infinity
                 : +document.getElementById('runs').value;
+            if (params.in.price)
+                params.out.cost = +document.getElementById('bp_price').value;
             return true;
         },
         oncancel:   function () true,
@@ -62,23 +76,46 @@ function forcecomplete_add(text) {
     text.selectionStart = st;
     text.selectionEnd = text.value.length;
 }
+function updateTotal() {
+    var pu = +document.getElementById('price_pu').value;
+    var cnt = +document.getElementById('amount-bb').value;
+    document.getElementById('price_total').value = pu*cnt;
+}
+function updatePerUnit() {
+    var tot = +document.getElementById('price_total').value;
+    var cnt = +document.getElementById('amount-bb').value;
+    document.getElementById('price_pu').value = 100*Math.round(tot/cnt/100);
+}
+
 ]]></script>
     <stack>
         <vbox id="buy-build" collapsed="true">
             <label id="label-bb" value=""/>
-            <textbox id="amount-bb" type="number" min="1"/>
+            <textbox id="amount-bb" type="number" min="1" onchange="updateTotal()"/>
         </vbox>
         <radiogroup id="blueprint" collapsed="true">
             <radio label="Blueprint Original" selected="true" id="is_orig"/>
             <radio label="Blueprint Copy" />
-            <hbox>
-                <label value="Runs" />
-                <textbox id="runs" type="number" min="1"/>
-            </hbox>
-            <hbox>
-                <label value="ME" />
-                <textbox id="me" type="number"/>
-            </hbox>
+            <grid>
+                <columns>
+                    <column flex="2" />
+                    <column flex="1" />
+                </columns>
+                <rows>
+                    <row style="-moz-box-align:center">
+                        <label value="Runs" />
+                        <textbox id="runs" type="number" min="1"/>
+                    </row>
+                    <row style="-moz-box-align:center">
+                        <label value="ME" />
+                        <textbox id="me" type="number"/>
+                    </row>
+                    <row style="-moz-box-align:center" id="bp-cost" collapsed="true">
+                        <label value="Cost: " />
+                        <textbox id="bp_price" type="number" decimalplaces="2"/>
+                    </row>
+                </rows>
+            </grid>
         </radiogroup>
         <vbox id="add-to-proj" collapsed="true">
             <label value="Please choose an item to build" />
@@ -92,5 +129,21 @@ function forcecomplete_add(text) {
             </hbox>
         </vbox>
     </stack>
+    <grid id="cost" collapsed="true">
+        <columns>
+            <column flex="2" />
+            <column flex="1" />
+        </columns>
+        <rows>
+            <row style="-moz-box-align:center">
+                <label value="Price per unit/run: "/>
+                <textbox id="price_pu" onchange="updateTotal()" type="number" decimalplaces="2"/>
+            </row>
+            <row style="-moz-box-align:center">
+                <label value="Total price: "/>
+                <textbox id="price_total" onchange="updatePerUnit()" type="number" decimalplaces="2"/>
+            </row>
+        </rows>
+    </grid>
 </dialog>
 

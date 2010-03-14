@@ -18,6 +18,7 @@ const AllItemTypes = {};
 
 function ItemType(typeID) {
     this.id = typeID;
+    this._bp = this._waste = null;
 }
 
 function getItemTypeByID(typeID) {
@@ -39,10 +40,10 @@ ItemType.prototype = {
         let stm = Stms.getBPByType;
         try {
             stm.params.tid = this.id;
-            if (!stm.step())
-                throw new Error("No blueprint for "+this.id);
-            this._bp = stm.row.blueprintTypeID;
-            this._waste = stm.row.wasteFactor;
+            if (stm.step()) {
+                this._bp = stm.row.blueprintTypeID;
+                this._waste = stm.row.wasteFactor;
+            }
         } catch (e) {
             println("Production planner: getBPByType for "+this.id+": "+e);
         } finally { stm.reset(); }
@@ -64,7 +65,10 @@ ItemType.prototype = {
     // TODO: get extra()
     get price() {
         this.__defineGetter__('price', function () this._price);
-        return this._price = Math.round(gPC.getPriceForItem(this.id, null)*100)/100;
+        var me = this;
+        gPC.getPriceForItemAsync(this.id, {},
+                function (price) me._price = Math.round(price*100)/100);
+        return this._price = -1;
     },
 };
 
@@ -152,6 +156,10 @@ function BuyTreeView() { }
 BuyTreeView.prototype = new TreeView();
 BuyTreeView.prototype.isSeparator = function (aRow) !this.values[aRow].itm;
 BuyTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
+BuyTreeView.prototype.getImageSrc = function (row,col)
+        this.values[row].isk && this.values[row].isk == ' ' && col.id.split('-')[0] == 'isk'
+            ? "chrome://jaet/content/images/loading.gif"
+            : null,
 BuyTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
@@ -209,7 +217,13 @@ BuyTreeView.prototype.rebuild = function () {
             type:   i,
             itm:    type.type.name,
             cnt:    tmp[i].toLocaleString(),
-            isk:    type.price.toLocaleString(),
+            get isk() {
+                var price = getItemTypeByID(this.type).price;
+                if (price == -1)
+                    return ' ';
+                price = price.toLocaleString();
+                this.__defineGetter__('isk', function () price);
+            },
         });
     }
     this.treebox.rowCountChanged(0, this.values.length);
@@ -295,31 +309,31 @@ Project.prototype = {
         this.box.buyView.rebuild();
         this.log('Build '+typeID+' x'+count);
     },
-    gotItem:        function (typeID, count, spend_isk) {
+    gotItem:        function (typeID, count, cost) {
         this._safeAdd(this.acquired, typeID, count);
-        this.log(['got', 'kept', 'bought', 'sold'][(count < 0) + 2 * spend_isk] + ' ' +
+        this.log(['got', 'kept', 'bought', 'sold'][(count < 0) + 2 * (cost != 0)] + ' ' +
                 typeID+ ' x'+count);
-        if (spend_isk)
-            [typeID, count] = ['isk', count*getItemTypeByID(typeID).price];
-        this._safeAdd(this.spent, typeID, count);
+        if (cost)
+            this._safeAdd(this.spent, 'isk', count > 0 ? cost : -cost);
+        else
+            this._safeAdd(this.spent, typeID, count);
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
     },
-    gotBP:          function (bpID, runs, me, spend_isk) {
+    gotBP:          function (bpID, runs, me, cost) {
         var id = bpID+'_'+me;
         if (!this.blueprints[id])
             this.blueprints[id] = {type : bpID, me: me, cnt: 0};
         this.blueprints[id].cnt += runs;
         if (!this.blueprints[id].cnt)
             delete(this.blueprints[id]);
-        this.log(['got', 'kept', 'bought', 'sold'][(runs < 0) + 2 * spend_isk] + ' ' +
+        this.log(['got', 'kept', 'bought', 'sold'][(runs < 0) + 2 * (cost != 0)] + ' ' +
                 bpID+ ' x'+runs);
-        if (runs !== Infinity) {
-//        if (spend_isk)
-//            [id, runs, bpID] = ['isk', getItemTypeByID(typeID).price, null];
+        if (cost)
+            this._safeAdd(this.spent, 'isk', runs > 0 ? cost : -cost);
+        else if (runs !== Infinity)
             this._safeAdd(this.spent, bpID, runs);
-        }
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
@@ -419,16 +433,18 @@ function gotIt1(spend_isk) {
     let buy = tabbox.tabpanels.selectedPanel.buyView;
     let itm = buy.active;
     var params = {in: buy.isBlueprint(buy.activeRow)
-        ? {dlg: 'blueprint'}
-        : {dlg: 'buy-build', amount: itm.cnt}
+        ? {dlg: 'blueprint', price: spend_isk ? getItemTypeByID(itm.type).price : 0}
+        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? getItemTypeByID(itm.type).price : 0}
     };
     openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
+    if (!params.out.cost)
+        params.out.cost = 0; // Remove the warning
     if (params.in.dlg == 'blueprint')
-        project.gotBP(itm.type, params.out.count, params.out.me || 0, spend_isk);
+        project.gotBP(itm.type, params.out.count, params.out.me || 0, params.out.cost);
     else
-        project.gotItem(itm.type, params.out.count, spend_isk);
+        project.gotItem(itm.type, params.out.count, params.out.cost);
 }
 
 function init() {
@@ -535,8 +551,10 @@ function save() {
         var name, id;
         while (!name) {
             name = 'New project';
-            if  (!gPS.prompt(null, "Save project", "Enter a name", name, null, {}))
+            var tmp = {value: name};
+            if  (!gPS.prompt(null, "Save project", "Enter a name", tmp, null, {}))
                 return;
+            name = tmp.value;
             let (stm = Stms.checkProjName) {
                 stm.params.pname = name;
                 if (stm.step()) {
