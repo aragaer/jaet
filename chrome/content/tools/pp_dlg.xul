@@ -7,6 +7,7 @@
     onload="onLoad();" id="pp-dlg" persist="screenX screenY">
 <script><![CDATA[
 var params, amount;
+var typeID = 0, typeName = '';
 const types = {
     'buy-build':    {
         onload:     function () {
@@ -31,9 +32,9 @@ const types = {
     'add-to-proj':  {
         onload:     function () { },
         onaccept:   function () {
-            var type = document.getElementById('type-add');
-            params.out.typeName = type.value;
-            if (type.value.length && !type.nomatch)
+            params.out.typeName = typeName;
+            params.out.typeID = typeID;
+            if (typeID)
                 params.out.count = +document.getElementById('amount-add').value;
             return true;
         },
@@ -67,14 +68,9 @@ function onLoad() {
     types[params.in.dlg].onload();
 }
 function forcecomplete_add(text) {
-    if (!text.searchCount) {
-        text.value = text.searchParam;
-        return;
-    }
-    var st = text.selectionStart;
-    text.value = text.controller.getValueAt(0);
-    text.selectionStart = st;
-    text.selectionEnd = text.value.length;
+    [typeID, typeName] = text.searchCount
+        ? [text.controller.getCommentAt(0), text.controller.getValueAt(0)]
+        : [0, ''];
 }
 function updateTotal() {
     var pu = +document.getElementById('price_pu').value;
@@ -122,6 +118,7 @@ function updatePerUnit() {
             <textbox id="type-add" type="autocomplete"
                      autocompletesearch="item-type-buildable-autocomplete"
                      highlightnonmatches="true"
+                     onblur="this.value = typeName"
                      onsearchcomplete="forcecomplete_add(this)"/>
             <hbox>
                 <label value="amount" />

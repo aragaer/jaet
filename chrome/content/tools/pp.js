@@ -1,7 +1,6 @@
 var gEIS, gDB, gPC, gPS;
 var tabbox;
 const Queries = {
-    getTypeByName:  "select typeID from invTypes where typeName=:tn",
     getBPByType:    "select blueprintTypeID, wasteFactor from invBlueprintTypes where productTypeID=:tid",
     getRawMats:     "select materialTypeID as tid, quantity from invTypeMaterials where typeID=:tid",
     getExtraMats:   "select requiredTypeID as tid, quantity, damagePerJob from ramTypeRequirements " +
@@ -11,11 +10,9 @@ const Queries = {
     checkProjName:  "select projectID from projects where projectName=:pname;",
     saveProj:       "update projects set projectData=:pdata where projectID=:id",
     loadProj:       "select projectData from projects where projectID=:id",
-};
-const Stms = { };
+}, Stms = { };
 
 const AllItemTypes = {};
-
 function ItemType(typeID) {
     this.id = typeID;
     this._bp = this._waste = null;
@@ -50,7 +47,7 @@ ItemType.prototype = {
         return this[arg];
     },
     get raw()   {
-        this.__defineGetter__('uses', function () this._uses);
+        this.__defineGetter__('raw', function () this._raw);
         this._raw = {};
         let stm = Stms.getRawMats;
         try {
@@ -58,7 +55,7 @@ ItemType.prototype = {
             while (stm.step())
                 this._raw[stm.row.tid] = stm.row.quantity;
         } catch (e) {
-            dump("Filling 'uses' for "+this.type.name+": "+e+"\n");
+            dump("Filling 'raw' for "+this.type.name+": "+e+"\n");
         } finally { stm.reset(); }
         return this._raw;
     },
@@ -132,7 +129,7 @@ TreeView.prototype = {
     hasNextSibling:     function (aRow, aAfterRow) 0,
     toggleOpenState:    function (aRow) { },
     setTree:            function (treebox) this.treebox = treebox,
-    isSeparator:        function (aRow) false,
+    isSeparator:        function (aRow) !this.values[aRow].itm,
     isSorted:           function () false,
     getImageSrc:        function (row,col) null,
     getRowProperties:   function (row,props) { },
@@ -185,7 +182,6 @@ SpentTreeView.prototype.rebuild = function () {
 
 function BuyTreeView() { }
 BuyTreeView.prototype = new TreeView();
-BuyTreeView.prototype.isSeparator = function (aRow) !this.values[aRow].itm;
 BuyTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
 BuyTreeView.prototype.getImageSrc = function (row,col)
         this.values[row].isk && this.values[row].isk == ' ' && col.id.split('-')[0] == 'isk'
@@ -280,7 +276,6 @@ BuildTreeView.prototype.rebuild = function () {
 
 function AcquiredTreeView() { }
 AcquiredTreeView.prototype = new TreeView();
-AcquiredTreeView.prototype.isSeparator = function (aRow) !this.values[aRow].itm;
 AcquiredTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
@@ -321,15 +316,8 @@ Project.prototype = {
         println(text);
         this.saved = false;
     },
-    _safeAdd:       function (list, id, cnt, type) {
-        if (!list[id])
-            list[id] = {type: type || id, cnt: 0}; // id and id are different for blueprints
-        list[id].cnt += cnt;
-        if (!list[id].cnt)
-            delete(list[id]);
-    },
     addToOrder:     function (typeID, count) {
-        this._safeAdd(this.order, typeID, count);
+        safeAdd(this.order, typeID, count);
         this.box.orderView.rebuild();
         this.box.buyView.rebuild();
         this.log('Add '+typeID+' x'+count);
@@ -342,19 +330,19 @@ Project.prototype = {
         yield {cnt: Infinity, me: 0, fake: true};
     },
     wantToBuild:    function (typeID, count) { // count can be negative
-        this._safeAdd(this.build, typeID, count);
+        safeAdd(this.build, typeID, count);
         this.box.buildView.rebuild();
         this.box.buyView.rebuild();
         this.log('Build '+typeID+' x'+count);
     },
     gotItem:        function (typeID, count, cost) {
-        this._safeAdd(this.acquired, typeID, count);
+        safeAdd(this.acquired, typeID, count);
         this.log(['got', 'kept', 'bought', 'sold'][(count < 0) + 2 * (cost != 0)] + ' ' +
                 typeID+ ' x'+count);
         if (cost)
-            this._safeAdd(this.spent, 'isk', count > 0 ? cost : -cost);
+            safeAdd(this.spent, 'isk', count > 0 ? cost : -cost);
         else
-            this._safeAdd(this.spent, typeID, count);
+            safeAdd(this.spent, typeID, count);
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
@@ -369,9 +357,9 @@ Project.prototype = {
         this.log(['got', 'kept', 'bought', 'sold'][(runs < 0) + 2 * (cost != 0)] + ' ' +
                 bpID+ ' x'+runs);
         if (cost)
-            this._safeAdd(this.spent, 'isk', runs > 0 ? cost : -cost);
+            safeAdd(this.spent, 'isk', runs > 0 ? cost : -cost);
         else if (runs !== Infinity)
-            this._safeAdd(this.spent, bpID, runs);
+            safeAdd(this.spent, bpID, runs);
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
@@ -385,16 +373,10 @@ Project.prototype = {
             var data = JSON.parse(stm.row.projectData);
             for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
                 this[i] = data[i];
-            for each (bp in this.blueprints)
-                if (bp.cnt == 0)
-                    bp.cnt = Infinity;
-            this.log("Loaded "+id);
+            for each (bp in this.blueprints) if (bp.cnt == 0)
+                bp.cnt = Infinity;
             this.saved = true;
-        } catch (e) {
-            println("Load project "+id+": "+e);
-        } finally {
-            stm.reset();
-        }
+        } catch (e) { println("Load project "+id+": "+e); } finally { stm.reset(); }
         this.box.rebuild();
     },
     save:           function (id) {
@@ -402,21 +384,13 @@ Project.prototype = {
         var data = {};
         for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
             data[i] = this[i];
-        for each (bp in this.blueprints)
-            if (bp.cnt == Infinity)
-                bp.cnt = 0;
         let stm = Stms.saveProj;
         try {
             stm.params.id = id;
             stm.params.pdata = JSON.stringify(data);
             stm.execute();
-            this.log("Saved "+id);
             this.saved = true;
-        } catch (e) {
-            println("Save project "+id+": "+e);
-        } finally {
-            stm.reset();
-        }
+        } catch (e) { println("Save project "+id+": "+e); } finally { stm.reset(); }
     },
 };
 
@@ -425,12 +399,7 @@ function addToProject1() {
     openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
-    let stm = Stms.getTypeByName;
-    stm.params.tn = params.out.typeName;
-    stm.step();
-    var typeID = stm.row.typeID;
-    stm.reset();
-    tabbox.tabpanels.selectedPanel.project.addToOrder(typeID, params.out.count);
+    tabbox.selectedPanel.project.addToOrder(params.out.typeID, params.out.count);
 }
 
 function removeFromProject1() {
@@ -512,11 +481,8 @@ function init() {
 
 function ppOnload() {
     init();
-    var conn = gDB.getConnection();
-
-    for each (id in getCharPref('jaet.production_planner.tabs', '').split(','))
-        if (id)
-            openPanel(id);
+    for each (id in getCharPref('jaet.production_planner.tabs', '').split(',')) if (id)
+        openPanel(id);
 }
 
 function openPanel(id) {
@@ -595,15 +561,12 @@ function save() {
             name = tmp.value;
             let (stm = Stms.checkProjName) {
                 stm.params.pname = name;
-                if (stm.step()) {
-                    if (confirm("You already have a project named "+name+"\nOverwrite?"))
-                        id = stm.row.projectID;
-                    else
-                        name = null;
-                    stm.reset();
+                id  = stm.step() ? stm.row.projectID : 0;
+                stm.reset();
+                if (id && !confirm("You already have a project named "+name+"\nOverwrite?")) {
+                    name = null;
                     continue;
                 }
-                stm.reset();
             }
         }
         if (!id) {
@@ -623,5 +586,13 @@ function save() {
         tabbox.selectedTab.label = name;
     }
     project.save();
+}
+
+function safeAdd(list, id, cnt) {
+    if (!list[id])
+        list[id] = {type: id, cnt: 0};
+    list[id].cnt += cnt;
+    if (!list[id].cnt)
+        delete(list[id]);
 }
 

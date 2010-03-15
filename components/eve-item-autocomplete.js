@@ -18,7 +18,10 @@ function ItemTypeAutoCompleteResult(searchString, searchResult,
     this._searchResult = searchResult;
     this._defaultIndex = defaultIndex;
     this._errorDescription = errorDescription;
-    this._results = results || [];
+    if (results) {
+        this._results = [i[0] for each (i in results)];
+        this._comments = [i[1] for each (i in results)];
+    }
 }
 
 ItemTypeAutoCompleteResult.prototype = {
@@ -27,6 +30,7 @@ ItemTypeAutoCompleteResult.prototype = {
     _defaultIndex: 0,
     _errorDescription: "",
     _results: [],
+    _comments: [],
 
     classDescription: R_CLASS_NAME,
     classID:          R_CLASS_ID,
@@ -38,7 +42,7 @@ ItemTypeAutoCompleteResult.prototype = {
     get errorDescription()  this._errorDescription,
     get matchCount()        this._results.length,
     getValueAt:     function (index) this._results[index],
-    getCommentAt:   function (index) "",
+    getCommentAt:   function (index) this._comments[index],
     getStyleAt:     function (index) null,
     getImageAt:     function (index) "",
     removeValueAt:  function (index, removeFromDb) this._results.splice(index, 1),
@@ -78,7 +82,7 @@ ItemTypeAutoCompleteSearch.prototype = {
         query.params.pattern = sslc+"%";
         try {
             while (query.step())
-                results.push(query.row.typeName);
+                results.push([query.row.typeName]);
         } catch (e) {
             dump("Error in item type autocomplete: "+e+"\n");
         } finally {
@@ -134,7 +138,7 @@ BuildableAutoCompleteSearch.prototype = {
         this.query.params.pattern = sslc+"%";
         try {
             while (this.query.step())
-                results.push(this.query.row.typeName);
+                results.push([this.query.row.typeName, this.query.row.typeID]);
         } catch (e) {
             dump("Error in buildable item type autocomplete: "+e+"\n");
         } finally {
@@ -153,8 +157,8 @@ BuildableAutoCompleteSearch.prototype = {
         case 'eve-db-init':
             var dbs = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);
             var conn = dbs.getConnection();
-            this.query = conn.createStatement("select typeName from static.invTypes as t " +
-                    "inner join static.invBlueprintTypes as b on t.typeID=b.productTypeID " +
+            this.query = conn.createStatement("select typeName, t.typeID from invTypes as t " +
+                    "inner join invBlueprintTypes as b on t.typeID=b.productTypeID " +
                     "where typeName like :pattern limit 5;");
         }
     },
