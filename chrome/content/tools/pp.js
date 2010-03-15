@@ -516,6 +516,18 @@ function openPanel(id) {
     tabbox.selectedIndex = tabbox.tabs.getIndexOfItem(item);
 }
 
+const projectList = {
+    __iterator__:   function () {
+        var tp = tabbox.tabpanels.firstChild;
+        var t = tabbox.tabs.firstChild;
+        while (tp) {
+            yield {panel: tp, tab: t};
+            tp = tp.nextSibling;
+            t = t.nextSibling;
+        }
+    }
+}
+
 function ppQuit() {
     if (!gPS.confirm(null, "Quit", "Really quit Production Planner?"))
         return;
@@ -525,11 +537,12 @@ function ppQuit() {
         gPS.BUTTON_POS_2 * gPS.BUTTON_TITLE_CANCEL;
     var panelList = [];
 tabpanels:
-    for (var tp = tabbox.tabpanels.firstChild; tp; tp = tp.nextSibling) {
-        let project = tp.project;
-        tabbox.selectedPanel = tp;
+    for each (p in projectList) {
+        let project = p.panel.project;
+        tabbox.selectedPanel = p.panel;
+        tabbox.selectedTab = p.tab;
         while (!project.saved) {
-            switch (gPS.confirmEx(null, "Not saved", "Project '"+tabbox.selectedTab.label+
+            switch (gPS.confirmEx(null, "Not saved", "Project '"+p.tab.label+
                     "' is not saved\nDiscard changes?", flags, "", "Discard", "", null, {})) {
             case 0:
                 save();
@@ -551,22 +564,18 @@ tabpanels:
 function save() {
     let project = tabbox.selectedPanel.project;
     if (project.id === undefined) {
-        /* do save as dialog */;
         var name, id;
         while (!name) {
-            name = 'New project';
-            var tmp = {value: name};
+            var tmp = {value: 'New project'};
             if  (!gPS.prompt(null, "Save project", "Enter a name", tmp, null, {}))
                 return;
             name = tmp.value;
             let (stm = Stms.checkProjName) {
                 stm.params.pname = name;
-                id  = stm.step() ? stm.row.projectID : 0;
+                id = stm.step() ? stm.row.projectID : 0;
                 stm.reset();
-                if (id && !confirm("You already have a project named "+name+"\nOverwrite?")) {
+                if (id && !confirm("You already have a project named "+name+"\nOverwrite?"))
                     name = null;
-                    continue;
-                }
             }
         }
         if (!id) {
@@ -586,6 +595,20 @@ function save() {
         tabbox.selectedTab.label = name;
     }
     project.save();
+}
+
+function open() {
+    var params = {in:{}};
+    openDialog("chrome://jaet/content/dialogs/pp.xul", null, "chrome,dialog,modal", params).focus();
+    if (!params.out)
+        return;
+    for each (p in projectList)
+        if (p.panel.project.id == params.out.id) {
+            tabbox.selectedPanel = p.panel;
+            tabbox.selectedTab = p.tab;
+            return;
+        }
+    openPanel(params.out.id);
 }
 
 function safeAdd(list, id, cnt) {

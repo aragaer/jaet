@@ -17,20 +17,6 @@
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/tools/pp.js"/>
-<script><![CDATA[
-var panelList = [];
-
-
-function open() {
-    var params = {in:{}};
-    openDialog("chrome://jaet/content/dialogs/pp.xul", null, "chrome,dialog,modal", params).focus();
-    if (!params.out)
-        return;
-    panelList.push(params.out);
-    openPanel(params.out.id);
-}
-]]></script>
-
     <command id="File:New" oncommand="openPanel()"/>
     <command id="File:Open" oncommand="open()"/>
     <command id="File:Save" oncommand="save()"/>
