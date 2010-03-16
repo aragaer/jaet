@@ -528,13 +528,19 @@ const projectList = {
     }
 }
 
+function confirmSave() {
+    let project = tabbox.selectedPanel.project;
+    var flags = gPS.BUTTON_POS_0 * gPS.BUTTON_TITLE_SAVE |
+        gPS.BUTTON_POS_1 * gPS.BUTTON_TITLE_IS_STRING |
+        gPS.BUTTON_POS_2 * gPS.BUTTON_TITLE_CANCEL;
+    return gPS.confirmEx(null, "Not saved", "Project '"+tabbox.selectedTab.label+
+            "' is not saved\nDiscard changes?", flags, "", "Discard", "", null, {});
+}
+
 function ppQuit() {
     if (!gPS.confirm(null, "Quit", "Really quit Production Planner?"))
         return;
 
-    var flags = gPS.BUTTON_POS_0 * gPS.BUTTON_TITLE_SAVE |
-        gPS.BUTTON_POS_1 * gPS.BUTTON_TITLE_IS_STRING |
-        gPS.BUTTON_POS_2 * gPS.BUTTON_TITLE_CANCEL;
     var panelList = [];
 tabpanels:
     for each (p in projectList) {
@@ -542,8 +548,7 @@ tabpanels:
         tabbox.selectedPanel = p.panel;
         tabbox.selectedTab = p.tab;
         while (!project.saved) {
-            switch (gPS.confirmEx(null, "Not saved", "Project '"+p.tab.label+
-                    "' is not saved\nDiscard changes?", flags, "", "Discard", "", null, {})) {
+            switch (confirmSave()) {
             case 0:
                 save();
                 break;
@@ -609,6 +614,23 @@ function open() {
             return;
         }
     openPanel(params.out.id);
+}
+
+function close() {
+    let project = tabbox.selectedPanel.project;
+    if (!project.saved)
+        switch (confirmSave()) {
+            case 0: save(); break;
+            case 1: break;
+            case 2: return;
+        }
+    var currentIndex = tabbox.selectedIndex;
+    tabbox.tabpanels.removeChild(tabbox.selectedPanel);
+    tabbox.tabs.removeItemAt(currentIndex);
+    if (currentIndex == 0 && tabbox.tabs.childNodes.length > 0)
+        tabbox.selectedIndex = 0;
+    else
+        tabbox.selectedIndex = currentIndex - 1;
 }
 
 function safeAdd(list, id, cnt) {

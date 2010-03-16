@@ -19,6 +19,7 @@
 <script type="application/x-javascript" src="chrome://jaet/content/tools/pp.js"/>
     <command id="File:New" oncommand="openPanel()"/>
     <command id="File:Open" oncommand="open()"/>
+    <command id="File:Close" oncommand="close()"/>
     <command id="File:Save" oncommand="save()"/>
     <command id="File:Export" oncommand="ppQuit()"/>
     <command id="File:Exit" oncommand="ppQuit()"/>
@@ -31,6 +32,7 @@
             <menupopup id="pp-file-popup">
                 <menuitem label="New" command="File:New"/>
                 <menuitem label="Open" command="File:Open"/>
+                <menuitem label="Close" command="File:Close"/>
                 <menuitem label="Save" command="File:Save"/>
                 <menuseparator/>
                 <menuitem label="Import..." command="File:Import"/>
@@ -51,6 +53,7 @@
         <toolbarbutton image="chrome://jaet/content/images/new_16.png" command="File:New"/>
         <toolbarbutton image="chrome://jaet/content/images/open_16.png" command="File:Open"/>
         <toolbarbutton image="chrome://jaet/content/images/save_16.png" command="File:Save"/>
+        <toolbarbutton image="chrome://jaet/content/images/close.png" command="File:Close"/>
     </toolbar>
     <menupopup id="buy-menu">
         <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>
