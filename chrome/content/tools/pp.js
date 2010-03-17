@@ -1,5 +1,6 @@
 var gEIS, gDB, gPC, gPS;
 var tabbox;
+const MAX_UNDO = 10;
 const Queries = {
     getBPByType:    "select blueprintTypeID, wasteFactor from invBlueprintTypes where productTypeID=:tid",
     getRawMats:     "select materialTypeID as tid, quantity from invTypeMaterials where typeID=:tid",
@@ -308,19 +309,45 @@ function Project(box) {
     this.box = box;
     for each (i in projFields)
         this[i] = {};
-    this._log = [];
+    this._undoList = [];
+    this._store();
 }
 Project.prototype = {
-    log:            function (text) {
-        this._log.push(text);
-        println(text);
-        this.saved = false;
+    _savedptr:      -1,
+    _stringify:     function () {
+        var tmp = {};
+        for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
+            tmp[i] = this[i];
+        return JSON.stringify(tmp);
     },
+    _store:         function () {
+        this._undoList.push(this._stringify());
+        while (this._undoList.length > MAX_UNDO)
+            this._undoList.shift();
+        this._undoptr = this._undoList.length - 1;
+    },
+    undo:           function () this.undoptr--,
+    redo:           function () this.undoptr++,
+    get undoptr()   this._undoptr,
+    set undoptr(i)  {
+        if (i < 0 || i >= this._undoList.length)
+            return;
+        this._undoptr = i;
+        document.getElementById("Edit:Undo").disabled = i == 0;
+        document.getElementById("Edit:Redo").disabled = i == this._undoList.length - 1;
+        var tmp = JSON.parse(this._undoList[i]);
+        for (l in tmp)
+            this[l] = tmp[l];
+        for each (bp in this.blueprints) if (!bp.cnt)
+            bp.cnt = Infinity;
+        this.box.rebuild();
+    },
+    get saved()     function () this._savedptr == this._undoptr,
     addToOrder:     function (typeID, count) {
         safeAdd(this.order, typeID, count);
         this.box.orderView.rebuild();
         this.box.buyView.rebuild();
-        this.log('Add '+typeID+' x'+count);
+        this._store();
     },
     getBPMEList:    function (typeID) {
         var bpID = getItemTypeByID(typeID).bp;
@@ -333,12 +360,10 @@ Project.prototype = {
         safeAdd(this.build, typeID, count);
         this.box.buildView.rebuild();
         this.box.buyView.rebuild();
-        this.log('Build '+typeID+' x'+count);
+        this._store();
     },
     gotItem:        function (typeID, count, cost) {
         safeAdd(this.acquired, typeID, count);
-        this.log(['got', 'kept', 'bought', 'sold'][(count < 0) + 2 * (cost != 0)] + ' ' +
-                typeID+ ' x'+count);
         if (cost)
             safeAdd(this.spent, 'isk', count > 0 ? cost : -cost);
         else
@@ -346,6 +371,7 @@ Project.prototype = {
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
+        this._store();
     },
     gotBP:          function (bpID, runs, me, cost) {
         var id = bpID+'_'+me;
@@ -354,42 +380,30 @@ Project.prototype = {
         this.blueprints[id].cnt += runs;
         if (!this.blueprints[id].cnt)
             delete(this.blueprints[id]);
-        this.log(['got', 'kept', 'bought', 'sold'][(runs < 0) + 2 * (cost != 0)] + ' ' +
-                bpID+ ' x'+runs);
-        if (cost)
-            safeAdd(this.spent, 'isk', runs > 0 ? cost : -cost);
         else if (runs !== Infinity)
             safeAdd(this.spent, bpID, runs);
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
+        this._store();
     },
     load:           function (id) {
-        this.id = id;
         let stm = Stms.loadProj;
-        stm.params.id = id;
+        stm.params.id = this.id = id;
         try {
             stm.step();
-            var data = JSON.parse(stm.row.projectData);
-            for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
-                this[i] = data[i];
-            for each (bp in this.blueprints) if (bp.cnt == 0)
-                bp.cnt = Infinity;
-            this.saved = true;
+            this._undoList = [stm.row.projectData];
         } catch (e) { println("Load project "+id+": "+e); } finally { stm.reset(); }
-        this.box.rebuild();
+        this.undoptr = this._savedptr = 0;
     },
     save:           function (id) {
         id = id || this.id;
-        var data = {};
-        for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
-            data[i] = this[i];
         let stm = Stms.saveProj;
         try {
             stm.params.id = id;
-            stm.params.pdata = JSON.stringify(data);
+            stm.params.pdata = this._stringify();
             stm.execute();
-            this.saved = true;
+            this._savedptr = this._undoptr;
         } catch (e) { println("Save project "+id+": "+e); } finally { stm.reset(); }
     },
 };

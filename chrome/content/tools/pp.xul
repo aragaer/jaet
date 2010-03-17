@@ -24,6 +24,9 @@
     <command id="File:Export" oncommand="ppQuit()"/>
     <command id="File:Exit" oncommand="ppQuit()"/>
 
+    <command id="Edit:Undo" oncommand="tabbox.selectedPanel.project.undo()" />
+    <command id="Edit:Redo" oncommand="tabbox.selectedPanel.project.redo()" />
+
     <command id="Settings:BP" oncommand="ppQuit()"/>
     <command id="Settings:Pref" oncommand="ppQuit()"/>
 
@@ -54,6 +57,9 @@
         <toolbarbutton image="chrome://jaet/content/images/open_16.png" command="File:Open"/>
         <toolbarbutton image="chrome://jaet/content/images/save_16.png" command="File:Save"/>
         <toolbarbutton image="chrome://jaet/content/images/close.png" command="File:Close"/>
+        <toolbarseparator />
+        <toolbarbutton image="chrome://jaet/content/images/undo.png" command="Edit:Undo" />
+        <toolbarbutton image="chrome://jaet/content/images/redo.png" command="Edit:Redo" />
     </toolbar>
     <menupopup id="buy-menu">
         <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>
