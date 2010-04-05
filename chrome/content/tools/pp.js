@@ -309,40 +309,41 @@ function Project(box) {
     this.box = box;
     for each (i in projFields)
         this[i] = {};
-    this._undoList = [];
+    this._states = [];
     this._store();
 }
 Project.prototype = {
-    _savedptr:      -1,
-    _stringify:     function () {
+    _savedstate:    -1,
+    _curstate:      -1,
+    _store:         function () {
         var tmp = {};
         for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
             tmp[i] = this[i];
-        return JSON.stringify(tmp);
+        this._states = this._states.slice(0, this._curstate + 1);
+        this._states.push(JSON.stringify(tmp));
+        if (this._states.length > MAX_UNDO) {
+            this._savedstate -= this._states.length - MAX_UNDO;
+            this._states = this._states.slice(this._states.length - MAX_UNDO);
+        }
+        this._curstate = this._states.length - 1;
     },
-    _store:         function () {
-        this._undoList.push(this._stringify());
-        while (this._undoList.length > MAX_UNDO)
-            this._undoList.shift();
-        this._undoptr = this._undoList.length - 1;
-    },
-    undo:           function () this.undoptr--,
-    redo:           function () this.undoptr++,
-    get undoptr()   this._undoptr,
-    set undoptr(i)  {
-        if (i < 0 || i >= this._undoList.length)
+    undo:           function () this.curstate--,
+    redo:           function () this.curstate++,
+    get curstate()  this._curstate,
+    set curstate(i) {
+        if (i < 0 || i >= this._states.length)
             return;
-        this._undoptr = i;
+        this._curstate = i;
         document.getElementById("Edit:Undo").disabled = i == 0;
-        document.getElementById("Edit:Redo").disabled = i == this._undoList.length - 1;
-        var tmp = JSON.parse(this._undoList[i]);
+        document.getElementById("Edit:Redo").disabled = i == this._states.length - 1;
+        var tmp = JSON.parse(this._states[i]);
         for (l in tmp)
             this[l] = tmp[l];
         for each (bp in this.blueprints) if (!bp.cnt)
             bp.cnt = Infinity;
         this.box.rebuild();
     },
-    get saved()     function () this._savedptr == this._undoptr,
+    get saved()     this._savedstate == this._curstate,
     addToOrder:     function (typeID, count) {
         safeAdd(this.order, typeID, count);
         this.box.orderView.rebuild();
@@ -392,18 +393,18 @@ Project.prototype = {
         stm.params.id = this.id = id;
         try {
             stm.step();
-            this._undoList = [stm.row.projectData];
+            this._states = [stm.row.projectData];
         } catch (e) { println("Load project "+id+": "+e); } finally { stm.reset(); }
-        this.undoptr = this._savedptr = 0;
+        this.curstate = this._savedstate = 0;
     },
     save:           function (id) {
         id = id || this.id;
         let stm = Stms.saveProj;
         try {
             stm.params.id = id;
-            stm.params.pdata = this._stringify();
+            stm.params.pdata = this._states[this._curstate];
             stm.execute();
-            this._savedptr = this._undoptr;
+            this._savedstate = this._curstate;
         } catch (e) { println("Save project "+id+": "+e); } finally { stm.reset(); }
     },
 };
@@ -437,9 +438,7 @@ function buyBuild(action) {
     let project = tabbox.tabpanels.selectedPanel.project;
     let build = tabbox.tabpanels.selectedPanel.buildView;
     let buy = tabbox.tabpanels.selectedPanel.buyView;
-    let src = action == 'buy'
-        ? build
-        : buy;
+    let src = action == 'buy' ? build : buy;
     if (!src.active)
         return;
     var params = {in: {dlg: 'buy-build', amount: src.active.cnt}};
