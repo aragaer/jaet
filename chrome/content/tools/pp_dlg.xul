@@ -42,6 +42,11 @@ const types = {
     },
     'blueprint':    {
         onload:     function () {
+            if (params.in.me !== undefined) {
+                var me = document.getElementById('me');
+                me.value = params.in.me;
+                me.disabled = true;
+            }
             if (!params.in.price)
                 return;
             document.getElementById('bp-cost').collapsed = false;

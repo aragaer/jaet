@@ -75,7 +75,8 @@
         <menuitem id="btn-remove" label="Remove item" oncommand="removeFromProject1()"/>
     </menupopup>
     <menupopup id="acquired-menu">
-        <menuitem id="btn-keep" label="Keep it for other project" oncommand="keepIt1()"/>
+        <menuitem id="btn-keep" label="Keep it for other project" oncommand="keepIt1(false)"/>
+        <menuitem id="btn-keep" label="Sell it now" oncommand="keepIt1(true)"/>
     </menupopup>
     <menupopup id="spent-menu" />
     <tabbox id="tabbox" flex="1">

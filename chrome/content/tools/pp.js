@@ -277,6 +277,7 @@ BuildTreeView.prototype.rebuild = function () {
 
 function AcquiredTreeView() { }
 AcquiredTreeView.prototype = new TreeView();
+AcquiredTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
 AcquiredTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
@@ -289,6 +290,7 @@ AcquiredTreeView.prototype.rebuild = function () {
             me:     itm.me,
             cnt:    itm.cnt || Infinity,
         });
+    this.bpCount = this.values.length;
     if (this.values.length)
         this.values.push({itm: false});
     for each (itm in this.pr.project.acquired) {
@@ -374,7 +376,7 @@ Project.prototype = {
         this.box.spentView.rebuild();
         this._store();
     },
-    gotBP:          function (bpID, runs, me, cost) {
+    gotBP:          function (bpID, runs, me, cost) { // TODO: Can't see here code involving 'cost'
         var id = bpID+'_'+me;
         if (!this.blueprints[id])
             this.blueprints[id] = {type : bpID, me: me, cnt: 0};
@@ -465,6 +467,25 @@ function gotIt1(spend_isk) {
         project.gotBP(itm.type, params.out.count, params.out.me || 0, params.out.cost);
     else
         project.gotItem(itm.type, params.out.count, params.out.cost);
+}
+
+function keepIt1(spend_isk) {
+    let project = tabbox.selectedPanel.project;
+    let acquired = tabbox.selectedPanel.acquiredView;
+    let itm = acquired.active;
+    var params = {in: acquired.isBlueprint(acquired.activeRow)
+        ? {dlg: 'blueprint', price: spend_isk ? getItemTypeByID(itm.type).price : 0, me : itm.me}
+        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? getItemTypeByID(itm.type).price : 0}
+    };
+    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    if (!params.out.count)
+        return;
+    if (!params.out.cost)
+        params.out.cost = 0; // Remove the warning
+    if (params.in.dlg == 'blueprint')
+        project.gotBP(itm.type, -params.out.count, itm.me, params.out.cost);
+    else
+        project.gotItem(itm.type, -params.out.count, params.out.cost);
 }
 
 function init() {
