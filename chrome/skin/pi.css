@@ -1,0 +1,16 @@
+planet {
+    -moz-binding: url('chrome://jaet/content/tools/pi.xml#planet') !important;
+}
+
+circle {
+    stroke-width:1;
+    stroke:black;
+}
+planet[type=barren] > circle { fill:#808000; }
+planet[type=gas] { fill:#c0c040; }
+planet[type=ice] { fill:#ffffff; }
+planet[type=lava] { fill:#804000; }
+planet[type=oceanic] { fill:#80a0ff; }
+planet[type=plasma] { fill:#000080; }
+planet[type=storm] { fill:#8080c0; }
+planet[type=temperate] { fill:#40c080; }

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="jaet.css" type="text/css"?>
+<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
+<?xml-stylesheet href="chrome://jaet/skin/pi.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
+%jaet;
+]>
+
+<window id="main" title="&title;" width="800" height="600"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:svg="http://www.w3.org/2000/svg"
+	onload="PIOnLoad();"
+	persist="screenX screenY width height sizemode">
+
+<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+	
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
+<script type="application/x-javascript" src="chrome://jaet/content/tools/pi.js"/>
+    <command id="PI:PlanetAdd_barren" oncommand="AddPlanet('barren')" />
+    <command id="PI:PlanetAdd_gas" oncommand="AddPlanet('gas')" />
+    <command id="PI:PlanetAdd_ice" oncommand="AddPlanet('ice')" />
+    <command id="PI:PlanetAdd_lava" oncommand="AddPlanet('lava')" />
+    <command id="PI:PlanetAdd_oceanic" oncommand="AddPlanet('oceanic')" />
+    <command id="PI:PlanetAdd_plasma" oncommand="AddPlanet('plasma')" />
+    <command id="PI:PlanetAdd_storm" oncommand="AddPlanet('storm')" />
+    <command id="PI:PlanetAdd_temperate" oncommand="AddPlanet('temperate')" />
+
+    <menupopup id="board">
+        <menu label="add planet">
+            <menupopup>
+                <menuitem label="barren" command="PI:PlanetAdd_barren" />
+                <menuitem label="gas" command="PI:PlanetAdd_gas" />
+                <menuitem label="ice" command="PI:PlanetAdd_ice" />
+                <menuitem label="lava" command="PI:PlanetAdd_lava" />
+                <menuitem label="oceanic" command="PI:PlanetAdd_oceanic" />
+                <menuitem label="plasma" command="PI:PlanetAdd_plasma" />
+                <menuitem label="storm" command="PI:PlanetAdd_storm" />
+                <menuitem label="temperate" command="PI:PlanetAdd_temperate" />
+            </menupopup>
+        </menu>
+    </menupopup>
+    <box flex="1" context="board" id="board_holder">
+<!--        <svg:svg version="1.1" baseProfile="full" id="PI_board" flex="1" style="border:1px solid blue"/> -->
+    </box>
+</window>
+

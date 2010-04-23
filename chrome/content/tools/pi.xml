@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<bindings 
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:svg="http://www.w3.org/2000/svg">
+<script><![CDATA[
+const planet_res = {
+    barren  => ["Micro Organisms", "Carbon Compound", "Noble Metals", "Base Metals", "Aqueous Liquids"],
+    gas     => ["Ionic Solutions", "Reactive Gas", "Noble Gas", "Base Metals", "Aqueous Liquids"],
+    barren => ["Micro Organisms", "Carbon Compound", "Noble Metals", "Base Metals", "Aqueous Liquids"],
+    barren => ["Micro Organisms", "Carbon Compound", "Noble Metals", "Base Metals", "Aqueous Liquids"],
+    barren => ["Micro Organisms", "Carbon Compound", "Noble Metals", "Base Metals", "Aqueous Liquids"],
+    barren => ["Micro Organisms", "Carbon Compound", "Noble Metals", "Base Metals", "Aqueous Liquids"],
+    barren => ["Micro Organisms", "Carbon Compound", "Noble Metals", "Base Metals", "Aqueous Liquids"],
+    barren => ["Micro Organisms", "Carbon Compound", "Noble Metals", "Base Metals", "Aqueous Liquids"],
+};
+]]></script>
+    <binding id="planet">
+        <content>
+            <xul:box anonid="box" flex="1">
+                <svg:circle anonid="circle" r="10" />
+            </xul:box>
+        </content>
+        <implementation>
+            <constructor><![CDATA[
+                var my_this = this;
+                
+                this._box = document.getAnonymousElementByAttribute(this, "anonid", "box");
+
+                var my_func = function (aEvt) { window.setTimeout(function (xbl) {xbl.click()}, 10, my_this)};
+                this._box.addEventListener("click", my_func, true);
+
+                this._circle = document.getAnonymousElementByAttribute(this, "anonid", "circle");
+                this._circle.addEventListener("click", function (aEvt) dump(planet_res[this._type].join(', ')+"\n"), true);
+                dump("out from constructor!\n");
+            ]]></constructor>
+            <property name="type" onset="dump('type='+val+'\n');return this._type = val" onget="return this._type" />
+            <property name="x" onset="dump('x = '+val+'\n');this._circle.setAttribute('cx', val); return val" onget="return this._circle.getAttribute('cx')" />
+            <property name="y" onset="dump('y = '+val+'\n');this._circle.setAttribute('cy', val); return val" onget="return this._circle.getAttribute('cy')" />
+        </implementation>
+    </binding>
+</bindings>
