@@ -488,6 +488,17 @@ function keepIt1(spend_isk) {
         project.gotItem(itm.type, -params.out.count, params.out.cost);
 }
 
+function builtIt1() {
+    let project = tabbox.selectedPanel.project;
+    let build = tabbox.selectedPanel.buildView;
+    let itm = build.active;
+    var params = {in: {itm: itm, type: getItemTypeByID(itm.type), pr: project}};
+    openDialog("chrome://jaet/content/tools/pp_build.xul", "", "chrome,dialog, modal", params).focus();
+    if (!params.out)
+        return;
+    println(JSON.stringify(params.out));
+}
+
 function init() {
     if (gEIS)
         return;
