@@ -4,7 +4,52 @@
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="onLoad();" id="pp-build" persist="screenX screenY">
 <script><![CDATA[
-var bps, bplist, params, runs;
+var bps, bplist, params, runs, raw, extra;
+var QuotaTreeView = {
+    getCellText:        function (aRow, aCol) {
+        var lst;
+        switch (true) {
+        case aRow == raw.length:
+            return;
+        case aRow < raw.length:
+            lst = raw;
+            break;
+        default:
+            lst = extra;
+            aRow -= raw.length +1;
+        }
+        switch (aCol.id) {
+        case 'name':
+            return lst[aRow].id;
+        case 'present':
+            var aqu = params.in.pr.acquired[lst[aRow].id];
+            return aqu ? aqu.cnt : 0;
+        case 'needed':
+            return runs.value*(lst == raw
+                ? Math.round(lst[aRow].cnt*(1 + params.in.type.waste/100/(1+bps[bplist.selectedIndex].me)))
+                : lst[aRow].cnt
+            );
+        default:
+            return "?";
+        }
+    },
+    setCellText:        function (row,col,value) { },
+    isEditable:         function (row,col) false,
+    isContainer:        function (aRow) false,
+    isContainerOpen:    function (aRow) false,
+    isContainerEmpty:   function (aRow) false,
+    getLevel:           function (aRow) 0,
+    getParentIndex:     function (aRow) 0,
+    hasNextSibling:     function (aRow, aAfterRow) 0,
+    toggleOpenState:    function (aRow) { },
+    setTree:            function (treebox) this.treebox = treebox,
+    isSeparator:        function (aRow) aRow == raw.length,
+    isSorted:           function () false,
+    getImageSrc:        function (row,col) null,
+    getRowProperties:   function (row,props) { },
+    getCellProperties:  function (row,col,props) { },
+    getColumnProperties: function (colid,col,props) { }
+};
 function onLoad() {
     params = window.arguments[0];
     runs = document.getElementById('cnt');
@@ -14,10 +59,20 @@ function onLoad() {
     for each (bp in bps)
         bplist.appendItem("ME "+bp.me+"; Runs: "+bp.cnt);
     bplist.selectedIndex = 0;
+    raw = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.raw))];
+    extra = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.extra))];
+    QuotaTreeView.rowCount = raw.length + 1 + extra.length;
+    document.getElementById('quota').view = QuotaTreeView;
+    window.width = document.documentElement.scrollWidth;
+    window.height = document.documentElement.scrollHeight;
     bpselect();
 }
 function bpselect() {
     runs.max = Math.min(params.in.itm.cnt, bps[bplist.selectedIndex].cnt);
+    recalc();
+}
+function recalc() {
+    QuotaTreeView.treebox.invalidate();
 }
 ]]></script>
     <caption id="name" />
@@ -26,9 +81,17 @@ function bpselect() {
     </menulist>
     <hbox style="-moz-box-align:center">
         <caption label="Runs" />
-        <textbox id="cnt" type="number" width="100px" min="1"/>
+        <textbox id="cnt" type="number" width="100px" min="1" onchange="recalc()"/>
     </hbox>
-    <groupbox>
-        <caption label="Materials"/>
-    </groupbox>
+    <caption label="Materials"/>
+    <tree id="quota" hidecolumnpicker="true" flex="1">
+        <treecols>
+            <treecol id="state" />
+            <treecol id="name" flex="1" label="Material"/>
+            <treecol id="needed" label="Required"/>
+            <treecol id="present" label="Present"/>
+            <treecol id="missing" label="Missing"/>
+        </treecols>
+        <treechildren />
+    </tree>
 </dialog>

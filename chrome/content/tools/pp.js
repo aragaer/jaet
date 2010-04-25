@@ -60,7 +60,7 @@ ItemType.prototype = {
         } finally { stm.reset(); }
         return this._raw;
     },
-    // TODO: get extra()
+    get extra() { return {} }, // TODO
     getPriceAsync:  function (handler, args) {
         var me = this;
         if (!this._price || this._price == -1)
