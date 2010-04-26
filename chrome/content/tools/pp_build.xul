@@ -3,6 +3,8 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="onLoad();" id="pp-build" persist="screenX screenY">
+
+<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
 <script><![CDATA[
 var bps, bplist, params, runs, raw, extra;
 var QuotaTreeView = {
@@ -18,19 +20,14 @@ var QuotaTreeView = {
             lst = extra;
             aRow -= raw.length +1;
         }
+        var itm = lst[aRow];
         switch (aCol.id) {
-        case 'name':
-            return lst[aRow].id;
-        case 'present':
-            var aqu = params.in.pr.acquired[lst[aRow].id];
-            return aqu ? aqu.cnt : 0;
-        case 'needed':
-            return runs.value*(lst == raw
-                ? Math.round(lst[aRow].cnt*(1 + params.in.type.waste/100/(1+bps[bplist.selectedIndex].me)))
-                : lst[aRow].cnt
-            );
-        default:
-            return "?";
+            case 'name':    return itm.name;
+            case 'present': return itm.present;
+            case 'needed':  return itm.needed;
+            case 'missing': return itm.missing;
+            case 'state':   return "";
+            default:        return "?";
         }
     },
     setCellText:        function (row,col,value) { },
@@ -45,12 +42,19 @@ var QuotaTreeView = {
     setTree:            function (treebox) this.treebox = treebox,
     isSeparator:        function (aRow) aRow == raw.length,
     isSorted:           function () false,
-    getImageSrc:        function (row,col) null,
+    getImageSrc:        function (row,col)
+        col.id == 'state'
+            ? (row < raw.length
+                    ? raw[row]
+                    : extra[row - raw.length - 1]
+                ).img
+            : "",
     getRowProperties:   function (row,props) { },
     getCellProperties:  function (row,col,props) { },
     getColumnProperties: function (colid,col,props) { }
 };
 function onLoad() {
+    var gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
     params = window.arguments[0];
     runs = document.getElementById('cnt');
     document.getElementById('name').value = "Building "+params.in.itm.itm;
@@ -61,8 +65,16 @@ function onLoad() {
     bplist.selectedIndex = 0;
     raw = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.raw))];
     extra = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.extra))];
+    for each (i in raw.concat(extra)) {
+        i.name = gEIS.getItemType(i.id).name;
+        var aqu = params.in.pr.acquired[i.id];
+        i.present = aqu ? aqu.cnt : 0;
+    }
     QuotaTreeView.rowCount = raw.length + 1 + extra.length;
     document.getElementById('quota').view = QuotaTreeView;
+    // TODO: Fix dimensions
+    document.getElementById('quota').width = 600;
+    document.getElementById('quota').height = QuotaTreeView.rowCount*20 + 40;
     window.width = document.documentElement.scrollWidth;
     window.height = document.documentElement.scrollHeight;
     bpselect();
@@ -72,6 +84,14 @@ function bpselect() {
     recalc();
 }
 function recalc() {
+    for each (i in raw)
+        i.needed = runs.value * Math.round(i.cnt*(1 + params.in.type.waste/100/(1+bps[bplist.selectedIndex].me)));
+    for each (i in extra)
+        i.needed = runs.value * i.cnt;
+    for each (i in raw.concat(extra)) {
+        i.missing = Math.max(i.needed - i.present, 0);
+        i.img = "chrome://jaet/content/images/" + (i.missing ? 'missing' : 'present') + ".png";
+    }
     QuotaTreeView.treebox.invalidate();
 }
 ]]></script>
@@ -83,7 +103,6 @@ function recalc() {
         <caption label="Runs" />
         <textbox id="cnt" type="number" width="100px" min="1" onchange="recalc()"/>
     </hbox>
-    <caption label="Materials"/>
     <tree id="quota" hidecolumnpicker="true" flex="1">
         <treecols>
             <treecol id="state" />
