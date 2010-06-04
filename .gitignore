@@ -1,1 +1,4 @@
 tags
+*.in
+Makefile
+application.ini
