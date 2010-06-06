@@ -5,7 +5,7 @@ const Queries = {
     getBPByType:    "select blueprintTypeID, wasteFactor from invBlueprintTypes where productTypeID=:tid",
     getRawMats:     "select materialTypeID as tid, quantity from invTypeMaterials where typeID=:tid",
     getExtraMats:   "select requiredTypeID as tid, quantity, damagePerJob from ramTypeRequirements " +
-            "where typeID=:bpid;",
+            "where typeID=:bpid and activityID=1;",
     getProjName:    "select projectName from projects where projectID=:id;",
     saveProjName:   "replace into projects (projectID, projectName) values (:id, :pname);",
     checkProjName:  "select projectID from projects where projectName=:pname;",
@@ -60,7 +60,19 @@ ItemType.prototype = {
         } finally { stm.reset(); }
         return this._raw;
     },
-    get extra() { return {} }, // TODO
+    get extra() {
+        this.__defineGetter__('extra', function () this._extra);
+        this._extra = {};
+        let stm = Stms.getExtraMats;
+        try {
+            stm.params.bpid = this.bp;
+            while (stm.step()) if (stm.row.damagePerJob) // TODO: Add reprocessing here
+                this._extra[stm.row.tid] = stm.row.quantity * stm.row.damagePerJob;
+        } catch (e) {
+            dump("Filling 'extra' for "+this.type.name+": "+e+"\n");
+        } finally { stm.reset(); }
+        return this._extra;
+    },
     getPriceAsync:  function (handler, args) {
         var me = this;
         if (!this._price || this._price == -1)
@@ -218,6 +230,11 @@ BuyTreeView.prototype.rebuild = function () {
                 tmpbp[type.bp] = q;
             cnt -= q;
         }
+        for (let [m,u] in Iterator(type.extra)) {
+            if (!tmp[m])
+                tmp[m] = 0;
+            tmp[m] += itm.cnt * u;
+        }
     }
     for each (itm in this.pr.project.acquired) {
         if (!tmp[itm.type])
@@ -291,7 +308,7 @@ AcquiredTreeView.prototype.rebuild = function () {
             cnt:    itm.cnt || Infinity,
         });
     this.bpCount = this.values.length;
-    if (this.values.length)
+    if (this.values.length)     // Separator
         this.values.push({itm: false});
     for each (itm in this.pr.project.acquired) {
         var type = getItemTypeByID(itm.type);
@@ -352,6 +369,26 @@ Project.prototype = {
         this.box.buyView.rebuild();
         this._store();
     },
+    spentItem:      function (typeID, count) {
+        var realcnt = safeGet(this.acquired, typeID);
+        realcnt -= count;
+        if (realcnt > 0)
+            safeAdd(this.acquired, typeID, -count);
+        else {
+            delete(this.acquired[typeID]);
+            safeAdd(this.spent, typeID, -realcnt);
+        }
+    },
+    builtItem:      function (typeID, count) {
+        if (count > this.build[typeID].cnt) {
+            alert("Error: trying to build " + count + " items, but only " + this.build[typeID].cnt + " are scheduled");
+            return;
+        }
+        safeAdd(this.build, typeID, -count);
+        safeAdd(this.acquired, typeID, count);
+        this.box.rebuild();
+        this._store();
+    },
     getBPMEList:    function (typeID) {
         var bpID = getItemTypeByID(typeID).bp;
         for each (bp in [i for each (i in this.blueprints) if (i.type == bpID)].
@@ -389,6 +426,19 @@ Project.prototype = {
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();
         this._store();
+    },
+    spentBP:        function (bp, runs) { // bp is actually an object pointing to a blueprint
+        if (bp.fake) {
+            safeAdd(this.spent, bp.type, runs);
+            return;
+        }
+        println(JSON.stringify(bp));
+        println(JSON.stringify(this.blueprints));
+        var id = bp.type+'_'+bp.me;
+        var rbp = this.blueprints[id];
+        rbp.cnt -= runs;
+        if (!rbp.cnt)
+            delete(this.blueprints[id]);
     },
     load:           function (id) {
         let stm = Stms.loadProj;
@@ -492,11 +542,16 @@ function builtIt1() {
     let project = tabbox.selectedPanel.project;
     let build = tabbox.selectedPanel.buildView;
     let itm = build.active;
-    var params = {in: {itm: itm, type: getItemTypeByID(itm.type), pr: project}};
+    var type = getItemTypeByID(itm.type);
+    var params = {in: {itm: itm, type: type, pr: project}};
     openDialog("chrome://jaet/content/tools/pp_build.xul", "", "chrome,dialog, modal", params).focus();
-    if (!params.out)
+    if (!params.out || !params.out.cnt)
         return;
-    println(JSON.stringify(params.out));
+    params.out.bp.type = type.bp;
+    for (let [i, c] in Iterator(params.out.needed))
+        project.spentItem(i, c);
+    project.spentBP(params.out.bp, params.out.cnt);
+    project.builtItem(itm.type, params.out.cnt); // This one stores states, thus it's the last one
 }
 
 function init() {
@@ -685,4 +740,9 @@ function safeAdd(list, id, cnt) {
     if (!list[id].cnt)
         delete(list[id]);
 }
+
+function safeGet(list, id)
+    list[id]
+        ? list[id].cnt
+        : 0;
 

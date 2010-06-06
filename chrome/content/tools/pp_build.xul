@@ -2,6 +2,8 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    ondialogaccept="doBuild()"
+    ondialogcancel="return true"
     onload="onLoad();" id="pp-build" persist="screenX screenY">
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
@@ -57,7 +59,7 @@ function onLoad() {
     var gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
     params = window.arguments[0];
     runs = document.getElementById('cnt');
-    document.getElementById('name').value = "Building "+params.in.itm.itm;
+    document.getElementById('name').label = "Building "+params.in.itm.itm;
     bps = [i for (i in params.in.pr.getBPMEList(params.in.itm.type))];
     bplist = document.getElementById('bplist');
     for each (bp in bps)
@@ -77,6 +79,7 @@ function onLoad() {
     document.getElementById('quota').height = QuotaTreeView.rowCount*20 + 40;
     window.width = document.documentElement.scrollWidth;
     window.height = document.documentElement.scrollHeight;
+    params.out = {};
     bpselect();
 }
 function bpselect() {
@@ -84,15 +87,28 @@ function bpselect() {
     recalc();
 }
 function recalc() {
+    params.out.needed = {};
     for each (i in raw)
         i.needed = runs.value * Math.round(i.cnt*(1 + params.in.type.waste/100/(1+bps[bplist.selectedIndex].me)));
     for each (i in extra)
-        i.needed = runs.value * i.cnt;
+        i.needed = Math.round(runs.value * i.cnt * 100)/100;
     for each (i in raw.concat(extra)) {
         i.missing = Math.max(i.needed - i.present, 0);
         i.img = "chrome://jaet/content/images/" + (i.missing ? 'missing' : 'present') + ".png";
+        params.out.needed[i.id] = +i.needed;
     }
     QuotaTreeView.treebox.invalidate();
+    params.out.cnt = +runs.value;
+    params.out.bp = bps[bplist.selectedIndex];
+}
+function doBuild() {
+    var missing = [i for each (i in raw.concat(extra)) if (i.missing)];
+    if (!missing.length)
+        return true;
+    var PS = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+    return PS.confirm(null, "Missing materials", "The following materials are missing:\n" +
+            [i.name + " x" + i.missing for each (i in missing)].join("\n") +
+            "\nDo you want to add these to 'spent'?");
 }
 ]]></script>
     <caption id="name" />
