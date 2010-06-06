@@ -12,6 +12,11 @@
     persist="screenX screenY width height sizemode" id="pp-main">
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script><![CDATA[
+function ppDummy() {
+    alert("Not implemented yet");
+}
+]]></script>
 
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -21,14 +26,15 @@
     <command id="File:Open" oncommand="open()"/>
     <command id="File:Close" oncommand="close()"/>
     <command id="File:Save" oncommand="save()"/>
-    <command id="File:Export" oncommand="ppQuit()"/>
-    <command id="File:Exit" oncommand="ppQuit()"/>
+    <command id="File:Import" oncommand="ppDummy()"/>
+    <command id="File:Export" oncommand="ppDummy()"/>
+    <command id="File:Exit" oncommand="ppDummy()"/>
 
     <command id="Edit:Undo" oncommand="tabbox.selectedPanel.project.undo()" />
     <command id="Edit:Redo" oncommand="tabbox.selectedPanel.project.redo()" />
 
-    <command id="Settings:BP" oncommand="ppQuit()"/>
-    <command id="Settings:Pref" oncommand="ppQuit()"/>
+    <command id="Settings:BP" oncommand="ppDummy()"/>
+    <command id="Settings:Pref" oncommand="ppDummy()"/>
 
     <menubar id="pp-menubar">
         <menu label="File" accesskey="F">
