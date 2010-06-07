@@ -180,9 +180,10 @@ SpentTreeView.prototype.rebuild = function () {
         var type;
         if (itm.type == 'isk')
             me.total += itm.cnt;
-        else  {
+        else {
             type = getItemTypeByID(itm.type);
-            type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
+            if (!itm.isBP)
+                type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
         }
         this.values.push({
             type:   itm.type,
@@ -430,6 +431,8 @@ Project.prototype = {
     spentBP:        function (bp, runs) { // bp is actually an object pointing to a blueprint
         if (bp.fake) {
             safeAdd(this.spent, bp.type, runs);
+            if (this.spent[bp.type])
+                this.spent[bp.type].isBP = true;
             return;
         }
         println(JSON.stringify(bp));
