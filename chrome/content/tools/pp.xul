@@ -28,7 +28,7 @@ function ppDummy() {
     <command id="File:Save" oncommand="save()"/>
     <command id="File:Import" oncommand="ppDummy()"/>
     <command id="File:Export" oncommand="ppDummy()"/>
-    <command id="File:Exit" oncommand="ppDummy()"/>
+    <command id="File:Exit" oncommand="ppQuit()"/>
 
     <command id="Edit:Undo" oncommand="tabbox.selectedPanel.project.undo()" />
     <command id="Edit:Redo" oncommand="tabbox.selectedPanel.project.redo()" />
