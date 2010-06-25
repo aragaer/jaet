@@ -419,10 +419,14 @@ Project.prototype = {
         if (!this.blueprints[id])
             this.blueprints[id] = {type : bpID, me: me, cnt: 0};
         this.blueprints[id].cnt += runs;
-        if (!this.blueprints[id].cnt)
+        if (!this.blueprints[id].cnt) // BP removed
             delete(this.blueprints[id]);
-        else if (runs !== Infinity)
+
+        if (runs !== Infinity) {
             safeAdd(this.spent, bpID, runs);
+            if (this.spent[bpID])
+                this.spent[bpID].isBP = true;
+        }
         this.box.buyView.rebuild();
         this.box.acquiredView.rebuild();
         this.box.spentView.rebuild();

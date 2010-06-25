@@ -3,7 +3,7 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     ondialogaccept="doBuild()"
-    ondialogcancel="return true"
+    ondialogcancel="params.out.cnt = 0; return true"
     onload="onLoad();" id="pp-build" persist="screenX screenY">
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
