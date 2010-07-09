@@ -21,6 +21,10 @@
 <!ENTITY menu_settings.preferences.label "Preferences">
 <!ENTITY menu_settings.preferences.accesskey "P">
 
+<!ENTITY menu.view.label "View">
+<!ENTITY menu.view.accesskey "V">
+<!ENTITY menu_view.plugins.label "Plug-ins">
+
 <!ENTITY api.acct.list.title "Account list">
 <!ENTITY api.char.list.title "Characters">
 
@@ -42,4 +46,3 @@
 
 <!ENTITY api.incorrect "Incorrect credentials">
 
-<!ENTITY exit_confirm "Really quit JAET?">

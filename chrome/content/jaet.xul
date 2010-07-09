@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="jaet.css" type="text/css"?>
-<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
@@ -22,10 +21,8 @@
     <command id="File:Exit" oncommand="quit()"/>
     <command id="Settings:Preferences" oncommand="setupPreferences()"/>
     <command id="Settings:ApiKeys" oncommand="setupApiKeys()"/>
-    <command id="Settings:POS" oncommand="setupPOS()"/>
+    <command id="Settings:Plugins" oncommand="openExtManager()"/>
 
-    <label id="quit-label" value="&exit_confirm;" hidden="true" />
-    
     <toolbar id="main-toolbar">
         <toolbaritem>
             <menubar id="main-menubar" statusbar="statusbar-display"
@@ -37,6 +34,12 @@
                                   command="File:Exit"/>
                     </menupopup>
                 </menu>
+                <menu label="&menu.view.label;" accesskey="&menu.view.accesskey;" id="menu_View">
+                    <menupopup id="menu_ViewPopup">
+                        <menuitem label="&menu_view.plugins.label;" type="checkbox"
+                                  panel="plugins" chrome="chrome://jaet/panels/plugins.xul"/>
+                    </menupopup>
+                </menu>
                 <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">
                     <menupopup id="menu_SettingsPopup">
                         <menuitem label="&menu_settings.pref.label;"
@@ -45,16 +48,17 @@
                         <menuitem label="&menu_settings.api.label;"
                                   accesskey="&menu_settings.api.accesskey;"
                                   command="Settings:ApiKeys"/>
-                        <menuitem label="POS configuration"
-                                  command="Settings:POS"/>
+                        <menuitem label="&menu_settings.extensions.label;"
+                                  accesskey="&menu_settings.extensions.accesskey;"
+                                  command="Settings:Plugins"/>
                     </menupopup>
                 </menu>
             </menubar>
         </toolbaritem>
     </toolbar>
     <tabbox id='main-tabs-list' flex="600" height="100%">
-	<tabs id='main-tabs' />
-	<tabpanels id='main-panels' flex="600"/>
+	<tabs />
+	<tabpanels flex="600"/>
     </tabbox>
     <hbox>
         <spacer flex="1"/>

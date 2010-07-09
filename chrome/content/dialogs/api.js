@@ -212,7 +212,8 @@ function add_acct() {
 }
 
 function reload_accts() {
-    accts = EveApi.getAccounts().map(function (a) new wrappedAcct(a));
+    accts = Cc["@aragaer/eve/auth-manager;1"].getService(Ci.nsIEveAuthManager).
+        getAccounts({}).map(function (a) new wrappedAcct(a));
     acct_list.view = AcctTreeView;
 }
 

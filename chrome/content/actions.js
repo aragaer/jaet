@@ -1,55 +1,28 @@
-var status;
+var status, tabbox;
 
 function onLoad() {
+    tabbox = document.getElementById('main-tabs-list')
     status = document.getElementById('status');
     println("Application initialized.");
 
-    var tabbox = document.getElementById('main-tabs-list');
-    var tabs = document.getElementById('main-tabs');
-    var tabpanels = document.getElementById('main-panels');
-
-    var list_file = Cc["@mozilla.org/file/directory_service;1"].
-            getService(Ci.nsIProperties).get('CurProcD', Ci.nsIFile);
-    list_file.append('tools.list');
-    if (list_file.exists()) {
-        var istream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
-        istream.init(list_file, 0x01, 0444, 0);
-        istream.QueryInterface(Ci.nsILineInputStream);
-        var line = {}, hasmore, lines = [];
-
-        do {
-            hasmore = istream.readLine(line);
-            if (line.value.length)
-                lines.push(line.value);
-        } while (hasmore);
-        
-        lines.forEach(function (line) {
-            var tabpanel = document.createElement('tabpanel');
-            var iframe = document.createElement('iframe');
-            var props = line.split(/\s*\t\s*/);
-            var tool = props[0], name = props[1], chrome = props[2];
-            tabpanel.setAttribute('orient', 'horisontal');
-            tabpanel.setAttribute('flex', '1');
-            iframe.setAttribute('src', chrome);
-            iframe.setAttribute('flex', '1000');
-            tabpanel.appendChild(iframe);
-
-            tabs.appendItem(name);
-            tabpanels.appendChild(tabpanel);
-        });
-        if (lines.length == 1)
-            tabs.collapsed = true;
-    } else {
-        list_file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666); 
+    var view_list = document.getElementById('menu_View');
+    var i;
+    for (i = 0; i < view_list.itemCount; i++) {
+        var item = view_list.getItemAtIndex(i);
+        println(i+": "+item);
+        if (item.getAttribute('type') != 'checkbox')
+            continue;
+        var func = viewCmd(item);
+        item.addEventListener('command', func, true);
+        if (getBoolPref('jaet.panels_shown.'+item.getAttribute('panel'), false)) {
+            item.setAttribute('checked', true);
+            func();
+        }
     }
-
-    if (tabbox.hasChildNodes())
-        tabbox.selectedIndex = 0;
 }
 
 function quit() {
-    if (confirm("Really quit JAET?"))
+    if (confirm("Really quit JAET?")) // TODO: use .properties
         doQuit(false);
 }
 
@@ -61,7 +34,6 @@ function doQuit (aForceQuit) {
             ? Ci.nsIAppStartup.eForceQuit
             : Ci.nsIAppStartup.eAttemptQuit);
 }
-
 
 function setupPreferences() {
     println("Preferences activated.");
@@ -80,16 +52,10 @@ function openExtManager() {
             "", "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
 }
 
-function setupPOS() {
-    println("POS setup activated.");
-    openDialog("towconf.xul", "",
-            "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
-}
-
 function openPreferences(paneID) {
     var instantApply = getBoolPref("browser.preferences.instantApply", false);
-    var features = "chrome,titlebar,toolbar,centerscreen"
-            + (instantApply ? ",dialog=no" : ",modal");
+    var features = "chrome,titlebar,toolbar,centerscreen" +
+        (instantApply ? ",dialog=no" : ",modal");
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
             getService(Ci.nsIWindowMediator);
     var win = wm.getMostRecentWindow("Preferences");
@@ -101,5 +67,77 @@ function openPreferences(paneID) {
         }
     } else 
         openDialog("dialogs/preferences.xul", "Preferences", features, paneID);
+}
+
+function viewCmd(item) {
+    var panel = item.getAttribute('panel');
+    var chrome = item.getAttribute('chrome');
+    var label = item.getAttribute('label');
+    return function (aEvt) {
+        var checked = item.getAttribute('checked');
+        Prefs.setBoolPref('jaet.panels_shown.'+panel, checked == 'true');
+        if (checked)
+            openMainPanel(panel, label, chrome)
+        else
+            closeMainPanel(panel);
+    }
+}
+
+const tabList = {
+    __iterator__: function () {
+        var t = tabbox.tabs.firstChild;
+        var tp = tabbox.tabpanels.firstChild;
+        while (tp) {
+            yield {panel: tp, tab: t};
+            t = t.nextSibling;
+            tp = tp.nextSibling;
+        }
+    }
+};
+
+function findMainPanel(panel) {
+    var i;
+    for each (i in tabList)
+        if (i.tab.value == panel)
+            return i;
+    return undefined;
+}
+
+function openMainPanel(panel, label, chrome) {
+    var t = findMainPanel(panel);
+    if (!t) {
+        t = {
+            panel:  document.createElement('tabpanel'),
+            tab:    tabbox.tabs.appendItem(label, panel),
+        };
+        t.panel.setAttribute('flex', 1);
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('flex', 1);
+        iframe.setAttribute('src', chrome);
+        t.panel.appendChild(iframe);
+        tabbox.tabpanels.appendChild(t.panel);
+    }
+
+    tabbox.selectedTab = t.tab;
+    tabbox.selectedPanel = t.panel;
+}
+
+function closeMainPanel(panel) {
+    var t = findMainPanel(panel);
+    if (!t)
+        return;
+
+    var currentIndex = tabbox.selectedIndex;
+    var index = tabbox.tabs.getIndexOfItem(t.tab);
+    tabbox.tabpanels.removeChild(t.panel);
+    tabbox.tabs.removeItemAt(index);
+
+    if (currentIndex < index)
+        return;
+
+    if (index == 0 && tabbox.tabs.itemCount)
+        tabbox.selectedIndex = 0;
+    else
+        tabbox.selectedIndex = currentIndex - 1;
 }
 
