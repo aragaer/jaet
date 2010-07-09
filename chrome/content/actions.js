@@ -9,7 +9,6 @@ function onLoad() {
     var i;
     for (i = 0; i < view_list.itemCount; i++) {
         var item = view_list.getItemAtIndex(i);
-        println(i+": "+item);
         if (item.getAttribute('type') != 'checkbox')
             continue;
         var func = viewCmd(item);
