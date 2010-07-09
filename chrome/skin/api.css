@@ -1,0 +1,5 @@
+label.api_status {
+    -moz-binding: url('chrome://jaet/skin/status.xml#api_status') !important;
+    font-size:10px;
+}
+

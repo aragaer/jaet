@@ -40,9 +40,5 @@
 <!ENTITY api.close "Close">
 <!ENTITY api.save "Save">
 
-
-<!ENTITY exports.title "Market Exports">
-<!ENTITY exports.browse "Browse">
-
 <!ENTITY api.incorrect "Incorrect credentials">
 
