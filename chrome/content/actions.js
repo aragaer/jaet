@@ -1,8 +1,10 @@
 var status, tabbox;
+var gOS;
 
 function onLoad() {
     tabbox = document.getElementById('main-tabs-list')
     status = document.getElementById('status');
+    gOS = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     println("Application initialized.");
 
     var view_list = document.getElementById('menu_View');
@@ -20,12 +22,22 @@ function onLoad() {
     }
 }
 
+function confirmQuit() {
+    if (!confirm("Really quit JAET?")) // TODO: use .properties
+        return false;
+
+    var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+    cancelQuit.data = false;
+    gOS.notifyObservers(cancelQuit, "quit-application-requested", null);
+    return !cancelQuit.data;
+}
+
 function quit() {
-    if (confirm("Really quit JAET?")) // TODO: use .properties
+    if (confirmQuit())
         doQuit(false);
 }
 
-function doQuit (aForceQuit) {
+function doQuit(aForceQuit) {
     var appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
             getService(Ci.nsIAppStartup);
 

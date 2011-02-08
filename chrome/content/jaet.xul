@@ -10,7 +10,7 @@
 
 <window id="main" title="&title;" width="800" height="600"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	onload="onLoad();"
+	onload="onLoad();" onclose="return confirmQuit()"
 	persist="screenX screenY width height sizemode">
 
 <script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
