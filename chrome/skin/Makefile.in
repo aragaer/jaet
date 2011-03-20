@@ -145,7 +145,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 skindir = $(pkgdatadir)/chrome/skin
-skin_DATA = towlistitm.css
+skin_DATA = api.css status.xml
 all: all-am
 
 .SUFFIXES:

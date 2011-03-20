@@ -186,7 +186,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = chrome components data defaults
-pkgdata_DATA = application.ini tools.list
+pkgdata_DATA = application.ini
 all: all-recursive
 
 .SUFFIXES:
