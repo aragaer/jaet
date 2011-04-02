@@ -1,0 +1,3 @@
+[submodule "binary/images"]
+	path = binary/images
+	url = git://github.com/aragaer/jaet-images
