@@ -1,3 +1,6 @@
 [submodule "binary/images"]
 	path = binary/images
 	url = git://github.com/aragaer/jaet-images
+[submodule "src/components/eve-api"]
+	path = src/components/eve-api
+	url = git://github.com/aragaer/EveAPI.git
