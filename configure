@@ -2203,7 +2203,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
-ac_config_files="$ac_config_files Makefile binary/Makefile binary/images/Makefile src/Makefile src/application.ini src/chrome/Makefile src/chrome/content/Makefile src/chrome/content/dialogs/Makefile src/chrome/content/img/Makefile src/chrome/locale/Makefile src/chrome/locale/branding/Makefile src/chrome/locale/en_US/Makefile src/components/Makefile src/defaults/Makefile src/defaults/preferences/Makefile"
+ac_config_files="$ac_config_files Makefile binary/Makefile binary/images/Makefile src/Makefile src/application.ini src/chrome/Makefile src/chrome/content/Makefile src/chrome/content/dialogs/Makefile src/chrome/content/img/Makefile src/chrome/locale/Makefile src/chrome/locale/branding/Makefile src/chrome/locale/en_US/Makefile src/components/Makefile src/components/eve-api/Makefile src/defaults/Makefile src/defaults/preferences/Makefile"
 
 
 
@@ -3110,6 +3110,7 @@ do
     "src/chrome/locale/branding/Makefile") CONFIG_FILES="$CONFIG_FILES src/chrome/locale/branding/Makefile" ;;
     "src/chrome/locale/en_US/Makefile") CONFIG_FILES="$CONFIG_FILES src/chrome/locale/en_US/Makefile" ;;
     "src/components/Makefile") CONFIG_FILES="$CONFIG_FILES src/components/Makefile" ;;
+    "src/components/eve-api/Makefile") CONFIG_FILES="$CONFIG_FILES src/components/eve-api/Makefile" ;;
     "src/defaults/Makefile") CONFIG_FILES="$CONFIG_FILES src/defaults/Makefile" ;;
     "src/defaults/preferences/Makefile") CONFIG_FILES="$CONFIG_FILES src/defaults/preferences/Makefile" ;;
 

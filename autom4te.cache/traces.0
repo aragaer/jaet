@@ -701,9 +701,6 @@ AC_PROVIDE_IFELSE([AC_PROG_OBJC],
 m4trace:configure.ac:4: -2- _AM_MANGLE_OPTION([no-dependencies])
 m4trace:configure.ac:4: -1- _AM_IF_OPTION([silent-rules], [AC_REQUIRE([AM_SILENT_RULES])])
 m4trace:configure.ac:4: -2- _AM_MANGLE_OPTION([silent-rules])
-m4trace:configure.ac:22: -2- _m4_warn([obsolete], [The macro `AC_HELP_STRING' is obsolete.
-You should run autoupdate.], [../../lib/autoconf/general.m4:209: AC_HELP_STRING is expanded from...
-configure.ac:22: the top level])
 m4trace:configure.ac:23: -2- _m4_warn([obsolete], [The macro `AC_HELP_STRING' is obsolete.
 You should run autoupdate.], [../../lib/autoconf/general.m4:209: AC_HELP_STRING is expanded from...
 configure.ac:23: the top level])
@@ -713,11 +710,14 @@ configure.ac:24: the top level])
 m4trace:configure.ac:25: -2- _m4_warn([obsolete], [The macro `AC_HELP_STRING' is obsolete.
 You should run autoupdate.], [../../lib/autoconf/general.m4:209: AC_HELP_STRING is expanded from...
 configure.ac:25: the top level])
-m4trace:configure.ac:26: -1- m4_pattern_allow([^XPIDL$])
-m4trace:configure.ac:27: -1- m4_pattern_allow([^IDLDIR$])
-m4trace:configure.ac:29: -1- m4_pattern_allow([^PKG_CONFIG$])
-m4trace:configure.ac:65: -1- m4_pattern_allow([^XPIDL$])
-m4trace:configure.ac:96: -1- m4_pattern_allow([^GECKO_INCLUDEDIR$])
-m4trace:configure.ac:98: -1- m4_pattern_allow([^BUILDID$])
-m4trace:configure.ac:100: -1- m4_pattern_allow([^LIB@&t@OBJS$])
-m4trace:configure.ac:100: -1- m4_pattern_allow([^LTLIBOBJS$])
+m4trace:configure.ac:26: -2- _m4_warn([obsolete], [The macro `AC_HELP_STRING' is obsolete.
+You should run autoupdate.], [../../lib/autoconf/general.m4:209: AC_HELP_STRING is expanded from...
+configure.ac:26: the top level])
+m4trace:configure.ac:27: -1- m4_pattern_allow([^XPIDL$])
+m4trace:configure.ac:28: -1- m4_pattern_allow([^IDLDIR$])
+m4trace:configure.ac:30: -1- m4_pattern_allow([^PKG_CONFIG$])
+m4trace:configure.ac:66: -1- m4_pattern_allow([^XPIDL$])
+m4trace:configure.ac:97: -1- m4_pattern_allow([^GECKO_INCLUDEDIR$])
+m4trace:configure.ac:99: -1- m4_pattern_allow([^BUILDID$])
+m4trace:configure.ac:101: -1- m4_pattern_allow([^LIB@&t@OBJS$])
+m4trace:configure.ac:101: -1- m4_pattern_allow([^LTLIBOBJS$])

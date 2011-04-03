@@ -356,7 +356,7 @@ uninstall-am: uninstall-prefDATA
 	uninstall-am uninstall-prefDATA
 
 %.xpt: %.idl
-	$(XPIDL) -m typelib -w -v -I $(IDLDIR) -e $@ $<
+	$(XPIDL) -m typelib -w -v -I $(IDLDIR) -I `dirname "$<"` -e $@ $<
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
