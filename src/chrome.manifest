@@ -1,2 +1,2 @@
 manifest chrome/chrome.manifest
-manifest components/eveapi.manifest
+manifest components/eve-api/eveapi.manifest
