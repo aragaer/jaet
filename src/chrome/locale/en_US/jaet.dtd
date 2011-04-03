@@ -13,13 +13,13 @@
 <!ENTITY menu.settings.accesskey "S">
 <!ENTITY menu_settings.pref.label "Preferences">
 <!ENTITY menu_settings.pref.accesskey "P">
-<!ENTITY menu_settings.extensions.label "Extension manager">
-<!ENTITY menu_settings.extensions.accesskey "E">
 <!ENTITY menu_settings.api.label "API keys">
 <!ENTITY menu_settings.api.accesskey "A">
 
-<!ENTITY menu_settings.preferences.label "Preferences">
-<!ENTITY menu_settings.preferences.accesskey "P">
+<!ENTITY menu.tools.label "Tools">
+<!ENTITY menu.tools.accesskey "T">
+<!ENTITY menu_tools.extensions.label "Extension manager">
+<!ENTITY menu_tools.extensions.accesskey "E">
 
 <!ENTITY menu.view.label "View">
 <!ENTITY menu.view.accesskey "V">

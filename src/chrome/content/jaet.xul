@@ -22,7 +22,7 @@
     <command id="File:Exit" oncommand="quit()"/>
     <command id="Settings:Preferences" oncommand="setupPreferences()"/>
     <command id="Settings:ApiKeys" oncommand="setupApiKeys()"/>
-    <command id="Settings:Plugins" oncommand="openExtManager()"/>
+    <command id="Tools:Plugins" oncommand="openExtManager()"/>
 
     <toolbar id="main-toolbar">
         <toolbaritem>
@@ -49,9 +49,13 @@
                         <menuitem label="&menu_settings.api.label;"
                                   accesskey="&menu_settings.api.accesskey;"
                                   command="Settings:ApiKeys"/>
-                        <menuitem label="&menu_settings.extensions.label;"
-                                  accesskey="&menu_settings.extensions.accesskey;"
-                                  command="Settings:Plugins"/>
+                    </menupopup>
+                </menu>
+                <menu label="&menu.tools.label;" accesskey="&menu.tools.accesskey;">
+                    <menupopup id="menu_ToolsPopup">
+                        <menuitem label="&menu_tools.extensions.label;"
+                                  accesskey="&menu_tools.extensions.accesskey;"
+                                  command="Tools:Plugins"/>
                     </menupopup>
                 </menu>
             </menubar>
