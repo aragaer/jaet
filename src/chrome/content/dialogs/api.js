@@ -183,7 +183,7 @@ function check_data() {
         return;
 
     var tmp = Cc["@aragaer/eve/account;1"].createInstance(Ci.nsIEveAccount);
-    for each (i in ['accountID', 'keyLimited', 'keyFull'])
+    for each (var i in ['accountID', 'keyLimited', 'keyFull'])
         tmp[i] = accts[row].fake[i] || accts[row].real[i];
     tmp.checkLimited(function (ret) {
         if (ret) {
